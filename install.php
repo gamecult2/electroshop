@@ -1,9 +1,125 @@
+<?php
+error_reporting(E_ALL);
+ini_set('display_errors', 1);
+
+session_start();
+
+$step = isset($_GET['step']) ? (int)$_GET['step'] : 1;
+$message = '';
+$messageType = '';
+
+// Requirements Check
+$requirements = [
+    'PHP Version >= 7.4' => version_compare(PHP_VERSION, '7.4.0', '>='),
+    'PDO Extension' => extension_loaded('pdo'),
+    'PDO MySQL Extension' => extension_loaded('pdo_mysql'),
+    'JSON Extension' => extension_loaded('json'),
+    'GD Extension' => extension_loaded('gd'),
+    'MBString Extension' => extension_loaded('mbstring'),
+    'Writable src/ Directory' => is_writable('src/'),
+    'Writable src/config.php' => is_writable('src/config.php'),
+];
+
+$allRequirementsMet = !in_array(false, $requirements, true);
+
+if ($step == 2 && $_SERVER['REQUEST_METHOD'] === 'POST') {
+    $host = $_POST['db_host'];
+    $user = $_POST['db_user'];
+    $pass = $_POST['db_pass'];
+    $name = $_POST['db_name'];
+
+    try {
+        $pdo = new PDO("mysql:host=$host", $user, $pass);
+        $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+        
+        // Create database if not exists
+        $pdo->exec("CREATE DATABASE IF NOT EXISTS `$name` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci");
+        
+        // Store in session for next step
+        $_SESSION['db_config'] = [
+            'host' => $host,
+            'user' => $user,
+            'pass' => $pass,
+            'name' => $name
+        ];
+        
+        header('Location: ?step=3');
+        exit;
+    } catch (PDOException $e) {
+        $message = "Connection failed: " . $e->getMessage();
+        $messageType = 'error';
+    }
+}
+
+if ($step == 3 && $_SERVER['REQUEST_METHOD'] === 'POST') {
+    if (!isset($_SESSION['db_config'])) {
+        header('Location: ?step=2');
+        exit;
+    }
+
+    $db_config = $_SESSION['db_config'];
+    
+    try {
+        $pdo = new PDO("mysql:host={$db_config['host']};dbname={$db_config['name']}", $db_config['user'], $db_config['pass']);
+        $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+
+        // Import SQL from DB.sql
+        $sqlFile = 'DB.sql';
+        if (file_exists($sqlFile)) {
+            $sql = file_get_contents($sqlFile);
+            
+            // Remove comments and execute queries
+            // Basic SQL split by semicolon (careful with semicolons in strings, but for standard schema it's okay)
+            $queries = explode(';', $sql);
+            foreach ($queries as $query) {
+                $query = trim($query);
+                if (!empty($query)) {
+                    $pdo->exec($query);
+                }
+            }
+            
+            // Update src/config.php with new credentials
+            $configFile = 'src/config.php';
+            if (file_exists($configFile)) {
+                $configContent = file_get_contents($configFile);
+                
+                $configContent = preg_replace("/define\('DB_HOST', '.*?'\);/", "define('DB_HOST', '{$db_config['host']}');", $configContent);
+                $configContent = preg_replace("/define\('DB_USER', '.*?'\);/", "define('DB_USER', '{$db_config['user']}');", $configContent);
+                $configContent = preg_replace("/define\('DB_PASS', '.*?'\);/", "define('DB_PASS', '{$db_config['pass']}');", $configContent);
+                $configContent = preg_replace("/define\('DB_NAME', '.*?'\);/", "define('DB_NAME', '{$db_config['name']}');", $configContent);
+                
+                file_put_contents($configFile, $configContent);
+            }
+            
+            // Create default admin user if admin_users table exists and is empty
+            $tableCheck = $pdo->query("SHOW TABLES LIKE 'admin_users'")->rowCount();
+            if ($tableCheck > 0) {
+                $adminCheck = $pdo->query("SELECT COUNT(*) FROM admin_users")->fetchColumn();
+                if ($adminCheck == 0) {
+                    $password = password_hash('admin123', PASSWORD_DEFAULT);
+                    $pdo->prepare("INSERT INTO admin_users (email, password, first_name, last_name, role) VALUES (?, ?, ?, ?, ?)")
+                        ->execute(['admin@qwenshop.dz', $password, 'Super', 'Admin', 'admin']);
+                }
+            }
+
+            header('Location: ?step=4');
+            exit;
+        } else {
+            $message = "SQL file not found at DB.sql";
+            $messageType = 'error';
+        }
+    } catch (Exception $e) {
+        $message = "Setup failed: " . $e->getMessage();
+        $messageType = 'error';
+    }
+}
+?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Install QwenShop - Modern E-commerce</title>
+    <title>Install GameCult - Modern E-commerce</title>
     <!-- Bootstrap 5 CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <!-- Font Awesome -->
@@ -116,7 +232,7 @@
                     <div class="logo-box">
                         <i class="fas fa-shopping-cart"></i>
                     </div>
-                    <h2 class="fw-800 text-dark mb-1">QwenShop Installer</h2>
+                    <h2 class="fw-800 text-dark mb-1">GameCult Installer</h2>
                     <p class="text-muted small">Complete the steps to launch your store</p>
                 </div>
 
@@ -164,7 +280,7 @@
                         <?php if ($step == 1): ?>
                             <div class="step-content">
                                 <h4 class="fw-bold mb-3"><i class="fas fa-microchip me-2 text-primary"></i> System Check</h4>
-                                <p class="text-muted small mb-4">We're checking if your server is ready to host QwenShop.</p>
+                                <p class="text-muted small mb-4">We're checking if your server is ready to host GameCult.</p>
                                 
                                 <div class="requirements mb-4">
                                     <?php foreach ($requirements as $req => $met): ?>
@@ -221,7 +337,7 @@
                                     
                                     <div class="col-12">
                                         <label class="small fw-bold text-muted text-uppercase mb-1">Database Name</label>
-                                        <input type="text" name="db_name" class="form-control" value="<?php echo htmlspecialchars($_POST['db_name'] ?? 'qwenshop'); ?>" required>
+                                        <input type="text" name="db_name" class="form-control" value="<?php echo htmlspecialchars($_POST['db_name'] ?? 'gamecult'); ?>" required>
                                         <div class="form-text x-small text-primary">We will create the database if it doesn't exist.</div>
                                     </div>
                                     
@@ -239,7 +355,7 @@
                                 <div class="spinner-border text-primary mb-4" style="width: 3rem; height: 3rem;" role="status">
                                     <span class="visually-hidden">Loading...</span>
                                 </div>
-                                <h4 class="fw-bold mb-3">Initializing QwenShop</h4>
+                                <h4 class="fw-bold mb-3">Initializing GameCult</h4>
                                 <p class="text-muted">We're setting up your database tables, indexes, and initial configurations. This handles the Heavy lifting for you.</p>
                                 
                                 <div class="alert alert-light border border-light-subtle small text-muted mt-4">
@@ -264,13 +380,13 @@
                                     <i class="fas fa-check-circle shadow-lg rounded-circle"></i>
                                 </div>
                                 <h3 class="fw-800 mb-2">Success!</h3>
-                                <p class="text-muted mb-4">QwenShop version 2.0 is now live on your server.</p>
+                                <p class="text-muted mb-4">GameCult version 2.0 is now live on your server.</p>
                                 
                                 <div class="bg-light p-4 rounded-4 text-start border border-light-subtle mb-4">
                                     <h6 class="fw-bold text-muted text-uppercase small mb-3"><i class="fas fa-key me-2"></i> Admin Control Panel</h6>
                                     <div class="d-flex justify-content-between mb-2 small">
                                         <span>Email:</span>
-                                        <span class="fw-bold">admin@qwenshop.dz</span>
+                                        <span class="fw-bold">admin@gamecult.dz</span>
                                     </div>
                                     <div class="d-flex justify-content-between mb-0 small">
                                         <span>Password:</span>
@@ -282,14 +398,14 @@
                                     <i class="fas fa-shield-alt me-2"></i> <strong>Security Tip:</strong> Change your default password immediately after logging in.
                                 </div>
                                 
-                                <a href="index.html" class="btn btn-primary w-100 shadow-sm btn-lg px-5">Launch My Store <i class="fas fa-rocket ms-2"></i></a>
+                                <a href="src/index.php" class="btn btn-primary w-100 shadow-sm btn-lg px-5">Launch My Store <i class="fas fa-rocket ms-2"></i></a>
                             </div>
                         <?php endif; ?>
                     </div>
                 </div>
                 <!-- Footer -->
                 <div class="text-center mt-4">
-                    <p class="text-muted x-small">© <?php echo date('Y'); ?> QwenShop. Built with <i class="fas fa-heart text-danger"></i> for Algers.</p>
+                    <p class="text-muted x-small">© <?php echo date('Y'); ?> GameCult. Built with <i class="fas fa-heart text-danger"></i> for Algers.</p>
                 </div>
             </div>
         </div>
