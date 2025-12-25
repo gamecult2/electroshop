@@ -1,0 +1,1 @@
+ALTER TABLE `site_settings` ADD `setting_group` VARCHAR(50) NOT NULL DEFAULT 'general' AFTER `is_public`;

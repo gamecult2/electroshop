@@ -1,0 +1,116 @@
+{
+    "sections": {
+        "flash_sales": {
+            "enabled": true,
+            "order": 3,
+            "title": "Flash Sales",
+            "description": "Limited time offers section",
+            "rows": 1,
+            "cards_per_row": 6
+        },
+        "best_sellers": {
+            "enabled": true,
+            "order": 1,
+            "title": "Best Sellers",
+            "description": "Popular products section",
+            "rows": 1,
+            "cards_per_row": 5
+        },
+        "category_showcase": {
+            "enabled": true,
+            "order": 5,
+            "title": "Category Showcase",
+            "description": "Featured categories with products",
+            "rows": 1,
+            "cards_per_row": 6
+        },
+        "official_brands": {
+            "enabled": true,
+            "order": 4,
+            "title": "Official Brands",
+            "description": "Brand showcase section",
+            "rows": 1,
+            "cards_per_row": 6
+        },
+        "new_arrivals": {
+            "enabled": true,
+            "order": 2,
+            "title": "New Arrivals",
+            "description": "Latest products section",
+            "rows": 1,
+            "cards_per_row": 5
+        }
+    },
+    "carousel_slides": {
+        "0": {
+            "id": "1",
+            "image": "img\/carousel-slide-1.jpg",
+            "title": "Tech Deals Up to 50% Off",
+            "description": "Latest Electronics & Gaming Gear123",
+            "button_text": "Shop Now",
+            "button_url": "products.php",
+            "enabled": false,
+            "start_date": null,
+            "end_date": null,
+            "order": 1
+        },
+        "1": {
+            "id": "2",
+            "image": "img\/carousel-slide-2.jpg",
+            "title": "Summer Sale",
+            "description": "Best prices on summer products",
+            "button_text": "View Deals",
+            "button_url": "products.php?category=summer",
+            "enabled": false,
+            "start_date": null,
+            "end_date": null,
+            "order": 2
+        },
+        "3": {
+            "id": "1765811667",
+            "image": "img\/carousel-1765811667-image_fx_ (24).jpg",
+            "title": "TEST SLIDE",
+            "description": "Slide description",
+            "button_text": "Shop Now",
+            "button_url": "products.php",
+            "enabled": true,
+            "start_date": null,
+            "end_date": null,
+            "order": 1
+        },
+        "4": {
+            "id": 1765811687,
+            "image": "img\/carousel-1765811687-image_fx_ (13).jpg",
+            "title": "New Slide",
+            "description": "Slide description",
+            "button_text": "Shop Now",
+            "button_url": "products.php",
+            "enabled": true
+        },
+        "5": {
+            "id": 1765811697,
+            "image": "img\/carousel-1765811697-image_fx_ (22).jpg",
+            "title": "New Slide",
+            "description": "Slide description",
+            "button_text": "Shop Now",
+            "button_url": "products.php",
+            "enabled": true
+        }
+    },
+    "carousel_config": {
+        "autoplay": true,
+        "interval": 1000,
+        "pause_on_hover": true,
+        "animation_type": "slide",
+        "animation_duration": 2000,
+        "show_navigation": false,
+        "show_indicators": false,
+        "infinite_loop": true,
+        "height": "480px",
+        "width": "100%",
+        "overlay_opacity": 0.4,
+        "lazy_loading": false,
+        "cta_alignment": "center",
+        "text_color": "#b71a1a"
+    }
+}
