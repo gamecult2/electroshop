@@ -76,7 +76,8 @@ class Router {
             '/returns' => 'returns.php',
             '/shipping' => 'shipping.php',
             '/faqs' => 'faqs.php',
-            '/support' => 'support.php'
+            '/support' => 'support.php',
+            '/maintenance.php' => 'maintenance.php'
         ];
 
         // Check for exact matches first

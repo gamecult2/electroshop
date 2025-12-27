@@ -25,7 +25,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 if (!is_dir($uploadDir)) {
                     mkdir($uploadDir, 0755, true);
                 }
-                $filename = uniqid() . '-' . basename($_FILES['logo']['name']);
+                $extension = strtolower(pathinfo($_FILES['logo']['name'], PATHINFO_EXTENSION));
+                $filename = create_slug($name) . '-' . substr(md5(uniqid()), 0, 8) . '.' . $extension;
                 $targetFile = $uploadDir . $filename;
                 if (move_uploaded_file($_FILES['logo']['tmp_name'], $targetFile)) {
                     $logo_url = 'uploads/images/brands/' . $filename;
@@ -55,7 +56,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 if (!is_dir($uploadDir)) {
                     mkdir($uploadDir, 0755, true);
                 }
-                $filename = uniqid() . '-' . basename($_FILES['logo']['name']);
+                $extension = strtolower(pathinfo($_FILES['logo']['name'], PATHINFO_EXTENSION));
+                $filename = create_slug($name) . '-' . substr(md5(uniqid()), 0, 8) . '.' . $extension;
                 $targetFile = $uploadDir . $filename;
                 if (move_uploaded_file($_FILES['logo']['tmp_name'], $targetFile)) {
                     $logo_url = 'uploads/images/brands/' . $filename;

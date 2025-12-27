@@ -38,7 +38,7 @@ $cartCount = $headerCart->getItemCount();
     </script>
 </head>
 <body class="bg-light">
-<header class="bg-white shadow-sm sticky-top" style="z-index: 2000;">
+<header class="bg-white shadow-sm sticky-top" style="z-index: 1030;">
     <!-- Top Bar -->
     <div class="bg-dark text-white py-1 d-none d-md-block" style="font-size: 0.7rem;">
         <div class="container-xxl d-flex justify-content-between align-items-center">

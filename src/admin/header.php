@@ -2,6 +2,17 @@
 // admin/header.php
 // Shared header and sidebar for admin pages
 
+// Fetch unread messages
+require_once '../db_connect.php';
+$unreadMessagesStmt = $pdo->query("SELECT * FROM contact_messages WHERE is_resolved = 0 ORDER BY created_at DESC LIMIT 5");
+$unreadMessages = $unreadMessagesStmt->fetchAll();
+$unreadMessagesCount = count($unreadMessages);
+
+// Fetch new orders (pending) from today only
+$newOrdersStmt = $pdo->query("SELECT * FROM orders WHERE status = 'pending' AND DATE(created_at) = CURDATE() ORDER BY created_at DESC LIMIT 5");
+$newOrders = $newOrdersStmt->fetchAll();
+$newOrdersCount = count($newOrders);
+
 // Determine the current page name to set the active menu item
 $current_page = basename($_SERVER['PHP_SELF']);
 
@@ -26,7 +37,6 @@ $menu_items = [
     'couriers.php' => ['icon' => 'fas fa-shipping-fast', 'label' => 'Couriers'],
     'settings.php' => ['icon' => 'fas fa-cog', 'label' => 'Settings'],
 ];
-
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -159,29 +169,38 @@ $menu_items = [
                         <div class="dropdown">
                             <button class="btn btn-light border shadow-xs rounded-circle d-flex align-items-center justify-content-center position-relative" type="button" data-bs-toggle="dropdown" style="width: 40px; height: 40px;">
                                 <i class="fas fa-envelope text-muted"></i>
-                                <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger border border-white" style="font-size: 0.6rem;">
-                                    3
-                                </span>
+                                <?php if ($unreadMessagesCount > 0): ?>
+                                    <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger border border-white" style="font-size: 0.6rem;">
+                                        <?php echo $unreadMessagesCount; ?>
+                                    </span>
+                                <?php endif; ?>
                             </button>
                             <div class="dropdown-menu dropdown-menu-end shadow-lg border-0 p-0 mt-2 rounded-4 overflow-hidden" style="width: 320px;">
                                 <div class="bg-dark text-white p-3 d-flex justify-content-between align-items-center">
                                     <h6 class="mb-0 fw-bold">Recent Messages</h6>
-                                    <span class="badge bg-danger rounded-pill">3 New</span>
+                                    <span class="badge bg-danger rounded-pill"><?php echo $unreadMessagesCount; ?> New</span>
                                 </div>
                                 <div class="list-group list-group-flush" style="max-height: 300px; overflow-y: auto;">
-                                    <a href="messages.php" class="list-group-item list-group-item-action p-3">
-                                        <div class="d-flex align-items-center gap-3">
-                                            <div class="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center flex-shrink-0" style="width: 40px; height: 40px;">JS</div>
-                                            <div class="flex-grow-1">
-                                                <div class="d-flex justify-content-between mb-1">
-                                                    <span class="fw-bold small text-dark">John Smith</span>
-                                                    <span class="text-muted x-small">2m ago</span>
+                                    <?php if ($unreadMessagesCount > 0): ?>
+                                        <?php foreach ($unreadMessages as $msg): ?>
+                                            <a href="messages.php" class="list-group-item list-group-item-action p-3">
+                                                <div class="d-flex align-items-center gap-3">
+                                                    <div class="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center flex-shrink-0" style="width: 40px; height: 40px;">
+                                                        <?php echo strtoupper(substr($msg['name'], 0, 1)); ?>
+                                                    </div>
+                                                    <div class="flex-grow-1">
+                                                        <div class="d-flex justify-content-between mb-1">
+                                                            <span class="fw-bold small text-dark"><?php echo htmlspecialchars($msg['name']); ?></span>
+                                                            <span class="text-muted x-small"><?php echo time_elapsed_string($msg['created_at']); ?></span>
+                                                        </div>
+                                                        <div class="text-muted x-small text-truncate" style="max-width: 180px;"><?php echo htmlspecialchars($msg['subject']); ?></div>
+                                                    </div>
                                                 </div>
-                                                <div class="text-muted x-small text-truncate" style="max-width: 180px;">Question regarding order #12345...</div>
-                                            </div>
-                                        </div>
-                                    </a>
-                                    <!-- More message placeholders... -->
+                                            </a>
+                                        <?php endforeach; ?>
+                                    <?php else: ?>
+                                        <div class="p-4 text-center text-muted small">No new messages</div>
+                                    <?php endif; ?>
                                 </div>
                                 <a href="messages.php" class="dropdown-item text-center py-2 bg-light text-primary fw-bold small border-top">View All Messages</a>
                             </div>
@@ -191,31 +210,38 @@ $menu_items = [
                         <div class="dropdown">
                             <button class="btn btn-light border shadow-xs rounded-circle d-flex align-items-center justify-content-center position-relative" type="button" data-bs-toggle="dropdown" style="width: 40px; height: 40px;">
                                 <i class="fas fa-bell text-muted"></i>
-                                <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-primary border border-white" style="font-size: 0.6rem;">
-                                    5
-                                </span>
+                                <?php if ($newOrdersCount > 0): ?>
+                                    <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-primary border border-white" style="font-size: 0.6rem;">
+                                        <?php echo $newOrdersCount; ?>
+                                    </span>
+                                <?php endif; ?>
                             </button>
                             <div class="dropdown-menu dropdown-menu-end shadow-lg border-0 p-0 mt-2 rounded-4 overflow-hidden" style="width: 320px;">
                                 <div class="bg-white p-3 border-bottom d-flex justify-content-between align-items-center">
                                     <h6 class="mb-0 fw-bold text-dark">Notifications</h6>
-                                    <button class="btn btn-link text-primary btn-sm p-0 text-decoration-none x-small fw-bold">Mark all read</button>
+                                    <span class="badge bg-primary-subtle text-primary rounded-pill small"><?php echo $newOrdersCount; ?> New</span>
                                 </div>
                                 <div class="list-group list-group-flush" style="max-height: 300px; overflow-y: auto;">
-                                    <a href="orders.php" class="list-group-item list-group-item-action p-3">
-                                        <div class="d-flex align-items-center gap-3">
-                                            <div class="bg-success-subtle text-success rounded-circle d-flex align-items-center justify-content-center flex-shrink-0" style="width: 40px; height: 40px;">
-                                                <i class="fas fa-shopping-cart"></i>
-                                            </div>
-                                            <div>
-                                                <div class="fw-bold small text-dark">New Order Received</div>
-                                                <div class="text-muted x-small">Order #REF-98765 placed successfully</div>
-                                                <div class="text-muted x-small mt-1">15 minutes ago</div>
-                                            </div>
-                                        </div>
-                                    </a>
-                                    <!-- More notification placeholders... -->
+                                    <?php if ($newOrdersCount > 0): ?>
+                                        <?php foreach ($newOrders as $order): ?>
+                                            <a href="admin_order_details.php?id=<?php echo $order['id']; ?>" class="list-group-item list-group-item-action p-3">
+                                                <div class="d-flex align-items-center gap-3">
+                                                    <div class="bg-success-subtle text-success rounded-circle d-flex align-items-center justify-content-center flex-shrink-0" style="width: 40px; height: 40px;">
+                                                        <i class="fas fa-shopping-cart"></i>
+                                                    </div>
+                                                    <div>
+                                                        <div class="fw-bold small text-dark">New Order Received</div>
+                                                        <div class="text-muted x-small">Order #<?php echo htmlspecialchars($order['order_number']); ?> placed</div>
+                                                        <div class="text-muted x-small mt-1"><?php echo time_elapsed_string($order['created_at']); ?></div>
+                                                    </div>
+                                                </div>
+                                            </a>
+                                        <?php endforeach; ?>
+                                    <?php else: ?>
+                                        <div class="p-4 text-center text-muted small">No new notifications</div>
+                                    <?php endif; ?>
                                 </div>
-                                <a href="#" class="dropdown-item text-center py-2 bg-light text-muted fw-bold small border-top">Show All Notifications</a>
+                                <a href="orders.php" class="dropdown-item text-center py-2 bg-light text-muted fw-bold small border-top">Show All Orders</a>
                             </div>
                         </div>
 

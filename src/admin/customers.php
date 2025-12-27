@@ -116,6 +116,9 @@ include 'header.php';
                             </td>
                             <td class="text-center">
                                 <div class="btn-group shadow-sm rounded">
+                                    <a href="customer_details.php?id=<?php echo $customer['id']; ?>" class="btn btn-white btn-sm border-light-subtle text-info" title="View Details">
+                                        <i class="fas fa-eye"></i>
+                                    </a>
                                     <button onclick='openEditModal(<?php echo json_encode($customer); ?>)' class="btn btn-white btn-sm border-light-subtle text-primary" title="Edit">
                                         <i class="fas fa-edit"></i>
                                     </button>

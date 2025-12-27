@@ -119,17 +119,19 @@ function get_default_settings($group) {
             'currency_symbol' => 'DA',
             'tax_rate' => '19.0',
             'tax_calculation_method' => 'exclusive',
-            'shipping_cost_standard' => '500',
-            'shipping_cost_express' => '1000',
-            'shipping_free_threshold' => '10000',
             'paypal_enabled' => '0',
             'paypal_client_id' => '',
             'paypal_secret' => '',
             'stripe_enabled' => '0',
             'stripe_publishable_key' => '',
             'stripe_secret_key' => '',
-            'inventory_tracking' => '1',
-            'low_stock_threshold' => '10',
+            'baridimob_enabled' => '0',
+            'baridimob_ccp' => '',
+            'baridimob_rip' => '',
+            'baridimob_holder' => '',
+            'chargily_enabled' => '0',
+            'chargily_api_key' => '',
+            'chargily_secret_key' => ''
         ],
         'email' => [
             'smtp_host' => '',
@@ -483,34 +485,33 @@ include 'header.php';
                 <!-- E-commerce Settings Tab -->
                 <div id="ecommerce" class="tab-pane fade" role="tabpanel">
                     <div class="row g-4">
-                        <div class="col-md-6">
+                        <!-- Left Column: Currency -->
+                        <div class="col-lg-4">
                             <div class="card border-0 shadow-sm p-4 h-100">
                                 <h3 class="h6 fw-bold text-uppercase text-muted mb-4 ls-1">
                                     <i class="fas fa-coins me-2 text-warning"></i> Currency & Tax
                                 </h3>
-                                <div class="row g-3 mb-4">
-                                    <div class="col-md-6">
-                                        <label for="currency_code" class="form-label small fw-bold text-muted">Currency Code</label>
-                                        <select class="form-select" id="currency_code" name="ecommerce[currency_code]">
-                                            <option value="DZD" <?php echo $ecommerce_settings['currency_code'] === 'DZD' ? 'selected' : ''; ?>>DZD (Algerian Dinar)</option>
-                                            <option value="USD" <?php echo $ecommerce_settings['currency_code'] === 'USD' ? 'selected' : ''; ?>>USD (US Dollar)</option>
-                                            <option value="EUR" <?php echo $ecommerce_settings['currency_code'] === 'EUR' ? 'selected' : ''; ?>>EUR (Euro)</option>
-                                            <option value="GBP" <?php echo $ecommerce_settings['currency_code'] === 'GBP' ? 'selected' : ''; ?>>GBP (British Pound)</option>
-                                        </select>
-                                    </div>
-                                    <div class="col-md-6">
-                                        <label for="currency_symbol" class="form-label small fw-bold text-muted">Symbol</label>
-                                        <input type="text" class="form-control" id="currency_symbol" name="ecommerce[currency_symbol]" value="<?php echo htmlspecialchars($ecommerce_settings['currency_symbol']); ?>">
-                                    </div>
+                                <div class="mb-4">
+                                    <label for="currency_code" class="form-label small fw-bold text-muted">Currency Code</label>
+                                    <select class="form-select border-light-subtle shadow-none" id="currency_code" name="ecommerce[currency_code]">
+                                        <option value="DZD" <?php echo $ecommerce_settings['currency_code'] === 'DZD' ? 'selected' : ''; ?>>DZD (Algerian Dinar)</option>
+                                        <option value="USD" <?php echo $ecommerce_settings['currency_code'] === 'USD' ? 'selected' : ''; ?>>USD (US Dollar)</option>
+                                        <option value="EUR" <?php echo $ecommerce_settings['currency_code'] === 'EUR' ? 'selected' : ''; ?>>EUR (Euro)</option>
+                                        <option value="GBP" <?php echo $ecommerce_settings['currency_code'] === 'GBP' ? 'selected' : ''; ?>>GBP (British Pound)</option>
+                                    </select>
+                                </div>
+                                <div class="mb-4">
+                                    <label for="currency_symbol" class="form-label small fw-bold text-muted">Symbol</label>
+                                    <input type="text" class="form-control border-light-subtle shadow-none" id="currency_symbol" name="ecommerce[currency_symbol]" value="<?php echo htmlspecialchars($ecommerce_settings['currency_symbol']); ?>">
                                 </div>
                                 <div class="row g-3">
                                     <div class="col-md-6">
                                         <label for="tax_rate" class="form-label small fw-bold text-muted">Tax Rate (%)</label>
-                                        <input type="number" class="form-control" id="tax_rate" name="ecommerce[tax_rate]" value="<?php echo htmlspecialchars($ecommerce_settings['tax_rate']); ?>" step="0.01" min="0">
+                                        <input type="number" class="form-control border-light-subtle shadow-none" id="tax_rate" name="ecommerce[tax_rate]" value="<?php echo htmlspecialchars($ecommerce_settings['tax_rate']); ?>" step="0.01" min="0">
                                     </div>
                                     <div class="col-md-6">
                                         <label for="tax_calculation_method" class="form-label small fw-bold text-muted">Calculation</label>
-                                        <select class="form-select" id="tax_calculation_method" name="ecommerce[tax_calculation_method]">
+                                        <select class="form-select border-light-subtle shadow-none" id="tax_calculation_method" name="ecommerce[tax_calculation_method]">
                                             <option value="exclusive" <?php echo $ecommerce_settings['tax_calculation_method'] === 'exclusive' ? 'selected' : ''; ?>>Exclusive</option>
                                             <option value="inclusive" <?php echo $ecommerce_settings['tax_calculation_method'] === 'inclusive' ? 'selected' : ''; ?>>Inclusive</option>
                                         </select>
@@ -519,101 +520,115 @@ include 'header.php';
                             </div>
                         </div>
 
-                        <div class="col-md-6">
-                            <div class="card border-0 shadow-sm p-4 h-100">
-                                <h3 class="h6 fw-bold text-uppercase text-muted mb-4 ls-1">
-                                    <i class="fas fa-truck me-2 text-primary"></i> Shipping Options
-                                </h3>
-                                <div class="row g-3 mb-3">
-                                    <div class="col-md-6">
-                                        <label class="form-label small fw-bold text-muted">Standard Cost (<?php echo $ecommerce_settings['currency_symbol']; ?>)</label>
-                                        <input type="number" class="form-control" name="ecommerce[shipping_cost_standard]" value="<?php echo htmlspecialchars($ecommerce_settings['shipping_cost_standard']); ?>" min="0" step="0.01">
-                                    </div>
-                                    <div class="col-md-6">
-                                        <label class="form-label small fw-bold text-muted">Express Cost (<?php echo $ecommerce_settings['currency_symbol']; ?>)</label>
-                                        <input type="number" class="form-control" name="ecommerce[shipping_cost_express]" value="<?php echo htmlspecialchars($ecommerce_settings['shipping_cost_express']); ?>" min="0" step="0.01">
-                                    </div>
-                                </div>
-                                <div class="mb-0">
-                                    <label class="form-label small fw-bold text-muted">Free Shipping Threshold (<?php echo $ecommerce_settings['currency_symbol']; ?>)</label>
-                                    <input type="number" class="form-control" name="ecommerce[shipping_free_threshold]" value="<?php echo htmlspecialchars($ecommerce_settings['shipping_free_threshold']); ?>" min="0" step="0.01">
-                                    <div class="form-text small">Orders above this amount qualify for free shipping.</div>
-                                </div>
-                            </div>
-                        </div>
-
+                        <!-- Right Column: Payment Gateways -->
                         <div class="col-lg-8">
-                            <div class="card border-0 shadow-sm p-4 h-100">
+                            <div class="card border-0 shadow-sm p-4">
                                 <h3 class="h6 fw-bold text-uppercase text-muted mb-4 ls-1">
                                     <i class="fas fa-credit-card me-2 text-success"></i> Payment Gateways
                                 </h3>
-                                <div class="p-3 border rounded-3 bg-light mb-4">
-                                    <div class="d-flex align-items-center justify-content-between mb-3 pb-2 border-bottom">
-                                        <div class="d-flex align-items-center gap-2">
-                                            <i class="fab fa-cc-paypal fs-3 text-primary"></i>
-                                            <h6 class="fw-bold mb-0">PayPal Payments</h6>
-                                        </div>
-                                        <div class="form-check form-switch">
-                                            <input class="form-check-input" type="checkbox" name="ecommerce[paypal_enabled]" value="1" <?php echo $ecommerce_settings['paypal_enabled'] == '1' ? 'checked' : ''; ?>>
+                                
+                                <!-- Global Gateways -->
+                                <div class="row g-3 mb-4">
+                                    <div class="col-md-6">
+                                        <div class="p-3 border rounded-3 bg-light h-100">
+                                            <div class="d-flex align-items-center justify-content-between mb-3 pb-2 border-bottom">
+                                                <div class="d-flex align-items-center gap-2">
+                                                    <i class="fab fa-cc-paypal fs-4 text-primary"></i>
+                                                    <h6 class="fw-bold mb-0 small">PayPal</h6>
+                                                </div>
+                                                <div class="form-check form-switch">
+                                                    <input class="form-check-input shadow-none" type="checkbox" name="ecommerce[paypal_enabled]" value="1" <?php echo $ecommerce_settings['paypal_enabled'] == '1' ? 'checked' : ''; ?>>
+                                                </div>
+                                            </div>
+                                            <div class="mb-2">
+                                                <label class="form-label x-small fw-bold text-muted">Client ID</label>
+                                                <input type="text" class="form-control form-control-sm border-light-subtle shadow-none" name="ecommerce[paypal_client_id]" value="<?php echo htmlspecialchars($ecommerce_settings['paypal_client_id']); ?>">
+                                            </div>
+                                            <div>
+                                                <label class="form-label x-small fw-bold text-muted">Secret</label>
+                                                <input type="password" class="form-control form-control-sm border-light-subtle shadow-none" name="ecommerce[paypal_secret]" value="<?php echo htmlspecialchars($ecommerce_settings['paypal_secret']); ?>">
+                                            </div>
                                         </div>
                                     </div>
-                                    <div class="row g-3">
-                                        <div class="col-md-6">
-                                            <label class="form-label small fw-bold text-muted">Client ID</label>
-                                            <input type="text" class="form-control form-control-sm" name="ecommerce[paypal_client_id]" value="<?php echo htmlspecialchars($ecommerce_settings['paypal_client_id']); ?>">
-                                        </div>
-                                        <div class="col-md-6">
-                                            <label class="form-label small fw-bold text-muted">Client Secret</label>
-                                            <input type="password" class="form-control form-control-sm" name="ecommerce[paypal_secret]" value="<?php echo htmlspecialchars($ecommerce_settings['paypal_secret']); ?>">
+                                    <div class="col-md-6">
+                                        <div class="p-3 border rounded-3 bg-light h-100">
+                                            <div class="d-flex align-items-center justify-content-between mb-3 pb-2 border-bottom">
+                                                <div class="d-flex align-items-center gap-2">
+                                                    <i class="fab fa-cc-stripe fs-4 text-info"></i>
+                                                    <h6 class="fw-bold mb-0 small">Stripe</h6>
+                                                </div>
+                                                <div class="form-check form-switch">
+                                                    <input class="form-check-input shadow-none" type="checkbox" name="ecommerce[stripe_enabled]" value="1" <?php echo $ecommerce_settings['stripe_enabled'] == '1' ? 'checked' : ''; ?>>
+                                                </div>
+                                            </div>
+                                            <div class="mb-2">
+                                                <label class="form-label x-small fw-bold text-muted">Publishable Key</label>
+                                                <input type="text" class="form-control form-control-sm border-light-subtle shadow-none" name="ecommerce[stripe_publishable_key]" value="<?php echo htmlspecialchars($ecommerce_settings['stripe_publishable_key']); ?>">
+                                            </div>
+                                            <div>
+                                                <label class="form-label x-small fw-bold text-muted">Secret Key</label>
+                                                <input type="password" class="form-control form-control-sm border-light-subtle shadow-none" name="ecommerce[stripe_secret_key]" value="<?php echo htmlspecialchars($ecommerce_settings['stripe_secret_key']); ?>">
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
 
-                                <div class="p-3 border rounded-3 bg-light">
-                                    <div class="d-flex align-items-center justify-content-between mb-3 pb-2 border-bottom">
-                                        <div class="d-flex align-items-center gap-2">
-                                            <i class="fab fa-cc-stripe fs-3 text-info"></i>
-                                            <h6 class="fw-bold mb-0">Stripe Payments</h6>
-                                        </div>
-                                        <div class="form-check form-switch">
-                                            <input class="form-check-input" type="checkbox" name="ecommerce[stripe_enabled]" value="1" <?php echo $ecommerce_settings['stripe_enabled'] == '1' ? 'checked' : ''; ?>>
+                                <!-- Local Gateways -->
+                                <div class="row g-3">
+                                    <div class="col-md-6">
+                                        <div class="p-3 border rounded-3 bg-light h-100">
+                                            <div class="d-flex align-items-center justify-content-between mb-3 pb-2 border-bottom">
+                                                <div class="d-flex align-items-center gap-2">
+                                                    <i class="fas fa-mobile-alt fs-4 text-danger"></i>
+                                                    <h6 class="fw-bold mb-0 small">BaridiMob / CCP</h6>
+                                                </div>
+                                                <div class="form-check form-switch">
+                                                    <input class="form-check-input shadow-none" type="checkbox" name="ecommerce[baridimob_enabled]" value="1" <?php echo $ecommerce_settings['baridimob_enabled'] == '1' ? 'checked' : ''; ?>>
+                                                </div>
+                                            </div>
+                                            <div class="mb-2">
+                                                <label class="form-label x-small fw-bold text-muted">CCP Number</label>
+                                                <input type="text" class="form-control form-control-sm border-light-subtle shadow-none" name="ecommerce[baridimob_ccp]" value="<?php echo htmlspecialchars($ecommerce_settings['baridimob_ccp']); ?>">
+                                            </div>
+                                            <div class="mb-2">
+                                                <label class="form-label x-small fw-bold text-muted">RIP Number</label>
+                                                <input type="text" class="form-control form-control-sm border-light-subtle shadow-none" name="ecommerce[baridimob_rip]" value="<?php echo htmlspecialchars($ecommerce_settings['baridimob_rip']); ?>">
+                                            </div>
+                                            <div>
+                                                <label class="form-label x-small fw-bold text-muted">Holder Name</label>
+                                                <input type="text" class="form-control form-control-sm border-light-subtle shadow-none" name="ecommerce[baridimob_holder]" value="<?php echo htmlspecialchars($ecommerce_settings['baridimob_holder']); ?>">
+                                            </div>
                                         </div>
                                     </div>
-                                    <div class="row g-3">
-                                        <div class="col-md-6">
-                                            <label class="form-label small fw-bold text-muted">Publishable Key</label>
-                                            <input type="text" class="form-control form-control-sm" name="ecommerce[stripe_publishable_key]" value="<?php echo htmlspecialchars($ecommerce_settings['stripe_publishable_key']); ?>">
-                                        </div>
-                                        <div class="col-md-6">
-                                            <label class="form-label small fw-bold text-muted">Secret Key</label>
-                                            <input type="password" class="form-control form-control-sm" name="ecommerce[stripe_secret_key]" value="<?php echo htmlspecialchars($ecommerce_settings['stripe_secret_key']); ?>">
+                                    <div class="col-md-6">
+                                        <div class="p-3 border rounded-3 bg-light h-100">
+                                            <div class="d-flex align-items-center justify-content-between mb-3 pb-2 border-bottom">
+                                                <div class="d-flex align-items-center gap-2">
+                                                    <img src="https://chargily.com/wp-content/uploads/2022/03/Chargily-Pay-Logo-1.png" height="20" alt="Chargily">
+                                                    <h6 class="fw-bold mb-0 small">Chargily Pay</h6>
+                                                </div>
+                                                <div class="form-check form-switch">
+                                                    <input class="form-check-input shadow-none" type="checkbox" name="ecommerce[chargily_enabled]" value="1" <?php echo $ecommerce_settings['chargily_enabled'] == '1' ? 'checked' : ''; ?>>
+                                                </div>
+                                            </div>
+                                            <div class="mb-2">
+                                                <label class="form-label x-small fw-bold text-muted">API Public Key</label>
+                                                <input type="text" class="form-control form-control-sm border-light-subtle shadow-none" name="ecommerce[chargily_api_key]" value="<?php echo htmlspecialchars($ecommerce_settings['chargily_api_key']); ?>">
+                                            </div>
+                                            <div class="mb-3">
+                                                <label class="form-label x-small fw-bold text-muted">API Secret Key</label>
+                                                <input type="password" class="form-control form-control-sm border-light-subtle shadow-none" name="ecommerce[chargily_secret_key]" value="<?php echo htmlspecialchars($ecommerce_settings['chargily_secret_key']); ?>">
+                                            </div>
+                                            <div class="alert alert-info py-2 px-3 border-0 mb-0" style="font-size: 10px;">
+                                                <i class="fas fa-info-circle me-1"></i> Supports Edahabia and local CIB cards.
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
                             </div>
                         </div>
-
-                        <div class="col-lg-4">
-                            <div class="card border-0 shadow-sm p-4 h-100">
-                                <h3 class="h6 fw-bold text-uppercase text-muted mb-4 ls-1">
-                                    <i class="fas fa-boxes me-2 text-info"></i> Inventory
-                                </h3>
-                                <div class="mb-4 pb-3 border-bottom">
-                                    <div class="d-flex align-items-center justify-content-between">
-                                        <label class="small fw-bold text-muted">Tracking</label>
-                                        <div class="form-check form-switch">
-                                            <input class="form-check-input" type="checkbox" name="ecommerce[inventory_tracking]" value="1" <?php echo $ecommerce_settings['inventory_tracking'] == '1' ? 'checked' : ''; ?>>
-                                        </div>
-                                    </div>
-                                    <div class="form-text small">Enable automatic stock deduction.</div>
-                                </div>
-                                <div>
-                                    <label class="form-label small fw-bold text-muted">Low Stock Alert</label>
-                                    <input type="number" class="form-control" name="ecommerce[low_stock_threshold]" value="<?php echo htmlspecialchars($ecommerce_settings['low_stock_threshold']); ?>" min="0">
-                                    <div class="form-text small">Notify when stock is below this.</div>
-                                </div>
-                            </div>
-                        </div>
+                    </div>
+                </div>
                     </div>
                 </div>
 
@@ -845,7 +860,7 @@ include 'header.php';
                 </div>
             </div> <!-- End Tab Content -->
 
-            <div class="sticky-bottom bg-white border-top p-4 mt-5 mx-n4 mb-n4 shadow-sm z-1">
+            <div class="sticky-bottom bg-white border-top p-4 mt-5 shadow-sm z-1">
                 <div class="d-flex justify-content-end align-items-center gap-3">
                     <span class="text-muted small d-none d-md-inline">
                         <i class="fas fa-info-circle me-1"></i> Settings are applied globally

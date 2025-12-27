@@ -205,7 +205,12 @@ class Cart {
         
         $sql = "SELECT sc.*, p.name_en as product_name, p.final_price, p.stock_quantity as product_stock, 
                        pi.image_url as product_image,
-                       v.stock_quantity as variant_stock
+                       v.stock_quantity as variant_stock,
+                       v.variant_name,
+                       COALESCE(v.sku, p.sku) as product_sku,
+                       (SELECT JSON_OBJECTAGG(va.attribute_name, va.attribute_value) 
+                        FROM variant_attributes va 
+                        WHERE va.product_variant_id = v.id) as attributes_json
                 FROM shopping_cart sc
                 JOIN products p ON sc.product_id = p.id
                 LEFT JOIN product_images pi ON p.id = pi.product_id AND pi.is_primary = 1

@@ -3,6 +3,7 @@
 // Advanced Product Media Management System
 
 require_once __DIR__ . '/../db_connect.php';
+require_once __DIR__ . '/../includes/functions.php';
 
 class MediaManager {
     private $pdo;
@@ -36,11 +37,98 @@ class MediaManager {
     public function getRelativePath($productId, $filename) {
         return 'uploads/medias/products/' . $productId . '/' . $filename;
     }
+
+    /**
+     * Generate SEO-friendly filename
+     * Pattern: {product-slug}_{variant}_{sequence}.{extension}
+     */
+    private function generateSEOFilename($slug, $variant, $sequence, $extension, $type = 'image') {
+        // 1. Lowercase everything
+        $slug = strtolower($slug);
+        $variant = $variant ? strtolower($variant) : '';
+        $extension = strtolower($extension);
+
+        // 2. Spaces -> hyphens, Special chars removal (handled by create_slug usually, but enforcing here)
+        $slug = preg_replace('/[^a-z0-9-]/', '', str_replace(' ', '-', $slug));
+        $slug = preg_replace('/-+/', '-', $slug);
+
+        if ($variant) {
+            $variant = preg_replace('/[^a-z0-9-]/', '', str_replace(' ', '-', $variant));
+            $variant = preg_replace('/-+/', '-', $variant);
+        }
+
+        // 3. Construct parts
+        $parts = [$slug];
+        if ($variant) {
+            $parts[] = $variant;
+        }
+        
+        // Videos -> add "video" to sequence
+        $seqStr = str_pad($sequence, 2, '0', STR_PAD_LEFT);
+        if ($type === 'video') {
+            $parts[] = 'video-' . $seqStr;
+        } else {
+            $parts[] = $seqStr;
+        }
+
+        // Join with underscores
+        $filename = implode('_', $parts);
+
+        // 4. Max 100 characters per filename check (including extension)
+        $maxLen = 100 - strlen($extension) - 1; // -1 for dot
+        if (strlen($filename) > $maxLen) {
+            // Truncate slug to fit
+            // structure: slug + '_' + variant + '_' + sequence
+            $suffix = '';
+            if ($variant) {
+                $suffix .= '_' . $variant;
+            }
+            if ($type === 'video') {
+                $suffix .= '_video-' . $seqStr;
+            } else {
+                $suffix .= '_' . $seqStr;
+            }
+            
+            $allowedSlugLen = $maxLen - strlen($suffix);
+            if ($allowedSlugLen < 1) $allowedSlugLen = 1; // Safety
+            
+            $slug = substr($slug, 0, $allowedSlugLen);
+            $filename = $slug . $suffix;
+        }
+
+        return $filename . '.' . $extension;
+    }
+
+    /**
+     * Get next sequence number for a product
+     */
+    private function getNextSequence($productId) {
+        // Count images
+        $sql = "SELECT COUNT(*) FROM product_images WHERE product_id = ?";
+        $stmt = $this->pdo->prepare($sql);
+        $stmt->execute([$productId]);
+        $count = $stmt->fetchColumn();
+        
+        // Count videos (only 1 usually, but good to account for it if we unify numbering or just for offset)
+        // The prompt implies sequential numbering "01, 02...". 
+        // Usually images and videos might share the sequence or be separate. 
+        // "logitech-g502-hero_black_01.jpg" vs "product-name_video-01.mp4".
+        // Let's keep a running count of all media for safety, or just images. 
+        // Since video has "_video-01", it implies a separate sequence or just a tag.
+        // But "Number sequentially in upload order" usually implies global counter or per-type.
+        // Let's use the total media count + 1 as the starting sequence for this batch.
+        
+        // Actually, if I upload 3 images, they should be 01, 02, 03.
+        // If I upload 3 more later, they should be 04, 05, 06.
+        // So checking DB count is correct.
+        
+        return $count + 1;
+    }
     
     /**
      * Upload mixed media (images and videos) for a product
      */
-    public function uploadMedia($productId, $files, $setPrimaryIfFirst = true) {
+    public function uploadMedia($productId, $files, $setPrimaryIfFirst = true, $slug = 'product', $variant = null) {
         $uploadedImages = [];
         $uploadedVideos = [];
         $errors = [];
@@ -57,6 +145,9 @@ class MediaManager {
         $existingImages = $this->getProductImages($productId);
         $isFirstImage = empty($existingImages);
         $firstImageProcessed = false;
+
+        // Determine starting sequence
+        $currentSequence = $this->getNextSequence($productId);
         
         foreach ($files['name'] as $index => $name) {
             if ($files['error'][$index] === UPLOAD_ERR_OK) {
@@ -78,7 +169,9 @@ class MediaManager {
                             continue;
                         }
                         
-                        $newName = uniqid('img_' . time() . '_') . '.' . $extension;
+                        $newName = $this->generateSEOFilename($slug, $variant, $currentSequence, $extension, 'image');
+                        $currentSequence++; // Increment for next file
+                        
                         $destination = $uploadDir . $newName;
                         
                         if ($this->optimizeAndMoveImage($tmpName, $destination, $extension)) {
@@ -117,7 +210,12 @@ class MediaManager {
                             continue;
                         }
                         
-                        $newName = uniqid('vid_' . time() . '_') . '.' . $extension;
+                        // For video, we can reset sequence or use the same global counter. 
+                        // "product-name_video-01.mp4"
+                        // If we use the same counter, it might be "product_05" (image) and "product_video-06" (video).
+                        // Let's use 1 for video if it's the only one, or increment if we support multiple. 
+                        // The code supports 1 video. So let's use 01.
+                        $newName = $this->generateSEOFilename($slug, $variant, 1, $extension, 'video');
                         $destination = $uploadDir . $newName;
                         
                         if (move_uploaded_file($tmpName, $destination)) {
@@ -162,7 +260,7 @@ class MediaManager {
     /**
      * Upload multiple images for a product
      */
-    public function uploadImages($productId, $files, $setPrimaryIfFirst = true) {
+    public function uploadImages($productId, $files, $setPrimaryIfFirst = true, $slug = 'product', $variant = null) {
         $uploadedImages = [];
         $errors = [];
         
@@ -177,6 +275,9 @@ class MediaManager {
         // Check if this is the first image (for primary setting)
         $existingImages = $this->getProductImages($productId);
         $isFirstImage = empty($existingImages);
+
+        // Determine starting sequence
+        $currentSequence = $this->getNextSequence($productId);
         
         foreach ($files['name'] as $index => $name) {
             if ($files['error'][$index] === UPLOAD_ERR_OK) {
@@ -204,7 +305,9 @@ class MediaManager {
                     }
                     
                     // Generate unique filename
-                    $newName = uniqid('img_' . time() . '_') . '.' . $extension;
+                    $newName = $this->generateSEOFilename($slug, $variant, $currentSequence, $extension, 'image');
+                    $currentSequence++;
+
                     $destination = $uploadDir . $newName;
                     
                     // Optimize and move image
@@ -247,7 +350,7 @@ class MediaManager {
     /**
      * Upload a video for a product
      */
-    public function uploadVideo($productId, $file) {
+    public function uploadVideo($productId, $file, $slug = 'product', $variant = null) {
         // Check if product exists
         if (!$this->productExists($productId)) {
             throw new Exception("Product not found");
@@ -276,7 +379,7 @@ class MediaManager {
         $uploadDir = $this->getProductMediaDir($productId, true);
         
         // Generate unique filename
-        $newName = uniqid('vid_' . time() . '_') . '.' . $extension;
+        $newName = $this->generateSEOFilename($slug, $variant, 1, $extension, 'video');
         $destination = $uploadDir . $newName;
         
         // Move video

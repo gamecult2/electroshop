@@ -36,7 +36,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_banner'])) {
     if (isset($_FILES['desktop_image']) && $_FILES['desktop_image']['error'] === UPLOAD_ERR_OK) {
         $uploadDir = '../uploads/images/banners/';
         if (!is_dir($uploadDir)) mkdir($uploadDir, 0755, true);
-        $filename = uniqid() . '-' . basename($_FILES['desktop_image']['name']);
+        
+        $extension = strtolower(pathinfo($_FILES['desktop_image']['name'], PATHINFO_EXTENSION));
+        $filename = create_slug($title) . '-desktop-' . substr(md5(uniqid()), 0, 8) . '.' . $extension;
+        
         $targetFile = $uploadDir . $filename;
         if (move_uploaded_file($_FILES['desktop_image']['tmp_name'], $targetFile)) {
             $desktop_image = 'uploads/images/banners/' . $filename;
@@ -47,7 +50,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_banner'])) {
     if (isset($_FILES['mobile_image']) && $_FILES['mobile_image']['error'] === UPLOAD_ERR_OK) {
         $uploadDir = '../uploads/images/banners/';
         if (!is_dir($uploadDir)) mkdir($uploadDir, 0755, true);
-        $filename = uniqid() . '-' . basename($_FILES['mobile_image']['name']);
+        
+        $extension = strtolower(pathinfo($_FILES['mobile_image']['name'], PATHINFO_EXTENSION));
+        $filename = create_slug($title) . '-mobile-' . substr(md5(uniqid()), 0, 8) . '.' . $extension;
+        
         $targetFile = $uploadDir . $filename;
         if (move_uploaded_file($_FILES['mobile_image']['tmp_name'], $targetFile)) {
             $mobile_image = 'uploads/images/banners/' . $filename;
@@ -82,7 +88,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
     if (isset($_FILES['desktop_image']) && $_FILES['desktop_image']['error'] === UPLOAD_ERR_OK) {
         $uploadDir = '../uploads/images/banners/';
         if (!is_dir($uploadDir)) mkdir($uploadDir, 0755, true);
-        $filename = uniqid() . '-' . basename($_FILES['desktop_image']['name']);
+        
+        $extension = strtolower(pathinfo($_FILES['desktop_image']['name'], PATHINFO_EXTENSION));
+        $filename = create_slug($title) . '-desktop-' . substr(md5(uniqid()), 0, 8) . '.' . $extension;
+        
         $targetFile = $uploadDir . $filename;
         if (move_uploaded_file($_FILES['desktop_image']['tmp_name'], $targetFile)) {
             $desktop_image = 'uploads/images/banners/' . $filename;
@@ -93,7 +102,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action']) && $_POST['
     if (isset($_FILES['mobile_image']) && $_FILES['mobile_image']['error'] === UPLOAD_ERR_OK) {
         $uploadDir = '../uploads/images/banners/';
         if (!is_dir($uploadDir)) mkdir($uploadDir, 0755, true);
-        $filename = uniqid() . '-' . basename($_FILES['mobile_image']['name']);
+        
+        $extension = strtolower(pathinfo($_FILES['mobile_image']['name'], PATHINFO_EXTENSION));
+        $filename = create_slug($title) . '-mobile-' . substr(md5(uniqid()), 0, 8) . '.' . $extension;
+        
         $targetFile = $uploadDir . $filename;
         if (move_uploaded_file($_FILES['mobile_image']['tmp_name'], $targetFile)) {
             $mobile_image = 'uploads/images/banners/' . $filename;

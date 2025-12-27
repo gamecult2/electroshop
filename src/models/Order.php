@@ -15,10 +15,16 @@ class Order {
                 FROM orders o 
                 LEFT JOIN customers c ON o.customer_id = c.id";
         $params = [];
+        $where = ["o.is_archived = ?"];
+        $params[] = isset($filters['is_archived']) ? (int)$filters['is_archived'] : 0;
         
         if (!empty($filters['status'])) {
-            $sql .= " WHERE o.status = ?";
+            $where[] = "o.status = ?";
             $params[] = $filters['status'];
+        }
+        
+        if (!empty($where)) {
+            $sql .= " WHERE " . implode(" AND ", $where);
         }
         
         $sql .= " ORDER BY o.created_at DESC LIMIT ? OFFSET ?";
@@ -33,15 +39,49 @@ class Order {
     public function getCount($filters = []) {
         $sql = "SELECT COUNT(*) FROM orders o LEFT JOIN customers c ON o.customer_id = c.id";
         $params = [];
+        $where = ["o.is_archived = ?"];
+        $params[] = isset($filters['is_archived']) ? (int)$filters['is_archived'] : 0;
         
         if (!empty($filters['status'])) {
-            $sql .= " WHERE o.status = ?";
+            $where[] = "o.status = ?";
             $params[] = $filters['status'];
+        }
+
+        if (!empty($where)) {
+            $sql .= " WHERE " . implode(" AND ", $where);
         }
         
         $stmt = $this->pdo->prepare($sql);
         $stmt->execute($params);
         return $stmt->fetchColumn();
+    }
+
+    public function archive($id, $isArchived = 1) {
+        $sql = "UPDATE orders SET is_archived = ?, updated_at = NOW() WHERE id = ?";
+        $stmt = $this->pdo->prepare($sql);
+        return $stmt->execute([(int)$isArchived, $id]);
+    }
+
+    public function delete($id) {
+        try {
+            $this->pdo->beginTransaction();
+            
+            // 1. Delete order items
+            $this->pdo->prepare("DELETE FROM order_items WHERE order_id = ?")->execute([$id]);
+            
+            // 2. Delete order history
+            $this->pdo->prepare("DELETE FROM order_status_history WHERE order_id = ?")->execute([$id]);
+            
+            // 3. Delete order record
+            $result = $this->pdo->prepare("DELETE FROM orders WHERE id = ?")->execute([$id]);
+            
+            $this->pdo->commit();
+            return $result;
+        } catch (Exception $e) {
+            if ($this->pdo->inTransaction()) $this->pdo->rollBack();
+            error_log("Order::delete Error: " . $e->getMessage());
+            return false;
+        }
     }
     
     public function getById($id) {
@@ -98,15 +138,48 @@ class Order {
     }
 
     public function cancel($id, $reason = '') {
-        $sql = "UPDATE orders SET status = 'cancelled', cancelled_at = NOW(), cancelled_reason = ? WHERE id = ?";
-        $stmt = $this->pdo->prepare($sql);
-        return $stmt->execute([$reason, $id]);
+        try {
+            $this->pdo->beginTransaction();
+
+            // 1. Update order status
+            $sql = "UPDATE orders SET status = 'cancelled', cancelled_at = NOW(), cancelled_reason = ? WHERE id = ?";
+            $stmt = $this->pdo->prepare($sql);
+            $stmt->execute([$reason, $id]);
+
+            // 2. Get order items to restore inventory
+            $items = $this->getItems($id);
+            
+            // 3. Restore inventory for each item
+            $restoreSql = "UPDATE products SET stock_quantity = stock_quantity + ? WHERE id = ?";
+            $restoreStmt = $this->pdo->prepare($restoreSql);
+
+            foreach ($items as $item) {
+                $restoreStmt->execute([$item['quantity'], $item['product_id']]);
+                
+                // If there's a variant, we should also restore variant stock if it exists in DB
+                if (!empty($item['variant_id'])) {
+                    $vRestoreSql = "UPDATE product_variants SET stock_quantity = stock_quantity + ? WHERE id = ?";
+                    $vRestoreStmt = $this->pdo->prepare($vRestoreSql);
+                    $vRestoreStmt->execute([$item['quantity'], $item['variant_id']]);
+                }
+            }
+
+            $this->pdo->commit();
+            return true;
+        } catch (Exception $e) {
+            if ($this->pdo->inTransaction()) {
+                $this->pdo->rollBack();
+            }
+            error_log("Order::cancel Error: " . $e->getMessage());
+            return false;
+        }
     }
     
     public function getItems($orderId) {
         $sql = "SELECT oi.*, 
                        (SELECT image_url FROM product_images WHERE product_id = oi.product_id ORDER BY is_primary DESC, sort_order ASC LIMIT 1) as product_image,
-                       pv.variant_name
+                       COALESCE(oi.variant_name, pv.variant_name) as variant_name,
+                       oi.attributes_json
                 FROM order_items oi 
                 LEFT JOIN product_variants pv ON oi.variant_id = pv.id
                 WHERE oi.order_id = ?";
@@ -115,14 +188,41 @@ class Order {
         return $stmt->fetchAll();
     }
 
-    public function getAllOrdersWithUserDetails() {
+    public function getAllOrdersWithUserDetails($filters = []) {
         $sql = "SELECT o.*, c.first_name, c.last_name, c.email, c.phone,
                        COALESCE(o.customer_name, CONCAT(c.first_name, ' ', c.last_name)) AS username
                 FROM orders o
-                LEFT JOIN customers c ON o.customer_id = c.id
-                ORDER BY o.created_at DESC";
+                LEFT JOIN customers c ON o.customer_id = c.id";
+        
+        $where = [];
+        $params = [];
+
+        // Always filter by archived status
+        $where[] = "o.is_archived = ?";
+        $params[] = isset($filters['is_archived']) ? (int)$filters['is_archived'] : 0;
+
+        // Filter by status if provided
+        if (!empty($filters['status'])) {
+            $where[] = "o.status = ?";
+            $params[] = $filters['status'];
+        }
+
+        // Filter by search if provided
+        if (!empty($filters['search'])) {
+            $where[] = "(o.order_number LIKE ? OR o.customer_name LIKE ? OR c.first_name LIKE ? OR c.last_name LIKE ? OR c.email LIKE ?)";
+            $searchTerm = '%' . $filters['search'] . '%';
+            // Add parameter 5 times for the 5 OR conditions
+            for($i=0; $i<5; $i++) $params[] = $searchTerm;
+        }
+
+        if (!empty($where)) {
+            $sql .= " WHERE " . implode(" AND ", $where);
+        }
+
+        $sql .= " ORDER BY o.created_at DESC";
+        
         $stmt = $this->pdo->prepare($sql);
-        $stmt->execute();
+        $stmt->execute($params);
         return $stmt->fetchAll();
     }
     public function getUserOrders($customerId, $limit = null) {
@@ -200,9 +300,9 @@ class Order {
 
             // 2. Add order items
             $itemSql = "INSERT INTO order_items (
-                            order_id, product_id, variant_id, product_name, 
+                            order_id, product_id, variant_id, variant_name, attributes_json, product_name, 
                             product_sku, quantity, price_at_purchase, total_price
-                        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
+                        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
             $itemStmt = $this->pdo->prepare($itemSql);
 
             foreach ($data['items'] as $item) {
@@ -210,11 +310,13 @@ class Order {
                     $orderId,
                     $item['product_id'],
                     $item['variant_id'] ?? null,
+                    $item['variant_name'] ?? null,
+                    $item['attributes_json'] ?? null,
                     $item['product_name'],
                     $item['product_sku'] ?? null,
                     $item['quantity'],
-                    $item['price_at_time'],
-                    $item['quantity'] * $item['price_at_time']
+                    $item['price_at_purchase'] ?? $item['price_at_time'],
+                    $item['quantity'] * ($item['price_at_purchase'] ?? $item['price_at_time'])
                 ]);
 
                 // 3. Update product stock

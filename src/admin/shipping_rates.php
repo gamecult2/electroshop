@@ -13,29 +13,56 @@ $message = '';
 $messageType = '';
 $algerian_wilayas = get_algerian_wilayas(); // Assumes this function exists in functions.php
 
+// Load global shipping settings
+$global_settings = $pdo->query("SELECT setting_key, setting_value FROM site_settings WHERE setting_group = 'ecommerce'")->fetchAll(PDO::FETCH_KEY_PAIR);
+$std_cost = $global_settings['shipping_cost_standard'] ?? 500;
+$exp_cost = $global_settings['shipping_cost_express'] ?? 1000;
+$free_threshold = $global_settings['shipping_free_threshold'] ?? 10000;
+
 // Process rates for all wilayas
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['save_rates'])) {
-    foreach ($_POST['rates'] as $wilaya => $rate_data) {
-        $rate = (float)($rate_data['rate'] ?? 0);
-        $is_active = isset($rate_data['is_active']) ? 1 : 0;
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    if (isset($_POST['save_global_settings'])) {
+        $std_cost = (float)$_POST['shipping_cost_standard'];
+        $exp_cost = (float)$_POST['shipping_cost_express'];
+        $free_threshold = (float)$_POST['shipping_free_threshold'];
 
-        // Check if rate for this wilaya already exists
-        $stmt = $pdo->prepare("SELECT id FROM shipping_rates WHERE wilaya = ?");
-        $stmt->execute([$wilaya]);
-        $existing = $stmt->fetch();
+        $global_updates = [
+            'shipping_cost_standard' => $std_cost,
+            'shipping_cost_express' => $exp_cost,
+            'shipping_free_threshold' => $free_threshold
+        ];
 
-        if ($existing) {
-            // Update
-            $stmt = $pdo->prepare("UPDATE shipping_rates SET flat_rate = ?, is_active = ? WHERE id = ?");
-            $stmt->execute([$rate, $is_active, $existing['id']]);
-        } else {
-            // Insert
-            $stmt = $pdo->prepare("INSERT INTO shipping_rates (wilaya, flat_rate, is_active) VALUES (?, ?, ?)");
-            $stmt->execute([$wilaya, $rate, $is_active]);
+        foreach ($global_updates as $key => $val) {
+            $stmt = $pdo->prepare("UPDATE site_settings SET setting_value = ? WHERE setting_key = ?");
+            $stmt->execute([$val, $key]);
         }
+        $message = 'Global shipping settings updated.';
+        $messageType = 'success';
     }
-    $message = 'Shipping rates saved successfully.';
-    $messageType = 'success';
+
+    if (isset($_POST['save_rates'])) {
+        foreach ($_POST['rates'] as $wilaya => $rate_data) {
+            $rate = (float)($rate_data['rate'] ?? 0);
+            $is_active = isset($rate_data['is_active']) ? 1 : 0;
+
+            // Check if rate for this wilaya already exists
+            $stmt = $pdo->prepare("SELECT id FROM shipping_rates WHERE wilaya = ?");
+            $stmt->execute([$wilaya]);
+            $existing = $stmt->fetch();
+
+            if ($existing) {
+                // Update
+                $stmt = $pdo->prepare("UPDATE shipping_rates SET flat_rate = ?, is_active = ? WHERE id = ?");
+                $stmt->execute([$rate, $is_active, $existing['id']]);
+            } else {
+                // Insert
+                $stmt = $pdo->prepare("INSERT INTO shipping_rates (wilaya, flat_rate, is_active) VALUES (?, ?, ?)");
+                $stmt->execute([$wilaya, $rate, $is_active]);
+            }
+        }
+        $message = 'Shipping rates saved successfully.';
+        $messageType = 'success';
+    }
 }
 
 $shipping_rates_db = $pdo->query("SELECT wilaya, flat_rate, is_active FROM shipping_rates")->fetchAll(PDO::FETCH_ASSOC);
@@ -91,6 +118,45 @@ include 'header.php';
                             </div>
                         </div>
                     </div>
+                </div>
+            </div>
+
+            <!-- Global Shipping Options -->
+            <div class="card border-0 shadow-sm mb-4 rounded-4 overflow-hidden">
+                <div class="card-header bg-white py-3 border-0">
+                    <h6 class="mb-0 fw-bold small text-uppercase text-muted"><i class="fas fa-globe me-2 text-danger"></i> General Shipping Configuration</h6>
+                </div>
+                <div class="card-body p-4 pt-0">
+                    <form method="POST" action="shipping_rates.php">
+                        <div class="row g-3">
+                            <div class="col-md-4">
+                                <label class="form-label small fw-bold text-muted text-uppercase">Standard Base Cost</label>
+                                <div class="input-group">
+                                    <input type="number" name="shipping_cost_standard" value="<?php echo htmlspecialchars($std_cost); ?>" class="form-control border-light-subtle shadow-none" step="0.01">
+                                    <span class="input-group-text bg-light border-light-subtle text-muted small"><?php echo htmlspecialchars(get_setting('currency_code', 'DZD')); ?></span>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label small fw-bold text-muted text-uppercase">Express Base Cost</label>
+                                <div class="input-group">
+                                    <input type="number" name="shipping_cost_express" value="<?php echo htmlspecialchars($exp_cost); ?>" class="form-control border-light-subtle shadow-none" step="0.01">
+                                    <span class="input-group-text bg-light border-light-subtle text-muted small"><?php echo htmlspecialchars(get_setting('currency_code', 'DZD')); ?></span>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label small fw-bold text-muted text-uppercase">Free Shipping Above</label>
+                                <div class="input-group">
+                                    <input type="number" name="shipping_free_threshold" value="<?php echo htmlspecialchars($free_threshold); ?>" class="form-control border-light-subtle shadow-none" step="0.01">
+                                    <span class="input-group-text bg-light border-light-subtle text-muted small"><?php echo htmlspecialchars(get_setting('currency_code', 'DZD')); ?></span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="mt-4 text-end">
+                            <button type="submit" name="save_global_settings" class="btn btn-danger btn-sm rounded-pill px-4 fw-bold shadow-sm">
+                                <i class="fas fa-check-circle me-1"></i> Save Global Settings
+                            </button>
+                        </div>
+                    </form>
                 </div>
             </div>
 

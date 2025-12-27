@@ -97,10 +97,9 @@ class Product {
                 $sql .= "p.created_at DESC"; // Default to newest
         }
         
-        $sql .= " LIMIT ? OFFSET ?";
-        $params[] = $limit;
-        $params[] = $offset;
-        
+        // Use integer casting for LIMIT and OFFSET to avoid SQL syntax errors
+        $sql .= " LIMIT " . (int)$limit . " OFFSET " . (int)$offset;
+
         $stmt = $this->pdo->prepare($sql);
         $stmt->execute($params);
         return $stmt->fetchAll();

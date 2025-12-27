@@ -12,9 +12,10 @@ if (!isset($_SESSION['admin_logged_in']) || !$_SESSION['admin_logged_in']) {
 
 if (isset($_FILES['file']['name'])) {
     if (!$_FILES['file']['error']) {
-        $name = md5(rand(100, 200));
-        $ext = explode('.', $_FILES['file']['name']);
-        $filename = $name . '.' . end($ext);
+        $slug = isset($_POST['slug']) ? create_slug($_POST['slug']) : 'editor-image';
+        $ext = strtolower(pathinfo($_FILES['file']['name'], PATHINFO_EXTENSION));
+        $uniqueId = substr(md5(uniqid()), 0, 8);
+        $filename = $slug . '-content-' . $uniqueId . '.' . $ext;
         
         // Determine upload directory
         // Default to editor folder

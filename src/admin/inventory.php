@@ -14,21 +14,49 @@ if (!isset($_SESSION['admin_logged_in']) || !$_SESSION['admin_logged_in']) {
 $productModel = new Product();
 $categoryModel = new Category();
 
+// Load global inventory settings
+$global_settings = $pdo->query("SELECT setting_key, setting_value FROM site_settings WHERE setting_group = 'ecommerce'")->fetchAll(PDO::FETCH_KEY_PAIR);
+$inventory_tracking = ($global_settings['inventory_tracking'] ?? '1') === '1';
+$low_stock_threshold = (int)($global_settings['low_stock_threshold'] ?? 10);
+
 $message = '';
 $messageType = '';
-$low_stock_threshold = 10;
 
-// Handle Stock Update
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_stock'])) {
-    $productId = (int)$_POST['product_id'];
-    $quantity = (int)$_POST['quantity'];
+// Handle Settings & Stock Update
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    if (isset($_POST['save_global_settings'])) {
+        $tracking = isset($_POST['inventory_tracking']) ? '1' : '0';
+        $threshold = (int)$_POST['low_stock_threshold'];
 
-    if ($productModel->updateStock($productId, $quantity)) {
-        $message = 'Stock updated successfully.';
+        $global_updates = [
+            'inventory_tracking' => $tracking,
+            'low_stock_threshold' => $threshold
+        ];
+
+        foreach ($global_updates as $key => $val) {
+            $stmt = $pdo->prepare("UPDATE site_settings SET setting_value = ? WHERE setting_key = ?");
+            $stmt->execute([$val, $key]);
+        }
+        
+        // Refresh local variables
+        $inventory_tracking = ($tracking === '1');
+        $low_stock_threshold = $threshold;
+        
+        $message = 'Global inventory settings updated.';
         $messageType = 'success';
-    } else {
-        $message = 'Failed to update stock.';
-        $messageType = 'error';
+    }
+
+    if (isset($_POST['update_stock'])) {
+        $productId = (int)$_POST['product_id'];
+        $quantity = (int)$_POST['quantity'];
+
+        if ($productModel->updateStock($productId, $quantity)) {
+            $message = 'Stock updated successfully.';
+            $messageType = 'success';
+        } else {
+            $message = 'Failed to update stock.';
+            $messageType = 'error';
+        }
     }
 }
 
@@ -73,12 +101,72 @@ include 'header.php';
             <?php if ($message): ?>
                 <div class="alert alert-<?php echo ($messageType === 'success') ? 'success' : 'danger'; ?> alert-dismissible fade show border-0 shadow-sm mb-4" role="alert">
                     <div class="d-flex align-items-center">
-                        <i class="fas <?php echo ($messageType === 'success') ? 'fa-check-circle' : 'fa-exclamation-circle'; ?> me-2"></i>
+                        <i class="fas <?php echo ($messageType === 'success') ? 'fa-check-circle' : 'fa-exclamation-circle'; ?> me-3 fs-4"></i>
                         <div><?php echo htmlspecialchars($message); ?></div>
                     </div>
                     <button type="button" class="btn-close shadow-none" data-bs-dismiss="alert" aria-label="Close"></button>
                 </div>
             <?php endif; ?>
+
+            <div class="card border-0 shadow-sm mb-4">
+                <div class="card-body p-4">
+                    <div class="d-flex align-items-center justify-content-between flex-wrap gap-3">
+                        <div>
+                            <h5 class="fw-bold mb-1"><i class="fas fa-boxes me-2 text-primary"></i> Inventory Management</h5>
+                            <p class="text-muted small mb-0">Track stock levels and configure alerts for your products.</p>
+                        </div>
+                        <div class="d-flex gap-2">
+                            <div class="bg-light px-3 py-2 rounded-3 border border-light-subtle text-center">
+                                <div class="x-small text-muted text-uppercase fw-bold">Low Stock</div>
+                                <div class="fw-bold text-danger">
+                                    <?php 
+                                    $lowCount = $productModel->getProductsCount(['max_stock' => $low_stock_threshold, 'include_inactive' => true]);
+                                    echo $lowCount;
+                                    ?>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Global Inventory Configuration -->
+            <div class="card border-0 shadow-sm mb-4 rounded-4 overflow-hidden">
+                <div class="card-header bg-white py-3 border-0">
+                    <h6 class="mb-0 fw-bold small text-uppercase text-muted"><i class="fas fa-cog me-2 text-info"></i> Global Inventory Rules</h6>
+                </div>
+                <div class="card-body p-4 pt-0">
+                    <form method="POST" action="inventory.php">
+                        <div class="row g-4 align-items-center">
+                            <div class="col-md-6">
+                                <div class="p-3 rounded-3 bg-light border border-light-subtle">
+                                    <div class="form-check form-switch d-flex justify-content-between align-items-center ps-0 mb-0">
+                                        <div>
+                                            <label class="form-check-label fw-bold small text-dark" for="inventory_tracking">Automatic Inventory Tracking</label>
+                                            <div class="form-text x-small mt-0">Automatically deduct stock when orders are placed.</div>
+                                        </div>
+                                        <input class="form-check-input ms-0 shadow-none fs-5" type="checkbox" name="inventory_tracking" id="inventory_tracking" <?php echo $inventory_tracking ? 'checked' : ''; ?>>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="p-3 rounded-3 bg-light border border-light-subtle">
+                                    <label class="form-label small fw-bold text-muted text-uppercase mb-1">Low Stock Alert Threshold</label>
+                                    <div class="input-group input-group-sm">
+                                        <span class="input-group-text bg-white border-light-subtle text-muted"><i class="fas fa-exclamation-triangle"></i></span>
+                                        <input type="number" name="low_stock_threshold" value="<?php echo $low_stock_threshold; ?>" class="form-control border-light-subtle shadow-none fw-bold" min="0">
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-2 text-end">
+                                <button type="submit" name="save_global_settings" class="btn btn-info btn-sm w-100 rounded-pill py-2 fw-bold text-white shadow-sm">
+                                    <i class="fas fa-save me-1"></i> Save Rules
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
 
             <!-- Filter Bar -->
             <div class="card border-0 shadow-sm mb-4">
@@ -222,5 +310,3 @@ include 'header.php';
 
     <!-- Include the shared footer template -->
     <?php include 'footer.php'; ?>
-
-

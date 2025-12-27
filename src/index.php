@@ -170,6 +170,47 @@ $featured = $productModel->getAll(6, 0, ['is_featured' => 1]);
                         #mainBannerCarousel .carousel-item {
                             transition-duration: <?php echo $duration; ?>ms;
                         }
+                        
+                        #mainBannerCarousel .carousel-control-prev,
+                        #mainBannerCarousel .carousel-control-next {
+                            width: 60px !important;
+                            height: 60px !important;
+                            top: 50% !important;
+                            transform: translateY(-50%) !important;
+                            opacity: 1 !important;
+                            z-index: 2000 !important;
+                            display: flex !important;
+                            align-items: center !important;
+                            justify-content: center !important;
+                            background: none !important;
+                            border: none !important;
+                        }
+                        
+                        #mainBannerCarousel .carousel-control-prev { left: 15px !important; }
+                        #mainBannerCarousel .carousel-control-next { right: 15px !important; }
+                        
+                        .carousel-nav-btn {
+                            width: 48px;
+                            height: 48px;
+                            background-color: rgba(0, 0, 0, 0.6) !important;
+                            border: 2px solid rgba(255, 255, 255, 0.3) !important;
+                            color: white !important;
+                            border-radius: 50% !important;
+                            display: flex !important;
+                            align-items: center !important;
+                            justify-content: center !important;
+                            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+                            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3) !important;
+                        }
+                        
+                        #mainBannerCarousel .carousel-control-prev:hover .carousel-nav-btn,
+                        #mainBannerCarousel .carousel-control-next:hover .carousel-nav-btn {
+                            background-color: #dc3545 !important;
+                            border-color: white !important;
+                            transform: scale(1.1) !important;
+                            box-shadow: 0 6px 20px rgba(220, 53, 69, 0.5) !important;
+                        }
+
                         <?php if ($zoomStyle): ?>
                         #mainBannerCarousel .carousel-item.active .d-block {
                             animation: zoomInEffect <?php echo $duration + 4000; ?>ms ease-out forwards;
@@ -185,10 +226,10 @@ $featured = $productModel->getAll(6, 0, ['is_featured' => 1]);
                          data-bs-ride="<?php echo $ride; ?>" 
                          data-bs-interval="<?php echo $interval; ?>"
                          data-bs-pause="<?php echo $pause; ?>"
-                         style="height: <?php echo $carouselConfig['height']; ?> !important; width: <?php echo $carouselConfig['width']; ?> !important; border-radius: var(--bs-border-radius-lg, .5rem) !important;">
+                         style="height: <?php echo $carouselConfig['height']; ?> !important; width: <?php echo $carouselConfig['width']; ?> !important; border-radius: var(--bs-border-radius-lg, .5rem) !important; position: relative;">
                         
                         <?php if (($carouselConfig['show_indicators'] ?? true) && !empty($carouselSlides)): ?>
-                        <div class="carousel-indicators">
+                        <div class="carousel-indicators" style="z-index: 1000;">
                             <?php foreach ($carouselSlides as $i => $slide): ?>
                                 <button type="button" data-bs-target="#mainBannerCarousel" data-bs-slide-to="<?php echo $i; ?>" class="<?php echo $i === 0 ? 'active' : ''; ?>" aria-current="<?php echo $i === 0 ? 'true' : 'false'; ?>"></button>
                             <?php endforeach; ?>
@@ -226,13 +267,17 @@ $featured = $productModel->getAll(6, 0, ['is_featured' => 1]);
                             <?php endif; ?>
                         </div>
 
-                        <?php if (($carouselConfig['show_navigation'] ?? true) && count($carouselSlides) > 1): ?>
+                        <?php if ($carouselConfig['show_navigation'] ?? true): ?>
                             <button class="carousel-control-prev" type="button" data-bs-target="#mainBannerCarousel" data-bs-slide="prev">
-                                <span class="carousel-control-prev-icon bg-dark rounded-circle p-3" aria-hidden="true"></span>
+                                <div class="carousel-nav-btn">
+                                    <i class="fas fa-chevron-left"></i>
+                                </div>
                                 <span class="visually-hidden">Previous</span>
                             </button>
                             <button class="carousel-control-next" type="button" data-bs-target="#mainBannerCarousel" data-bs-slide="next">
-                                <span class="carousel-control-next-icon bg-dark rounded-circle p-3" aria-hidden="true"></span>
+                                <div class="carousel-nav-btn">
+                                    <i class="fas fa-chevron-right"></i>
+                                </div>
                                 <span class="visually-hidden">Next</span>
                             </button>
                         <?php endif; ?>
@@ -240,7 +285,7 @@ $featured = $productModel->getAll(6, 0, ['is_featured' => 1]);
                 </div>
 
                 <!-- Right: Quick Access Cards -->
-                <div class="col-lg-3 col-md-4" style="height: <?php echo $carouselConfig['height']; ?> !important;">
+                <div class="col-lg-3 col-md-4 d-none d-md-block" style="height: <?php echo $carouselConfig['height']; ?> !important;">
                     <div class="d-flex flex-column gap-2 h-100">
                         <div class="flex-grow-1" style="min-height: 0;">
                             <div class="card border-0 shadow-sm rounded-3 transition-all h-100 overflow-hidden" style="background: linear-gradient(135deg, #FF6B6B 0%, #FF8E53 100%);">
@@ -641,11 +686,6 @@ $featured = $productModel->getAll(6, 0, ['is_featured' => 1]);
     function formatCurrency(amount) {
         return new Intl.NumberFormat('en-DZ', { minimumFractionDigits: 0 }).format(amount) + ' DA';
     }
-</script>
-
-
-
-
 </script>
 
 <?php require_once 'includes/footer.php'; ?>

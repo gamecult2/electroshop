@@ -70,7 +70,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             // Handle Media Uploads (both images and videos) using MediaManager
             if (isset($_FILES['product_media']) && !empty($_FILES['product_media']['name'][0])) {
                 try {
-                    $uploadResult = $mediaManager->uploadMedia($productId, $_FILES['product_media'], false);
+                    $slug = create_slug($product['name_en']);
+                    $uploadResult = $mediaManager->uploadMedia($productId, $_FILES['product_media'], false, $slug);
                     
                     $msg = '';
                     if (!empty($uploadResult['success']['images']) || !empty($uploadResult['success']['videos'])) {
@@ -1041,6 +1042,7 @@ include 'header.php';
             let data = new FormData();
             data.append("file", file);
             data.append("product_id", <?php echo $productId; ?>);
+            data.append("slug", $('#name_en').val());
             $.ajax({
                 url: 'ajax/upload_editor_image.php',
                 cache: false,

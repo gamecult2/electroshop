@@ -63,3 +63,17 @@ if (!isset($pdo)) {
 require_once __DIR__ . '/functions.php';
 
 $lang = DEFAULT_LANGUAGE;
+
+// Maintenance Mode Check
+if (get_setting('maintenance_mode') === '1') {
+    $request_uri = $_SERVER['REQUEST_URI'];
+    $script_name = $_SERVER['SCRIPT_NAME'];
+    
+    $is_admin_path = strpos($request_uri, '/admin/') !== false || strpos($script_name, '/admin/') !== false;
+    $is_maintenance_page = strpos($request_uri, 'maintenance.php') !== false;
+    
+    if (!$is_admin_path && !$is_maintenance_page && !is_staff()) {
+        header('Location: ' . SITE_URL . '/maintenance.php');
+        exit;
+    }
+}

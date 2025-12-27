@@ -37,14 +37,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 }
 
 function handleCarouselSettingsUpdate() {
+    $showControls = isset($_POST['carousel_show_controls']);
     $newConfig = [
         'autoplay' => isset($_POST['carousel_autoplay']),
         'interval' => (int)$_POST['carousel_interval'] ?: 5000,
         'pause_on_hover' => isset($_POST['carousel_pause']),
         'animation_type' => $_POST['carousel_animation_type'] ?? 'slide',
         'animation_duration' => (int)$_POST['carousel_animation_duration'] ?: 500,
-        'show_navigation' => isset($_POST['carousel_show_navigation']),
-        'show_indicators' => isset($_POST['carousel_show_indicators']),
+        'show_navigation' => $showControls,
+        'show_indicators' => $showControls,
         'infinite_loop' => isset($_POST['carousel_infinite_loop']),
         'height' => !empty($_POST['carousel_height']) ? $_POST['carousel_height'] : '600px',
         'width' => !empty($_POST['carousel_width']) ? $_POST['carousel_width'] : '100%',
@@ -303,6 +304,12 @@ include 'header.php';
                                                 <div class="form-check form-switch d-flex justify-content-between align-items-center ps-0">
                                                     <label class="form-check-label fw-bold small text-dark" for="carousel_pause">Pause on Interaction</label>
                                                     <input class="form-check-input ms-0 shadow-none" type="checkbox" name="carousel_pause" id="carousel_pause" <?php echo (getCarouselConfig()['pause_on_hover']) ? 'checked' : ''; ?>>
+                                                </div>
+                                            </div>
+                                            <div class="col-12 bg-light p-2 rounded-3 border border-light-subtle">
+                                                <div class="form-check form-switch d-flex justify-content-between align-items-center ps-0">
+                                                    <label class="form-check-label fw-bold small text-dark" for="carousel_show_controls">Show Navigation</label>
+                                                    <input class="form-check-input ms-0 shadow-none" type="checkbox" name="carousel_show_controls" id="carousel_show_controls" <?php echo (getCarouselConfig()['show_navigation'] || getCarouselConfig()['show_indicators']) ? 'checked' : ''; ?>>
                                                 </div>
                                             </div>
                                         </div>

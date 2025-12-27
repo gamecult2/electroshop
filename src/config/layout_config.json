@@ -99,18 +99,18 @@
     },
     "carousel_config": {
         "autoplay": true,
-        "interval": 1000,
+        "interval": 3000,
         "pause_on_hover": true,
         "animation_type": "slide",
-        "animation_duration": 2000,
-        "show_navigation": false,
-        "show_indicators": false,
+        "animation_duration": 200,
+        "show_navigation": true,
+        "show_indicators": true,
         "infinite_loop": true,
         "height": "480px",
         "width": "100%",
         "overlay_opacity": 0.4,
         "lazy_loading": false,
         "cta_alignment": "center",
-        "text_color": "#b71a1a"
+        "text_color": "#ffffff"
     }
 }

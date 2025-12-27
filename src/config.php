@@ -9,8 +9,15 @@ define('DB_NAME', 'qwenshop');
 // Define site URL components
 define('SITE_PROTOCOL', (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? 'https' : 'http'));
 define('SITE_HOST', $_SERVER['HTTP_HOST'] ?? 'localhost');
-define('SITE_BASE_PATH', '/QwenShop/src'); // Adjust this based on your deployment path
-define('SITE_URL', SITE_PROTOCOL . '://' . SITE_HOST . SITE_BASE_PATH);
+
+// Dynamically determine the base path
+$current_dir = rtrim(str_replace('\\', '/', __DIR__), '/');
+$document_root = rtrim(str_replace('\\', '/', $_SERVER['DOCUMENT_ROOT']), '/');
+$base_path = str_replace($document_root, '', $current_dir);
+$base_path = '/' . ltrim($base_path, '/');
+
+define('SITE_BASE_PATH', $base_path); 
+define('SITE_URL', SITE_PROTOCOL . '://' . SITE_HOST . $base_path);
 define('SITE_TITLE', 'Online Store');
 define('SITE_EMAIL', 'contact@yourstore.dz');
 define('EMAIL_FROM_ADDRESS', SITE_EMAIL);

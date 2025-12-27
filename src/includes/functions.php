@@ -51,7 +51,7 @@ function redirect($location) {
 }
 
 function is_logged_in() {
-    return isset($_SESSION['customer_id']);
+    return isset($_SESSION['user_id']) || isset($_SESSION['customer_id']);
 }
 
 function is_admin() {
@@ -63,7 +63,7 @@ function is_staff() {
 }
 
 function get_current_user_id() {
-    return isset($_SESSION['customer_id']) ? $_SESSION['customer_id'] : null;
+    return $_SESSION['user_id'] ?? $_SESSION['customer_id'] ?? null;
 }
 
 function require_login() {
@@ -580,6 +580,30 @@ function export_user_data($userId) {
     ];
     
     return $data;
+}
+
+function time_elapsed_string($datetime, $full = false) {
+    $time = $datetime instanceof DateTime ? $datetime->getTimestamp() : strtotime($datetime);
+    $now = time();
+    $diff = $now - $time;
+    $days = floor($diff / 86400);
+
+    if ($days > 0) {
+        if ($days == 1) return '1 day ago';
+        if ($days < 7) return $days . ' days ago';
+        if ($days < 30) return ceil($days / 7) . ' weeks ago';
+        if ($days < 365) return ceil($days / 30) . ' months ago';
+        return ceil($days / 365) . ' years ago';
+    } else {
+        $hours = floor($diff / 3600);
+        if ($hours > 0) return $hours . ($hours == 1 ? ' hour' : ' hours') . ' ago';
+
+        $minutes = floor($diff / 60);
+        if ($minutes > 0) return $minutes . ($minutes == 1 ? ' minute' : ' minutes') . ' ago';
+
+        if ($diff < 60) return 'Just now';
+        return 'Just now';
+    }
 }
 
 function get_algerian_wilayas() {

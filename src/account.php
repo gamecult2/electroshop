@@ -110,11 +110,12 @@ $loyaltyTier = 'Silver';
                     <button class="list-group-item list-group-item-action py-3 border-0 d-flex align-items-center gap-3" data-bs-toggle="pill" data-bs-target="#addresses" type="button" role="tab">
                         <i class="fas fa-map-marker-alt text-secondary opacity-75" style="width: 20px;"></i> <span><?php echo t('addresses'); ?></span>
                     </button>
-                    <button class="list-group-item list-group-item-action py-3 border-0 d-flex align-items-center gap-3" data-bs-toggle="pill" data-bs-target="#payment" type="button" role="tab">
-                        <i class="fas fa-credit-card text-secondary opacity-75" style="width: 20px;"></i> <span>Payment Methods</span>
-                    </button>
                     <button class="list-group-item list-group-item-action py-3 border-0 d-flex align-items-center gap-3" data-bs-toggle="pill" data-bs-target="#wishlist" type="button" role="tab">
                         <i class="fas fa-heart text-secondary opacity-75" style="width: 20px;"></i> <span><?php echo t('wishlist'); ?></span>
+                    </button>
+                    <button class="list-group-item list-group-item-action py-3 border-0 d-flex align-items-center gap-3 position-relative" data-bs-toggle="pill" data-bs-target="#messages" type="button" role="tab">
+                        <i class="fas fa-comments text-secondary opacity-75" style="width: 20px;"></i> <span>Messages</span>
+                        <span class="badge bg-danger rounded-pill position-absolute top-50 end-0 translate-middle-y me-3 d-none" id="accountMessagesBadge">0</span>
                     </button>
                     <button class="list-group-item list-group-item-action py-3 border-0 d-flex align-items-center gap-3" data-bs-toggle="pill" data-bs-target="#reviews" type="button" role="tab">
                         <i class="fas fa-star text-secondary opacity-75" style="width: 20px;"></i> <span>My Reviews</span>
@@ -207,9 +208,9 @@ $loyaltyTier = 'Silver';
                         <div class="card-header bg-white border-bottom py-3">
                             <h2 class="h5 mb-0 fw-bold"><?php echo t('order_history'); ?></h2>
                         </div>
-                        <div class="card-body p-4">
+                        <div class="card-body p-0">
                             <?php if (empty($orders)): ?>
-                                <div class="text-center py-5">
+                                <div class="p-5 text-center">
                                     <div class="bg-light rounded-circle d-flex align-items-center justify-content-center mx-auto mb-4" style="width: 80px; height: 80px;">
                                         <i class="fas fa-shopping-bag text-muted fs-2"></i>
                                     </div>
@@ -217,31 +218,35 @@ $loyaltyTier = 'Silver';
                                     <a href="products.php" class="btn btn-danger rounded-pill px-5 fw-bold"><?php echo t('start_shopping'); ?></a>
                                 </div>
                             <?php else: ?>
-                                <div class="d-flex flex-column gap-4">
-                                    <?php foreach ($orders as $order): ?>
-                                    <div class="card border border-light-subtle rounded-4 overflow-hidden">
-                                        <div class="card-header bg-light py-3 px-4 border-bottom-0">
-                                            <div class="row g-3 align-items-center">
-                                                <div class="col-6 col-sm-3 text-center text-sm-start">
-                                                    <span class="d-block text-muted small text-uppercase"><?php echo t('order_number'); ?></span> 
-                                                    <strong class="small">#<?php echo $order['order_number']; ?></strong>
-                                                </div>
-                                                <div class="col-6 col-sm-3 text-center text-sm-start">
-                                                    <span class="d-block text-muted small text-uppercase"><?php echo t('order_date'); ?></span> 
-                                                    <strong class="small"><?php echo date('M d, Y', strtotime($order['created_at'])); ?></strong>
-                                                </div>
-                                                <div class="col-6 col-sm-3 text-center text-sm-start">
-                                                    <span class="d-block text-muted small text-uppercase"><?php echo t('total'); ?></span> 
-                                                    <div class="d-flex align-items-center justify-content-center justify-content-sm-start">
-                                                        <strong class="text-danger"><?php echo format_price($order['total_amount']); ?></strong>
+                                <div class="table-responsive">
+                                    <table class="table table-hover align-middle mb-0">
+                                        <thead class="table-light">
+                                            <tr>
+                                                <th class="border-0 px-4 py-3 small fw-bold text-muted text-uppercase"><?php echo t('order_number'); ?></th>
+                                                <th class="border-0 py-3 small fw-bold text-muted text-uppercase"><?php echo t('order_date'); ?></th>
+                                                <th class="border-0 py-3 small fw-bold text-muted text-uppercase"><?php echo t('total'); ?></th>
+                                                <th class="border-0 py-3 small fw-bold text-muted text-uppercase"><?php echo t('status'); ?></th>
+                                                <th class="border-0 px-4 py-3 small fw-bold text-muted text-uppercase text-end"><?php echo t('actions'); ?></th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <?php foreach ($orders as $order): ?>
+                                            <tr>
+                                                <td class="px-4 py-3">
+                                                    <strong class="text-dark small">#<?php echo $order['order_number']; ?></strong>
+                                                </td>
+                                                <td class="py-3">
+                                                    <span class="text-muted small"><?php echo date('M d, Y', strtotime($order['created_at'])); ?></span>
+                                                </td>
+                                                <td class="py-3">
+                                                    <div class="d-flex align-items-center">
+                                                        <strong class="text-danger small"><?php echo format_price($order['total_amount']); ?></strong>
                                                         <?php if (isset($order['discount_amount']) && $order['discount_amount'] > 0): ?>
-                                                            <span class="badge bg-success-subtle text-success border border-success-subtle ms-2 px-2 py-1" style="font-size: 0.6rem;" title="Discount Applied">
-                                                                <i class="fas fa-tag"></i>
-                                                            </span>
+                                                            <i class="fas fa-tag text-success ms-2" style="font-size: 0.7rem;" title="Discount Applied"></i>
                                                         <?php endif; ?>
                                                     </div>
-                                                </div>
-                                                <div class="col-6 col-sm-3 text-center text-sm-end">
+                                                </td>
+                                                <td class="py-3">
                                                     <span class="badge rounded-pill <?php 
                                                         echo match($order['status']) {
                                                             'pending' => 'bg-warning text-dark',
@@ -251,23 +256,20 @@ $loyaltyTier = 'Silver';
                                                             'cancelled' => 'bg-danger',
                                                             default => 'bg-secondary'
                                                         };
-                                                    ?> px-3 py-2 small shadow-sm"><?php echo t($order['status']); ?></span>
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <div class="card-body p-4 border-top">
-                                            <div class="d-flex flex-wrap justify-content-between align-items-center gap-3">
-                                                <div class="d-flex gap-2">
-                                                    <a href="order_details.php?id=<?php echo $order['id']; ?>" class="btn btn-outline-dark btn-sm rounded-pill px-4 fw-bold"><?php echo t('view'); ?></a>
-                                                    <?php if ($order['status'] === 'shipped' || $order['status'] === 'delivered'): ?>
-                                                        <button class="btn btn-outline-secondary btn-sm rounded-pill px-4 fw-bold" onclick="trackOrder('<?php echo $order['id']; ?>')"><?php echo t('track_order'); ?></button>
-                                                    <?php endif; ?>
-                                                </div>
-                                                <button class="btn btn-danger btn-sm rounded-pill px-4 fw-bold" onclick="reorder('<?php echo $order['id']; ?>')">Buy Again</button>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <?php endforeach; ?>
+                                                    ?> px-3 py-1 fw-bold" style="font-size: 10px; letter-spacing: 0.3px;"><?php echo strtoupper(t($order['status'])); ?></span>
+                                                </td>
+                                                <td class="px-4 py-3 text-end">
+                                                    <div class="d-flex justify-content-end gap-2">
+                                                        <a href="order_details.php?id=<?php echo $order['id']; ?>" class="btn btn-outline-dark btn-sm rounded-pill px-3 fw-bold shadow-xs" style="font-size: 11px;"><?php echo t('view'); ?></a>
+                                                        <?php if ($order['status'] === 'shipped' || $order['status'] === 'delivered'): ?>
+                                                            <button class="btn btn-outline-secondary btn-sm rounded-pill px-3 fw-bold shadow-xs" style="font-size: 11px;" onclick="trackOrder('<?php echo $order['id']; ?>')"><?php echo t('track_order'); ?></button>
+                                                        <?php endif; ?>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                            <?php endforeach; ?>
+                                        </tbody>
+                                    </table>
                                 </div>
                             <?php endif; ?>
                         </div>
@@ -429,25 +431,6 @@ $loyaltyTier = 'Silver';
                     </div>
                 </div>
                 
-                <!-- 5. PAYMENT METHODS -->
-                <div class="tab-pane fade" id="payment" role="tabpanel">
-                    <div class="card border-0 shadow-sm">
-                        <div class="card-header bg-white border-bottom py-3">
-                            <h2 class="h5 mb-0 fw-bold">Payment Methods</h2>
-                        </div>
-                        <div class="card-body p-4 text-center">
-                            <div class="py-5">
-                                <div class="bg-light rounded-circle d-flex align-items-center justify-content-center mx-auto mb-4" style="width: 80px; height: 80px;">
-                                    <i class="fas fa-credit-card text-secondary fs-3"></i>
-                                </div>
-                                <h3 class="h6 fw-bold">No saved payment methods</h3>
-                                <p class="text-muted small mb-4">Save your credit/debit cards for faster checkout.</p>
-                                <button class="btn btn-outline-dark rounded-pill px-4 fw-bold" onclick="alert('Feature coming soon!')">Add New Card</button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
                 <!-- 6. WISHLIST -->
                 <div class="tab-pane fade" id="wishlist" role="tabpanel">
                     <div class="card border-0 shadow-sm">
@@ -466,7 +449,49 @@ $loyaltyTier = 'Silver';
                     </div>
                 </div>
                 
-                <!-- 7. REVIEWS -->
+                <!-- 7. MESSAGES -->
+                <div class="tab-pane fade" id="messages" role="tabpanel">
+                    <div class="card border-0 shadow-sm">
+                        <div class="card-header bg-white border-bottom py-3 d-flex justify-content-between align-items-center">
+                            <h2 class="h5 mb-0 fw-bold">My Messages</h2>
+                            <button class="btn btn-danger btn-sm rounded-pill" onclick="toggleChatModal()">
+                                <i class="fas fa-plus me-1"></i> New Message
+                            </button>
+                        </div>
+                        <div class="card-body p-0">
+                            <div id="conversationsListAccount" class="list-group list-group-flush">
+                                <!-- Conversations will be loaded here -->
+                                <div class="text-center py-5">
+                                    <div class="spinner-border text-danger" role="status">
+                                        <span class="visually-hidden">Loading...</span>
+                                    </div>
+                                    <p class="text-muted mt-3">Loading conversations...</p>
+                                </div>
+                            </div>
+
+                            <!-- Pagination Controls -->
+                            <div id="paginationControlsAccount" class="d-none">
+                                <nav aria-label="Messages pagination" class="px-3 py-3">
+                                    <ul class="pagination justify-content-center mb-0">
+                                        <li class="page-item" id="prevPageAccount">
+                                            <a class="page-link" href="#" aria-label="Previous" onclick="loadAccountConversationsPage(currentPageAccount - 1)">
+                                                <span aria-hidden="true">&laquo;</span>
+                                            </a>
+                                        </li>
+                                        <!-- Page numbers will be dynamically added here -->
+                                        <li class="page-item" id="nextPageAccount">
+                                            <a class="page-link" href="#" aria-label="Next" onclick="loadAccountConversationsPage(currentPageAccount + 1)">
+                                                <span aria-hidden="true">&raquo;</span>
+                                            </a>
+                                        </li>
+                                    </ul>
+                                </nav>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- 8. REVIEWS -->
                 <div class="tab-pane fade" id="reviews" role="tabpanel">
                     <div class="card border-0 shadow-sm">
                         <div class="card-header bg-white border-bottom py-3">
@@ -860,36 +885,6 @@ function trackOrder(orderId) {
     new bootstrap.Modal(document.getElementById('trackingModal')).show();
 }
 
-function reorder(orderId) {
-    const btn = event.currentTarget;
-    const originalText = btn.innerHTML;
-    btn.disabled = true;
-    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Adding...';
-
-    fetch('api/reorder.php', {
-        method: 'POST',
-        headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify({order_id: orderId})
-    })
-    .then(res => res.json())
-    .then(data => {
-        btn.disabled = false;
-        btn.innerHTML = originalText;
-        if (data.success) {
-            showNotification(data.message, 'success');
-            updateCartBadge(); // Global function expected
-            setTimeout(() => window.location.href = 'cart.php', 500);
-        } else {
-            showNotification(data.error || 'Failed to reorder', 'error');
-        }
-    })
-    .catch(err => {
-        btn.disabled = false;
-        btn.innerHTML = originalText;
-        showNotification('Connection error', 'error');
-    });
-}
-
 function confirmDeleteAccount() {
     new bootstrap.Modal(document.getElementById('deleteAccountModal')).show();
 }
@@ -917,6 +912,184 @@ function deleteAccount() {
             alert(data.error || 'Failed to delete account');
         }
     });
+}
+
+// Current page for account messages pagination
+let currentPageAccount = 1;
+
+// Load conversations for account messages tab with pagination
+async function loadAccountConversations(page = 1) {
+    try {
+        const response = await fetch(`api/messages/conversations.php?page=${page}&limit=10`);
+        const text = await response.text();
+        let data;
+        try {
+            data = JSON.parse(text);
+        } catch (e) {
+            console.error('Invalid JSON response:', text);
+            throw new Error('Invalid server response');
+        }
+
+        if (data.success) {
+            displayAccountConversations(data.conversations);
+            updateAccountPaginationControls(data.pagination);
+        } else {
+            throw new Error(data.message || 'Unknown error occurred');
+        }
+    } catch (error) {
+        console.error('Error loading conversations:', error);
+        document.getElementById('conversationsListAccount').innerHTML = `
+            <div class="text-center py-5">
+                <i class="fas fa-exclamation-triangle text-warning fs-1 mb-3 d-block"></i>
+                <p class="text-muted">Failed to load conversations: ${error.message}</p>
+            </div>
+        `;
+    }
+}
+
+// Load conversations for a specific page
+async function loadAccountConversationsPage(page) {
+    // Validate page number
+    if (page < 1 || (window.accountPaginationData && page > window.accountPaginationData.total_pages)) {
+        return;
+    }
+
+    currentPageAccount = page;
+    loadAccountConversations(page);
+}
+
+// Update pagination controls for account messages
+function updateAccountPaginationControls(pagination) {
+    window.accountPaginationData = pagination;
+    const container = document.getElementById('paginationControlsAccount');
+    const prevBtn = document.getElementById('prevPageAccount');
+    const nextBtn = document.getElementById('nextPageAccount');
+
+    // Show pagination controls
+    container.classList.remove('d-none');
+
+    // Update previous button state
+    if (currentPageAccount <= 1) {
+        prevBtn.classList.add('disabled');
+    } else {
+        prevBtn.classList.remove('disabled');
+    }
+
+    // Update next button state
+    if (currentPageAccount >= pagination.total_pages) {
+        nextBtn.classList.add('disabled');
+    } else {
+        nextBtn.classList.remove('disabled');
+    }
+
+    // Update page numbers in pagination
+    const paginationUl = container.querySelector('ul');
+    const pageItems = Array.from(paginationUl.children).filter(el =>
+        !el.id.includes('prev') && !el.id.includes('next')
+    );
+
+    // Remove existing page number items (except prev/next)
+    pageItems.forEach(item => item.remove());
+
+    // Calculate visible page range
+    const totalPages = pagination.total_pages;
+    const maxVisiblePages = 5;
+    let startPage = Math.max(1, currentPageAccount - Math.floor(maxVisiblePages / 2));
+    let endPage = Math.min(totalPages, startPage + maxVisiblePages - 1);
+
+    // Adjust startPage if needed to ensure maxVisiblePages are shown
+    if (endPage - startPage + 1 < maxVisiblePages) {
+        startPage = Math.max(1, endPage - maxVisiblePages + 1);
+    }
+
+    // Create page number buttons
+    for (let i = startPage; i <= endPage; i++) {
+        const pageLi = document.createElement('li');
+        pageLi.className = `page-item ${i === currentPageAccount ? 'active' : ''}`;
+        pageLi.innerHTML = `
+            <a class="page-link" href="#" onclick="loadAccountConversationsPage(${i})">${i}</a>
+        `;
+        if (nextBtn && nextBtn.parentNode) {
+            nextBtn.parentNode.insertBefore(pageLi, nextBtn);
+        } else {
+            paginationUl.appendChild(pageLi);
+        }
+    }
+}
+
+function displayAccountConversations(conversations) {
+    const container = document.getElementById('conversationsListAccount');
+    
+    if (conversations.length === 0) {
+        container.innerHTML = `
+            <div class="text-center py-5">
+                <div class="bg-light rounded-circle d-flex align-items-center justify-content-center mx-auto mb-4" style="width: 80px; height: 80px;">
+                    <i class="fas fa-comments text-muted fs-2"></i>
+                </div>
+                <p class="text-muted mb-4">No messages yet</p>
+                <button class="btn btn-danger rounded-pill px-5 fw-bold" onclick="toggleChatModal()">
+                    Start a Conversation
+                </button>
+            </div>
+        `;
+        return;
+    }
+    
+    container.innerHTML = conversations.map(conv => `
+        <div class="list-group-item list-group-item-action py-3 ${conv.customer_unread_count > 0 ? 'bg-warning-subtle' : ''}" style="cursor: pointer;" onclick="openConversationFromAccount(${conv.id})">
+            <div class="d-flex gap-3">
+                ${conv.product_image ? 
+                    `<img src="${conv.product_image}" class="rounded" style="width: 60px; height: 60px; object-fit: cover;">` :
+                    `<div class="bg-secondary rounded d-flex align-items-center justify-content-center text-white" style="width: 60px; height: 60px;">
+                        <i class="fas fa-comment"></i>
+                    </div>`
+                }
+                <div class="flex-grow-1">
+                    <div class="d-flex justify-content-between mb-1">
+                        <strong class="small">${conv.product_name || 'General Inquiry'}</strong>
+                        ${conv.customer_unread_count > 0 ? `<span class="badge bg-danger rounded-pill">${conv.customer_unread_count}</span>` : ''}
+                    </div>
+                    <div class="small text-muted text-truncate">${conv.last_message || 'No messages'}</div>
+                    <div class="d-flex justify-content-between align-items-center mt-1">
+                        <small class="text-muted x-small">${formatTime(conv.last_message_at)}</small>
+                        <span class="badge ${conv.status === 'open' ? 'bg-success' : conv.status === 'pending' ? 'bg-warning' : 'bg-secondary'} x-small">
+                            ${conv.status.charAt(0).toUpperCase() + conv.status.slice(1)}
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `).join('');
+}
+
+function openConversationFromAccount(conversationId) {
+    currentConversationId = conversationId;
+    document.getElementById('currentConversationId').value = conversationId;
+    toggleChatModal();
+    setTimeout(() => openConversation(conversationId), 300);
+}
+
+// Load conversations when Messages tab is shown
+document.querySelector('button[data-bs-target="#messages"]')?.addEventListener('shown.bs.tab', function() {
+    loadAccountConversations(1); // Load first page
+    loadUnreadCount();
+});
+
+// Update message badge on page load
+if (typeof loadUnreadCount === 'function') {
+    loadUnreadCount();
+    setInterval(() => {
+        fetch('api/messages/unread_count.php')
+            .then(res => res.json())
+            .then(data => {
+                if (data.success && data.count > 0) {
+                    document.getElementById('accountMessagesBadge').textContent = data.count;
+                    document.getElementById('accountMessagesBadge').classList.remove('d-none');
+                } else {
+                    document.getElementById('accountMessagesBadge').classList.add('d-none');
+                }
+            });
+    }, 30000);
 }
 </script>
 

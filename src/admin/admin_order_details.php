@@ -148,8 +148,8 @@ function format_address_detailed($json) {
                 <li><a class="dropdown-item py-2" href="#"><i class="fas fa-box me-2 text-muted"></i> Packing Slip</a></li>
             </ul>
         </div>
-        <button class="btn btn-danger btn-sm rounded-pill px-3 fw-bold shadow-sm" data-bs-toggle="modal" data-bs-target="#emailModal">
-            <i class="fas fa-envelope me-1"></i> Message Customer
+        <button class="btn btn-danger btn-sm rounded-pill px-3 fw-bold shadow-sm" onclick="openCustomerChat(<?php echo $order['customer_id']; ?>, '<?php echo addslashes(($order['user_first_name'] ?? '') . ' ' . ($order['user_last_name'] ?? '')); ?>')">
+            <i class="fas fa-comments me-1"></i> Message Customer
         </button>
         <a href="orders.php" class="btn btn-light btn-sm text-secondary rounded-pill px-3 fw-bold border shadow-xs">
             <i class="fas fa-arrow-left me-1"></i> Back
@@ -269,8 +269,25 @@ function format_address_detailed($json) {
                                                 <div class="fw-bold text-dark small mb-1"><?php echo htmlspecialchars($item['product_name']); ?></div>
                                                 <div class="d-flex flex-wrap gap-2">
                                                     <span class="badge bg-light text-muted border fw-normal x-small">SKU: <?php echo htmlspecialchars($item['product_sku'] ?? 'N/A'); ?></span>
-                                                    <?php if (!empty($item['variant_name'])): ?>
-                                                        <span class="badge bg-light text-danger border border-danger-subtle fw-normal x-small"><?php echo htmlspecialchars($item['variant_name']); ?></span>
+                                                    <?php 
+                                                    $displayVariant = '';
+                                                    if (!empty($item['attributes_json'])) {
+                                                        $attrs = json_decode($item['attributes_json'], true);
+                                                        if ($attrs) {
+                                                            $displayParts = [];
+                                                            foreach ($attrs as $k => $v) {
+                                                                $displayParts[] = htmlspecialchars($k) . ': ' . htmlspecialchars($v);
+                                                            }
+                                                            $displayVariant = implode(', ', $displayParts);
+                                                        }
+                                                    }
+                                                    
+                                                    if (empty($displayVariant) && !empty($item['variant_name'])) {
+                                                        $displayVariant = htmlspecialchars($item['variant_name']);
+                                                    }
+
+                                                    if (!empty($displayVariant)): ?>
+                                                        <span class="badge bg-light text-danger border border-danger-subtle fw-normal x-small"><?php echo $displayVariant; ?></span>
                                                     <?php endif; ?>
                                                 </div>
                                             </div>
@@ -333,7 +350,7 @@ function format_address_detailed($json) {
                     <div class="card-body p-4">
                         <div class="row">
                             <div class="<?php echo !empty($order['tracking_number']) ? 'col-md-7' : 'col-12'; ?>">
-                                <h6 class="mb-2 text-dark fw-bold"><?php echo htmlspecialchars($order['user_first_name'] . ' ' . $order['user_last_name']); ?></h6>
+                                <h6 class="mb-2 text-dark fw-bold"><?php echo htmlspecialchars(($order['user_first_name'] ?? '') . ' ' . ($order['user_last_name'] ?? '')); ?></h6>
                                 <p class="text-muted small mb-1"><?php echo htmlspecialchars($shipAddr['street_address'] ?? ''); ?></p>
                                 <p class="text-muted small mb-1"><?php echo htmlspecialchars(($shipAddr['commune'] ?? '') . ', ' . ($shipAddr['wilaya'] ?? '')); ?></p>
                                 <?php if (!empty($shipAddr['phone_number'])): ?>
@@ -487,13 +504,20 @@ function format_address_detailed($json) {
             </div>
             <div class="card-body p-4 text-center">
                 <div class="bg-danger text-white rounded-circle d-flex align-items-center justify-content-center fw-bold fs-3 mx-auto mb-3 shadow-sm flex-shrink-0" style="width: 60px; height: 60px; border: 4px solid #fff; box-shadow: 0 0 0 1px #eee;">
-                    <?php echo strtoupper(substr($order['user_first_name'] ?? 'G', 0, 1)); ?>
+                    <?php echo strtoupper(substr(($order['user_first_name'] ?? 'G'), 0, 1)); ?>
                 </div>
-                <div class="fw-bold text-dark fs-5 mb-1"><?php echo htmlspecialchars($order['user_first_name'] . ' ' . $order['user_last_name']); ?></div>
-                <div class="text-muted small mb-4"><?php echo htmlspecialchars($order['user_email']); ?></div>
+                <div class="fw-bold text-dark fs-5 mb-1"><?php echo htmlspecialchars(($order['user_first_name'] ?? '') . ' ' . ($order['user_last_name'] ?? '')); ?></div>
+                <div class="text-muted small mb-4"><?php echo htmlspecialchars($order['user_email'] ?? ''); ?></div>
                 <div class="row g-2">
-                    <div class="col-6"><a href="edit_customer.php?id=<?php echo $order['customer_id']; ?>" class="btn btn-light btn-sm border w-100 fw-bold rounded-pill shadow-xs">Profile</a></div>
-                    <div class="col-6"><a href="orders.php?customer_id=<?php echo $order['customer_id']; ?>" class="btn btn-light btn-sm border w-100 fw-bold rounded-pill shadow-xs">Orders</a></div>
+                    <div class="col-6"><a href="edit_customer.php?id=<?php echo $order['customer_id']; ?>" class="btn btn-light btn-sm border w-100 fw-bold rounded-pill shadow-xs" <?php if(empty($order['customer_id'])) echo 'onclick="return false;" style="pointer-events: none; opacity: 0.5;"'; ?>>Profile</a></div>
+                    <div class="col-6"><a href="orders.php?customer_id=<?php echo $order['customer_id']; ?>" class="btn btn-light btn-sm border w-100 fw-bold rounded-pill shadow-xs" <?php if(empty($order['customer_id'])) echo 'onclick="return false;" style="pointer-events: none; opacity: 0.5;"'; ?>>Orders</a></div>
+                </div>
+                <div class="mt-3">
+                    <button class="btn btn-outline-primary btn-sm w-100 rounded-pill shadow-xs"
+                            onclick="openCustomerChat(<?php echo $order['customer_id']; ?>, '<?php echo addslashes(($order['user_first_name'] ?? '') . ' ' . ($order['user_last_name'] ?? '')); ?>')"
+                            <?php if(empty($order['customer_id'])) echo 'disabled'; ?>>
+                        <i class="fas fa-comments me-1"></i> Message Customer
+                    </button>
                 </div>
             </div>
         </div>
@@ -605,5 +629,12 @@ The Customer Service Team</textarea>
     .table-responsive { overflow: visible !important; }
 }
 </style>
+
+<script>
+function openCustomerChat(customerId, customerName) {
+    // Redirect to messages page with customer filter
+    window.location.href = `messages.php?customer_id=${customerId}&customer_name=${encodeURIComponent(customerName)}`;
+}
+</script>
 
 <?php include 'footer.php'; ?>

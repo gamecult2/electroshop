@@ -122,7 +122,7 @@ include 'header.php';
                 <div class="col-lg-8">
                     <div class="card border-0 shadow-sm overflow-hidden mb-4">
                         <div class="card-header bg-white py-3 border-0">
-                            <h2 class="h5 fw-bold mb-0 text-dark">Courier List <span class="badge bg-light text-muted border ms-2 small fw-normal"><?php echo count($couriers); ?> Total</span></h2>
+                            <h2 class="h5 fw-bold mb-0 text-dark"><i class="fas fa-shipping-fast me-2 text-danger"></i> Courier List <span class="badge bg-light text-muted border ms-2 small fw-normal"><?php echo count($couriers); ?> Total</span></h2>
                         </div>
                         <div class="table-responsive">
                             <table class="table table-hover align-middle mb-0 text-center">

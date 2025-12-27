@@ -57,9 +57,36 @@ try {
     }
 } catch (Exception $e) { echo "Table not found: " . $e->getMessage() . "\n"; }
 
-echo "\n=== ORDER_STATUS_HISTORY TABLE STRUCTURE ===\n";
+echo "\n=== SHOPPING_CART TABLE STRUCTURE ===\n";
 try {
-    $stmt = $pdo->query("DESCRIBE order_status_history");
+    $stmt = $pdo->query("DESCRIBE shopping_cart");
+    $columns = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    foreach ($columns as $col) {
+        echo "{$col['Field']}: {$col['Type']}\n";
+    }
+} catch (Exception $e) { echo "Table not found: " . $e->getMessage() . "\n"; }
+
+echo "\n=== ORDER_ITEMS TABLE STRUCTURE ===\n";
+try {
+    $stmt = $pdo->query("DESCRIBE order_items");
+    $columns = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    foreach ($columns as $col) {
+        echo "{$col['Field']}: {$col['Type']}\n";
+    }
+} catch (Exception $e) { echo "Table not found: " . $e->getMessage() . "\n"; }
+
+echo "\n=== CONVERSATIONS TABLE STRUCTURE ===\n";
+try {
+    $stmt = $pdo->query("DESCRIBE conversations");
+    $columns = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    foreach ($columns as $col) {
+        echo "{$col['Field']}: {$col['Type']}\n";
+    }
+} catch (Exception $e) { echo "Table not found: " . $e->getMessage() . "\n"; }
+
+echo "\n=== MESSAGES TABLE STRUCTURE ===\n";
+try {
+    $stmt = $pdo->query("DESCRIBE messages");
     $columns = $stmt->fetchAll(PDO::FETCH_ASSOC);
     foreach ($columns as $col) {
         echo "{$col['Field']}: {$col['Type']}\n";

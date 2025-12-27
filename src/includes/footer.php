@@ -1,5 +1,7 @@
 </main>
 
+<?php include __DIR__ . '/chat-widget.php'; ?>
+
 <footer class="bg-dark text-white pt-5 pb-3">
     <div class="container-xxl pb-4 border-bottom border-secondary">
         <div class="row g-4">
