@@ -1,11 +1,13 @@
 <?php
 require_once 'models/Product.php';
 require_once 'models/Category.php';
+require_once 'models/Review.php';
 require_once 'includes/functions.php'; // Ensure functions are available if needed
 
 $productId = isset($_GET['id']) ? (int)$_GET['id'] : 0;
 $productModel = new Product();
 $categoryModel = new Category();
+$reviewModel = new Review();
 
 // Try to get the product, handle if it's not found or invalid
 $product = null;
@@ -17,6 +19,12 @@ if (!$product) {
     header('Location: products.php');
     exit;
 }
+
+// Fetch Reviews
+$reviews = $reviewModel->getForProduct($productId, 50); // Get up to 50 approved reviews
+$ratingStats = $reviewModel->getAverageRating($productId);
+$avgRating = round((float)($ratingStats['average_rating'] ?? 0), 1);
+$totalReviews = (int)($ratingStats['total_reviews'] ?? 0);
 
 require_once 'includes/header.php';
 
@@ -149,59 +157,238 @@ if (is_logged_in()) {
     ?>
     
     <div class="row g-3">
-        <!-- Media Viewer (Order 1 on mobile) -->
-        <div class="col-lg-8 order-1">
-            <!-- Gallery Section -->
-            <div class="card border-0 shadow-sm mb-3">
-                <div class="card-body">
-                    <div class="row g-3">
-                        <!-- Thumbnails -->
-                        <div class="col-2 col-md-2 order-2 order-md-1">
-                            <div class="d-flex flex-column gap-2 overflow-auto product-thumbnails" style="max-height: 500px; scrollbar-width: none;">
-                                <?php if (!empty($product['video_url'])): ?>
-                                    <div class="thumbnail border rounded overflow-hidden d-flex align-items-center justify-content-center bg-light video-thumb" 
-                                         onclick="toggleVideo(true)" 
-                                         style="aspect-ratio: 1; min-height: 50px; cursor: pointer;">
-                                        <i class="fas fa-play-circle text-danger fs-4"></i>
-                                    </div>
-                                <?php endif; ?>
+        <!-- Main Content Area (Media + Tabs) -->
+        <div class="col-lg-8">
+            <div class="row g-3">
+                <!-- Media Viewer -->
+                <div class="col-12">
+                    <div class="card border-0 shadow-sm mb-3">
+                        <div class="card-body">
+                            <div class="row g-3">
+                                <!-- Thumbnails -->
+                                <div class="col-2 col-md-2 order-2 order-md-1">
+                                    <div class="d-flex flex-column gap-2 overflow-auto product-thumbnails" style="max-height: 500px; scrollbar-width: none;">
+                                        <?php if (!empty($product['video_url'])): ?>
+                                            <div class="thumbnail border rounded overflow-hidden d-flex align-items-center justify-content-center bg-light video-thumb" 
+                                                 onclick="toggleVideo(true)" 
+                                                 style="aspect-ratio: 1; min-height: 50px; cursor: pointer;">
+                                                <i class="fas fa-play-circle text-danger fs-4"></i>
+                                            </div>
+                                        <?php endif; ?>
 
-                                <?php foreach ($product['images'] as $index => $image): ?>
-                                    <div class="thumbnail border rounded overflow-hidden <?php echo $index === 0 && empty($product['video_url']) ? 'border-danger border-2' : ''; ?>" 
-                                         onclick="toggleVideo(false); changeMainImage('<?php echo htmlspecialchars($image); ?>', this)"
-                                         style="aspect-ratio: 1; min-height: 50px; cursor: pointer;">
-                                        <img src="<?php echo htmlspecialchars($image); ?>" class="img-fluid object-fit-contain w-100 h-100" alt="Thumbnail">
+                                        <?php foreach ($product['images'] as $index => $image): ?>
+                                            <div class="thumbnail border rounded overflow-hidden <?php echo $index === 0 && empty($product['video_url']) ? 'border-danger border-2' : ''; ?>" 
+                                                 onclick="toggleVideo(false); changeMainImage('<?php echo htmlspecialchars($image); ?>', this)"
+                                                 style="aspect-ratio: 1; min-height: 50px; cursor: pointer;">
+                                                <img src="<?php echo htmlspecialchars($image); ?>" class="img-fluid object-fit-contain w-100 h-100" alt="Thumbnail">
+                                            </div>
+                                        <?php endforeach; ?>
                                     </div>
-                                <?php endforeach; ?>
-                            </div>
-                        </div>
-                        
-                        <!-- Main Image/Video -->
-                        <div class="col-10 col-md-10 order-1 order-md-2">
-                            <div class="position-relative border rounded bg-white overflow-hidden" style="aspect-ratio: 1/1;">
-                                <?php if (!empty($product['video_url'])): ?>
-                                    <div id="product-video-wrapper" class="w-100 h-100 d-none align-items-center justify-content-center bg-black">
-                                        <video id="main-product-video" class="w-100 h-100" controls>
-                                            <source src="<?php echo htmlspecialchars($product['video_url'] ?? ''); ?>" type="video/mp4">
-                                        </video>
-                                    </div>
-                                <?php endif; ?>
+                                </div>
+                                
+                                <!-- Main Image/Video -->
+                                <div class="col-10 col-md-10 order-1 order-md-2">
+                                    <div class="position-relative border rounded bg-white overflow-hidden" style="aspect-ratio: 1/1;">
+                                        <?php if (!empty($product['video_url'])): ?>
+                                            <div id="product-video-wrapper" class="w-100 h-100 d-none align-items-center justify-content-center bg-black">
+                                                <video id="main-product-video" class="w-100 h-100" controls>
+                                                    <source src="<?php echo htmlspecialchars($product['video_url'] ?? ''); ?>" type="video/mp4">
+                                                </video>
+                                            </div>
+                                        <?php endif; ?>
 
-                                <div class="w-100 h-100 d-flex align-items-center justify-content-center" id="main-product-image-wrapper">
-                                    <img src="<?php echo htmlspecialchars($product['images'][0] ?? ''); ?>" 
-                                         alt="<?php echo htmlspecialchars($product['name'] ?? ''); ?>" 
-                                         id="main-product-image"
-                                         class="img-fluid object-fit-cover w-100 h-100">
+                                        <div class="w-100 h-100 d-flex align-items-center justify-content-center" id="main-product-image-wrapper">
+                                            <img src="<?php echo htmlspecialchars($product['images'][0] ?? ''); ?>" 
+                                                 alt="<?php echo htmlspecialchars($product['name'] ?? ''); ?>" 
+                                                 id="main-product-image"
+                                                 class="img-fluid object-fit-cover w-100 h-100">
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                         </div>
                     </div>
                 </div>
+
+                <!-- Product Details / Tabs -->
+                <div class="col-12">
+                    <div class="card border-0 shadow-sm mb-4">
+                        <div class="card-header bg-white border-0 p-0">
+                            <ul class="nav nav-tabs border-0" id="productTabs" role="tablist">
+                                <li class="nav-item" role="presentation">
+                                    <button class="nav-link active rounded-0 border-0 py-3 px-4 fw-bold text-dark" id="intro-tab" data-bs-toggle="tab" data-bs-target="#intro" type="button" role="tab">About Product</button>
+                                </li>
+                                <li class="nav-item" role="presentation">
+                                    <button class="nav-link rounded-0 border-0 py-3 px-4 fw-bold text-dark" id="specs-tab" data-bs-toggle="tab" data-bs-target="#specs" type="button" role="tab">Specifications</button>
+                                </li>
+                                <li class="nav-item" role="presentation">
+                                    <button class="nav-link rounded-0 border-0 py-3 px-4 fw-bold text-dark" id="reviews-tab" data-bs-toggle="tab" data-bs-target="#reviews" type="button" role="tab">Reviews (<?php echo $totalReviews; ?>)</button>
+                                </li>
+                            </ul>
+                        </div>
+                        <div class="card-body">
+                            <div class="tab-content" id="productTabsContent">
+                                <div class="tab-pane fade show active" id="intro" role="tabpanel">
+                                    <div class="lh-lg text-muted">
+                                        <?php echo ($product['description'] ?? ''); ?>
+                                    </div>
+                                </div>
+                                
+                                <div class="tab-pane fade" id="specs" role="tabpanel">
+                                    <div class="table-responsive">
+                                        <table class="table table-bordered align-middle">
+                                            <tbody>
+                                                <?php if (!empty($product['technical_specs'])): ?>
+                                                    <?php foreach ($product['technical_specs'] as $spec => $value): ?>
+                                                        <tr>
+                                                            <th class="bg-light w-25"><?php echo htmlspecialchars($spec ?? ''); ?></th>
+                                                            <td><?php echo htmlspecialchars($value ?? ''); ?></td>
+                                                        </tr>
+                                                    <?php endforeach; ?>
+                                                <?php endif; ?>
+                                                <?php if(!empty($product['brand'])): ?>
+                                                    <tr><th class="bg-light">Brand</th><td><?php echo htmlspecialchars($product['brand'] ?? ''); ?></td></tr>
+                                                <?php endif; ?>
+                                                <?php if(!empty($product['sku'])): ?>
+                                                    <tr><th class="bg-light">SKU</th><td><?php echo htmlspecialchars($product['sku'] ?? ''); ?></td></tr>
+                                                <?php endif; ?>
+                                                <?php if(!empty($product['weight']) && $product['weight'] > 0): ?>
+                                                    <tr><th class="bg-light">Weight</th><td><?php echo htmlspecialchars($product['weight'] ?? ''); ?> kg</td></tr>
+                                                <?php endif; ?>
+                                                <?php if(!empty($product['dimensions'])): ?>
+                                                    <tr><th class="bg-light">Dimensions</th><td><?php echo htmlspecialchars($product['dimensions'] ?? ''); ?></td></tr>
+                                                <?php endif; ?>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                                
+                                <div class="tab-pane fade" id="reviews" role="tabpanel">
+                                    <div class="row g-4 mb-5">
+                                        <div class="col-md-4">
+                                            <div class="text-center p-4 bg-light rounded-3">
+                                                <h2 class="display-4 fw-bold text-dark mb-1"><?php echo $avgRating; ?></h2>
+                                                <div class="text-warning mb-2">
+                                                    <?php for($i=1; $i<=5; $i++): ?>
+                                                        <i class="<?php echo $i <= $avgRating ? 'fas' : 'far'; ?> fa-star"></i>
+                                                    <?php endfor; ?>
+                                                </div>
+                                                <p class="text-muted small mb-0">Based on <?php echo $totalReviews; ?> reviews</p>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-8">
+                                            <div class="d-flex flex-column gap-2">
+                                                <?php 
+                                                $stars = [5, 4, 3, 2, 1];
+                                                foreach($stars as $star): 
+                                                    $count = (int)($ratingStats[match($star) {
+                                                        5 => 'five_star',
+                                                        4 => 'four_star',
+                                                        3 => 'three_star',
+                                                        2 => 'two_star',
+                                                        1 => 'one_star'
+                                                    }] ?? 0);
+                                                    $percent = $totalReviews > 0 ? ($count / $totalReviews) * 100 : 0;
+                                                ?>
+                                                    <div class="d-flex align-items-center gap-3">
+                                                        <div class="text-muted small fw-bold" style="width: 50px;"><?php echo $star; ?> Stars</div>
+                                                        <div class="progress flex-grow-1" style="height: 8px;">
+                                                            <div class="progress-bar bg-warning" role="progressbar" style="width: <?php echo $percent; ?>%" aria-valuenow="<?php echo $percent; ?>" aria-valuemin="0" aria-valuemax="100"></div>
+                                                        </div>
+                                                        <div class="text-muted small" style="width: 30px;"><?php echo $count; ?></div>
+                                                    </div>
+                                                <?php endforeach; ?>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <hr class="mb-4 opacity-50">
+
+                                    <?php if (empty($reviews)): ?>
+                                        <div class="text-center py-5 text-muted">
+                                            <i class="fas fa-comment-slash fa-3x mb-3 opacity-25"></i>
+                                            <p>No reviews yet for this product.</p>
+                                        </div>
+                                    <?php else: ?>
+                                        <div class="d-flex flex-column gap-4">
+                                            <?php foreach ($reviews as $review): ?>
+                                                <div class="border-bottom pb-4">
+                                                    <div class="d-flex justify-content-between align-items-start mb-2">
+                                                        <div>
+                                                            <h6 class="fw-bold mb-1"><?php echo htmlspecialchars($review['title'] ?: 'Review'); ?></h6>
+                                                            <div class="text-warning small">
+                                                                <?php for($i=1; $i<=5; $i++): ?>
+                                                                    <i class="<?php echo $i <= $review['rating'] ? 'fas' : 'far'; ?> fa-star"></i>
+                                                                <?php endfor; ?>
+                                                            </div>
+                                                        </div>
+                                                        <span class="text-muted small"><?php echo date('M d, Y', strtotime($review['created_at'])); ?></span>
+                                                    </div>
+                                                    <p class="text-muted small mb-2"><?php echo nl2br(htmlspecialchars($review['review_text'])); ?></p>
+                                                    
+                                                    <?php if (!empty($review['reply_text'])): ?>
+                                                        <div class="bg-light p-3 rounded-3 mt-3 border-start border-4 border-danger">
+                                                            <div class="d-flex align-items-center justify-content-between mb-2">
+                                                                <div class="fw-bold small text-danger">
+                                                                    <i class="fas fa-store me-1"></i> Store Response
+                                                                </div>
+                                                                <span class="text-muted x-small"><?php echo date('M d, Y', strtotime($review['replied_at'])); ?></span>
+                                                            </div>
+                                                            <p class="mb-0 text-dark small fst-italic"><?php echo nl2br(htmlspecialchars($review['reply_text'])); ?></p>
+                                                        </div>
+                                                    <?php endif; ?>
+
+                                                    <div class="d-flex align-items-center gap-2 mt-3">
+                                                        <div class="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center fw-bold" style="width: 24px; height: 24px; font-size: 10px;">
+                                                            <?php echo strtoupper(substr($review['first_name'], 0, 1)); ?>
+                                                        </div>
+                                                        <span class="text-dark fw-bold small"><?php echo htmlspecialchars($review['first_name'] . ' ' . $review['last_name']); ?></span>
+                                                        <?php if ($review['is_verified_purchase']): ?>
+                                                            <span class="badge bg-success-subtle text-success border border-success-subtle rounded-pill x-small px-2 py-1">
+                                                                <i class="fas fa-check-circle me-1"></i>Verified Purchase
+                                                            </span>
+                                                        <?php endif; ?>
+                                                    </div>
+                                                </div>
+                                            <?php endforeach; ?>
+                                        </div>
+                                    <?php endif; ?>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Related Products -->
+                <div class="col-12 mt-4">
+                    <h4 class="mb-4 d-flex align-items-center">
+                        <span class="bg-danger text-white p-2 rounded me-3 d-inline-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
+                            <i class="fas fa-layer-group"></i>
+                        </span>
+                        Related Products
+                    </h4>
+                    <div class="row row-cols-2 row-cols-md-3 row-cols-lg-4 g-3">
+                        <?php if (!empty($related_products)): ?>
+                            <?php 
+                            $mainProductData = $product; 
+                            foreach ($related_products as $related): 
+                                $product = $related; 
+                                echo '<div class="col">';
+                                include 'includes/product-card-mini.php'; 
+                                echo '</div>';
+                            endforeach; 
+                            $product = $mainProductData; 
+                            ?>
+                        <?php else: ?>
+                            <div class="col-12 text-muted fst-italic">No related products found.</div>
+                        <?php endif; ?>
+                    </div>
+                </div>
             </div>
         </div>
 
-        <!-- Price Card Column (Order 2 on mobile, last on desktop) -->
-        <div class="col-lg-4 order-2 order-lg-last">
+        <!-- Price Card Column -->
+        <div class="col-lg-4">
             <div class="card border-0 shadow-sm sticky-top" style="top: 20px;">
                 <div class="card-body p-4">
                     <h1 class="h3 fw-bold mb-2 text-dark"><?php echo htmlspecialchars($product['name'] ?? ''); ?></h1>
@@ -307,113 +494,6 @@ if (is_logged_in()) {
                         </button>
                         <button class="btn btn-link text-decoration-none text-muted p-0 small"><i class="fas fa-share-alt me-1"></i> Share</button>
                     </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Product Details / Tabs (Order 3 on mobile) -->
-        <div class="col-lg-8 order-3 order-lg-2">
-            <!-- Tabs Section -->
-            <div class="card border-0 shadow-sm mb-4">
-                <div class="card-header bg-white border-0 p-0">
-                    <ul class="nav nav-tabs border-0" id="productTabs" role="tablist">
-                        <li class="nav-item" role="presentation">
-                            <button class="nav-link active rounded-0 border-0 py-3 px-4 fw-bold text-dark" id="intro-tab" data-bs-toggle="tab" data-bs-target="#intro" type="button" role="tab">About Product</button>
-                        </li>
-                        <li class="nav-item" role="presentation">
-                            <button class="nav-link rounded-0 border-0 py-3 px-4 fw-bold text-dark" id="specs-tab" data-bs-toggle="tab" data-bs-target="#specs" type="button" role="tab">Specifications</button>
-                        </li>
-                        <li class="nav-item" role="presentation">
-                            <button class="nav-link rounded-0 border-0 py-3 px-4 fw-bold text-dark" id="reviews-tab" data-bs-toggle="tab" data-bs-target="#reviews" type="button" role="tab">Reviews (<?php echo $product['rating_count']; ?>)</button>
-                        </li>
-                    </ul>
-                </div>
-                <div class="card-body">
-                    <div class="tab-content" id="productTabsContent">
-                        <div class="tab-pane fade show active" id="intro" role="tabpanel">
-                            <div class="lh-lg text-muted">
-                                <?php echo ($product['description'] ?? ''); ?>
-                            </div>
-                        </div>
-                        
-                        <div class="tab-pane fade" id="specs" role="tabpanel">
-                            <div class="table-responsive">
-                                <table class="table table-bordered align-middle">
-                                    <tbody>
-                                        <?php if (!empty($product['technical_specs'])): ?>
-                                            <?php foreach ($product['technical_specs'] as $spec => $value): ?>
-                                                <tr>
-                                                    <th class="bg-light w-25"><?php echo htmlspecialchars($spec ?? ''); ?></th>
-                                                    <td><?php echo htmlspecialchars($value ?? ''); ?></td>
-                                                </tr>
-                                            <?php endforeach; ?>
-                                        <?php endif; ?>
-                                        <?php if(!empty($product['brand'])): ?>
-                                            <tr><th class="bg-light">Brand</th><td><?php echo htmlspecialchars($product['brand'] ?? ''); ?></td></tr>
-                                        <?php endif; ?>
-                                        <?php if(!empty($product['sku'])): ?>
-                                            <tr><th class="bg-light">SKU</th><td><?php echo htmlspecialchars($product['sku'] ?? ''); ?></td></tr>
-                                        <?php endif; ?>
-                                        <?php if(!empty($product['weight']) && $product['weight'] > 0): ?>
-                                            <tr><th class="bg-light">Weight</th><td><?php echo htmlspecialchars($product['weight'] ?? ''); ?> kg</td></tr>
-                                        <?php endif; ?>
-                                        <?php if(!empty($product['dimensions'])): ?>
-                                            <tr><th class="bg-light">Dimensions</th><td><?php echo htmlspecialchars($product['dimensions'] ?? ''); ?></td></tr>
-                                        <?php endif; ?>
-                                    </tbody>
-                                </table>
-                            </div>
-                        </div>
-                        
-                        <div class="tab-pane fade" id="reviews" role="tabpanel">
-                            <div class="d-flex align-items-center mb-4 gap-3">
-                                <h4 class="mb-0">Customer Reviews</h4>
-                                <div class="text-warning">
-                                    <i class="fas fa-star"></i>
-                                    <i class="fas fa-star"></i>
-                                    <i class="fas fa-star"></i>
-                                    <i class="fas fa-star"></i>
-                                    <i class="fas fa-star-half-alt"></i>
-                                </div>
-                            </div>
-                            <!-- Mock Review -->
-                            <div class="border-bottom pb-3 mb-3">
-                                <div class="d-flex justify-content-between mb-2">
-                                    <h6 class="mb-0">Excellent Product</h6>
-                                    <span class="text-muted small">2023-10-10</span>
-                                </div>
-                                <div class="text-warning small mb-2"><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i></div>
-                                <p class="text-muted small mb-1">Great quality and fast shipping. Highly recommended!</p>
-                                <div class="text-dark fw-bold small">By User123</div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Related Products -->
-            <div class="mt-5">
-                <h4 class="mb-4 d-flex align-items-center">
-                    <span class="bg-danger text-white p-2 rounded me-3 d-inline-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
-                        <i class="fas fa-layer-group"></i>
-                    </span>
-                    Related Products
-                </h4>
-                <div class="row row-cols-2 row-cols-md-3 row-cols-lg-4 g-3">
-                    <?php if (!empty($related_products)): ?>
-                        <?php 
-                        $mainProductData = $product; 
-                        foreach ($related_products as $related): 
-                            $product = $related; 
-                            echo '<div class="col">';
-                            include 'includes/product-card-mini.php'; 
-                            echo '</div>';
-                        endforeach; 
-                        $product = $mainProductData; 
-                        ?>
-                    <?php else: ?>
-                        <div class="col-12 text-muted fst-italic">No related products found.</div>
-                    <?php endif; ?>
                 </div>
             </div>
         </div>

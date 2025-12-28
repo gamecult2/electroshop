@@ -3,8 +3,10 @@
 
 header('Content-Type: application/json');
 require_once '../includes/init.php';
+require_once '../models/Review.php';
 
 $method = $_SERVER['REQUEST_METHOD'];
+$reviewModel = new Review();
 
 switch ($method) {
     case 'GET':
@@ -20,29 +22,14 @@ switch ($method) {
             exit;
         }
         
-        $sql = "SELECT r.*, u.first_name, u.last_name 
-                FROM reviews r
-                JOIN users u ON r.user_id = u.id
-                WHERE r.product_id = ? AND r.is_approved = 1
-                ORDER BY r.created_at DESC
-                LIMIT ? OFFSET ?";
-        $stmt = $pdo->prepare($sql);
-        $stmt->execute([$productId, $limit, $offset]);
-        $reviews = $stmt->fetchAll();
-        
-        // Get average rating
-        $ratingSql = "SELECT AVG(rating) as average_rating, COUNT(*) as total_reviews
-                      FROM reviews
-                      WHERE product_id = ? AND is_approved = 1";
-        $ratingStmt = $pdo->prepare($ratingSql);
-        $ratingStmt->execute([$productId]);
-        $ratingData = $ratingStmt->fetch();
+        $reviews = $reviewModel->getForProduct($productId, $limit, $offset);
+        $ratingData = $reviewModel->getAverageRating($productId);
         
         echo json_encode([
             'success' => true,
             'reviews' => $reviews,
-            'average_rating' => (float)$ratingData['average_rating'],
-            'total_reviews' => $ratingData['total_reviews']
+            'average_rating' => (float)($ratingData['average_rating'] ?? 0),
+            'total_reviews' => (int)($ratingData['total_reviews'] ?? 0)
         ]);
         break;
     
@@ -57,8 +44,8 @@ switch ($method) {
         $input = json_decode(file_get_contents('php://input'), true);
         $productId = $input['product_id'] ?? null;
         $rating = (int)($input['rating'] ?? 0);
-        $title = sanitize_input($input['title'] ?? '');
-        $reviewText = sanitize_input($input['review_text'] ?? '');
+        $title = $input['title'] ?? '';
+        $reviewText = $input['review_text'] ?? '';
         
         if (!$productId || $rating < 1 || $rating > 5 || empty($reviewText)) {
             http_response_code(400);
@@ -66,28 +53,84 @@ switch ($method) {
             exit;
         }
         
-        $userId = get_current_user_id();
+        $customerId = get_current_user_id();
         
+        // Check if user already reviewed this product
+        $existing = $reviewModel->getUserReview($customerId, $productId);
+        if ($existing) {
+            http_response_code(400);
+            echo json_encode(['error' => 'You have already reviewed this product']);
+            exit;
+        }
+
         // Check if user purchased this product
-        $purchaseSql = "SELECT COUNT(*) 
-                        FROM orders o 
-                        JOIN order_items oi ON o.id = oi.order_id 
-                        WHERE o.user_id = ? AND oi.product_id = ? AND o.status = 'delivered'";
-        $purchaseStmt = $pdo->prepare($purchaseSql);
-        $purchaseStmt->execute([$userId, $productId]);
-        $isVerifiedPurchase = $purchaseStmt->fetchColumn() > 0;
+        $isVerifiedPurchase = $reviewModel->hasPurchasedProduct($customerId, $productId);
         
-        // Insert review
-        $sql = "INSERT INTO reviews (product_id, user_id, rating, title, review_text, is_verified_purchase, is_approved, created_at) 
-                VALUES (?, ?, ?, ?, ?, ?, 0, NOW())";
-        $stmt = $pdo->prepare($sql);
-        $result = $stmt->execute([$productId, $userId, $rating, $title, $reviewText, $isVerifiedPurchase]);
-        
-        if ($result) {
-            echo json_encode(['success' => true, 'message' => t('review_submitted_for_approval')]);
-        } else {
+        // Use the Review model to add
+        try {
+            $reviewId = $reviewModel->addReview([
+                'product_id' => $productId,
+                'customer_id' => $customerId,
+                'rating' => $rating,
+                'title' => $title,
+                'review_text' => $reviewText,
+                'is_verified_purchase' => $isVerifiedPurchase ? 1 : 0,
+                'is_approved' => 0 // Needs admin approval by default
+            ]);
+            
+            echo json_encode([
+                'success' => true, 
+                'message' => 'Your review has been submitted and is awaiting approval.',
+                'review_id' => $reviewId
+            ]);
+        } catch (Exception $e) {
             http_response_code(500);
-            echo json_encode(['error' => 'Failed to submit review']);
+            echo json_encode(['error' => 'Failed to submit review: ' . $e->getMessage()]);
+        }
+        break;
+    
+    case 'PUT':
+        // Edit an existing review
+        if (!is_logged_in()) {
+            http_response_code(401);
+            echo json_encode(['error' => 'Unauthorized']);
+            exit;
+        }
+
+        $input = json_decode(file_get_contents('php://input'), true);
+        $reviewId = $input['review_id'] ?? null;
+        $rating = (int)($input['rating'] ?? 0);
+        $reviewText = $input['review_text'] ?? '';
+
+        if (!$reviewId || $rating < 1 || $rating > 5 || empty($reviewText)) {
+            http_response_code(400);
+            echo json_encode(['error' => 'Review ID, rating, and text are required']);
+            exit;
+        }
+
+        $customerId = get_current_user_id();
+
+        // Verify ownership
+        $stmt = $pdo->prepare("SELECT id FROM reviews WHERE id = ? AND customer_id = ?");
+        $stmt->execute([$reviewId, $customerId]);
+        if (!$stmt->fetch()) {
+            http_response_code(403);
+            echo json_encode(['error' => 'Unauthorized to edit this review']);
+            exit;
+        }
+
+        try {
+            // Update and reset approval status
+            $stmt = $pdo->prepare("UPDATE reviews SET rating = ?, review_text = ?, is_approved = 0, updated_at = NOW() WHERE id = ?");
+            $stmt->execute([$rating, $reviewText, $reviewId]);
+
+            echo json_encode([
+                'success' => true,
+                'message' => 'Your review has been updated and is awaiting re-approval.'
+            ]);
+        } catch (Exception $e) {
+            http_response_code(500);
+            echo json_encode(['error' => 'Failed to update review: ' . $e->getMessage()]);
         }
         break;
     

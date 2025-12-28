@@ -233,7 +233,7 @@ $categories = $categoryModel->getWithSubcategories();
                                         </td>
                                         <td class="text-center">
                                             <div class="btn-group shadow-sm rounded">
-                                                <a href="../product.php?id=<?php echo $product['id']; ?>" target="_blank" class="btn btn-white btn-sm border-light-subtle text-info" title="View Product">
+                                                <a href="product_details.php?id=<?php echo $product['id']; ?>" class="btn btn-white btn-sm border-light-subtle text-info" title="View Product">
                                                     <i class="fas fa-eye"></i>
                                                 </a>
                                                 <a href="edit_product.php?id=<?php echo $product['id']; ?>" class="btn btn-white btn-sm border-light-subtle text-primary" title="Edit">

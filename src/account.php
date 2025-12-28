@@ -261,6 +261,16 @@ $loyaltyTier = 'Silver';
                                                 <td class="px-4 py-3 text-end">
                                                     <div class="d-flex justify-content-end gap-2">
                                                         <a href="order_details.php?id=<?php echo $order['id']; ?>" class="btn btn-outline-dark btn-sm rounded-pill px-3 fw-bold shadow-xs" style="font-size: 11px;"><?php echo t('view'); ?></a>
+                                                        <?php if ($order['status'] === 'delivered'): 
+                                                            // Check if all items in this order are reviewed
+                                                            $stmt = $pdo->prepare("SELECT COUNT(*) FROM order_items oi LEFT JOIN reviews r ON oi.product_id = r.product_id AND r.customer_id = ? WHERE oi.order_id = ? AND r.id IS NULL");
+                                                            $stmt->execute([$userId, $order['id']]);
+                                                            $unreviewedCount = $stmt->fetchColumn();
+                                                            $btnText = ($unreviewedCount == 0) ? 'Reviewed' : 'Review';
+                                                            $btnClass = ($unreviewedCount == 0) ? 'btn-outline-success' : 'btn-danger';
+                                                        ?>
+                                                            <button class="btn <?php echo $btnClass; ?> btn-sm rounded-pill px-3 fw-bold shadow-xs" style="font-size: 11px;" onclick="openReviewModal('<?php echo $order['id']; ?>')"><?php echo $btnText; ?></button>
+                                                        <?php endif; ?>
                                                         <?php if ($order['status'] === 'shipped' || $order['status'] === 'delivered'): ?>
                                                             <button class="btn btn-outline-secondary btn-sm rounded-pill px-3 fw-bold shadow-xs" style="font-size: 11px;" onclick="trackOrder('<?php echo $order['id']; ?>')"><?php echo t('track_order'); ?></button>
                                                         <?php endif; ?>
@@ -512,12 +522,23 @@ $loyaltyTier = 'Silver';
                                         <div class="card border-light-subtle rounded-4">
                                             <div class="card-body p-4">
                                                 <div class="d-flex gap-3">
-                                                    <img src="assets/images/products/<?php echo $review['product_image'] ?? 'placeholder.jpg'; ?>" 
+                                                    <img src="<?php echo $review['product_image'] ?: 'img/product-placeholder.jpg'; ?>" 
                                                          alt="" 
                                                          class="rounded"
                                                          style="width: 60px; height: 60px; object-fit: cover; background: #f8f9fa;">
                                                     <div class="flex-grow-1">
-                                                        <h5 class="h6 fw-bold mb-1"><?php echo htmlspecialchars($review['product_name']); ?></h5>
+                                                        <div class="d-flex justify-content-between align-items-start mb-1">
+                                                            <h5 class="h6 fw-bold mb-0"><?php echo htmlspecialchars($review['product_name']); ?></h5>
+                                                            <div class="d-flex align-items-center gap-2">
+                                                                <?php if (!$review['is_approved']): ?>
+                                                                    <span class="badge bg-warning-subtle text-warning border border-warning-subtle x-small px-2 py-1">Pending Approval</span>
+                                                                <?php endif; ?>
+                                                                <button class="btn btn-link p-0 text-primary small text-decoration-none fw-bold" 
+                                                                        onclick='openEditReviewModal(<?php echo json_encode($review); ?>)'>
+                                                                    <i class="fas fa-edit me-1"></i>Edit
+                                                                </button>
+                                                            </div>
+                                                        </div>
                                                         <div class="mb-2 text-warning small">
                                                             <?php for($i=1; $i<=5; $i++): ?>
                                                                 <i class="<?php echo $i <= $review['rating'] ? 'fas' : 'far'; ?> fa-star"></i>
@@ -662,33 +683,23 @@ $loyaltyTier = 'Silver';
 
 <!-- Tracking Modal -->
 <div class="modal fade" id="trackingModal" tabindex="-1" aria-hidden="true">
-  <div class="modal-dialog modal-dialog-centered">
-    <div class="modal-content border-0 rounded-4">
-      <div class="modal-header border-0">
-        <h5 class="modal-title fw-bold">Order Tracking</h5>
+...
+</div>
+
+<!-- Product Review Modal -->
+<div class="modal fade" id="reviewModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-lg modal-dialog-centered">
+    <div class="modal-content border-0 rounded-4 shadow-lg">
+      <div class="modal-header border-0 pb-0">
+        <h5 class="modal-title fw-bold"><i class="fas fa-star text-warning me-2"></i>Review Your Purchase</h5>
         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
       </div>
       <div class="modal-body p-4">
-        <div class="tracking-timeline position-relative ps-4 border-start border-2 border-light ms-2">
-            <div class="mb-4 position-relative">
-                <div class="position-absolute start-0 translate-middle-x bg-success rounded-circle" style="width: 12px; height: 12px; left: -2px;"></div>
-                <div class="fw-bold text-success">Order Delivered</div>
-                <div class="small text-muted">Oct 24, 2025 - 2:30 PM</div>
-            </div>
-            <div class="mb-4 position-relative">
-                <div class="position-absolute start-0 translate-middle-x bg-success rounded-circle" style="width: 12px; height: 12px; left: -2px;"></div>
-                <div class="fw-bold">Out for Delivery</div>
-                <div class="small text-muted">Oct 24, 2025 - 8:00 AM</div>
-            </div>
-            <div class="mb-4 position-relative">
-                <div class="position-absolute start-0 translate-middle-x bg-success rounded-circle" style="width: 12px; height: 12px; left: -2px;"></div>
-                <div class="fw-bold">Shipped</div>
-                <div class="small text-muted">Oct 22, 2025 - 5:00 PM</div>
-            </div>
-            <div class="position-relative">
-                <div class="position-absolute start-0 translate-middle-x bg-success rounded-circle" style="width: 12px; height: 12px; left: -2px;"></div>
-                <div class="fw-bold">Order Placed</div>
-                <div class="small text-muted">Oct 20, 2025 - 10:00 AM</div>
+        <p class="text-muted small mb-4">Your feedback helps other shoppers make better choices. Thank you for sharing your experience!</p>
+        <div id="reviewItemsContainer">
+            <!-- Order items will be loaded here -->
+            <div class="text-center py-4">
+                <div class="spinner-border text-danger" role="status"></div>
             </div>
         </div>
       </div>
@@ -697,7 +708,231 @@ $loyaltyTier = 'Silver';
 </div>
 
 <script>
+let reviewModal;
 document.addEventListener('DOMContentLoaded', function() {
+    reviewModal = new bootstrap.Modal(document.getElementById('reviewModal'));
+    // ... existing ...
+});
+
+async function openReviewModal(orderId) {
+    reviewModal.show();
+    const container = document.getElementById('reviewItemsContainer');
+    container.innerHTML = '<div class="text-center py-5"><div class="spinner-border text-danger"></div><p class="mt-2 text-muted">Fetching items...</p></div>';
+
+    try {
+        const response = await fetch(`api/orders/get_items.php?order_id=${orderId}`);
+        const data = await response.json();
+
+        if (data.success) {
+            renderReviewItems(data.items);
+        } else {
+            container.innerHTML = `<div class="alert alert-danger">${data.error || 'Failed to load items'}</div>`;
+        }
+    } catch (err) {
+        container.innerHTML = '<div class="alert alert-danger">Connection error. Please try again.</div>';
+    }
+}
+
+function renderReviewItems(items) {
+    const container = document.getElementById('reviewItemsContainer');
+    if (items.length === 0) {
+        container.innerHTML = '<p class="text-center">No items found for this order.</p>';
+        return;
+    }
+
+    container.innerHTML = items.map(item => {
+        const isReviewed = !!item.review_id;
+        const currentRating = item.review_rating || 0;
+        
+        return `
+            <div class="card border-light-subtle rounded-3 mb-3 p-3 shadow-xs review-item-card" data-product-id="${item.product_id}">
+                <div class="row align-items-center g-3">
+                    <div class="col-auto">
+                        <img src="${item.product_image || 'img/product-placeholder.jpg'}" alt="" class="rounded" style="width: 60px; height: 60px; object-fit: cover;">
+                    </div>
+                    <div class="col">
+                        <div class="d-flex justify-content-between align-items-center mb-1">
+                            <h6 class="mb-0 fw-bold text-dark">${item.product_name}</h6>
+                            ${isReviewed ? '<span class="badge bg-success-subtle text-success border border-success-subtle rounded-pill x-small px-2 py-1"><i class="fas fa-check-circle me-1"></i>Reviewed</span>' : ''}
+                        </div>
+                        <div class="rating-stars mb-2" id="stars-${item.product_id}" data-rating="${currentRating}">
+                            ${[1,2,3,4,5].map(num => `
+                                <i class="${num <= currentRating ? 'fas' : 'far'} fa-star text-warning pointer fs-5" onclick="setRating(${item.product_id}, ${num})"></i>
+                            `).join('')}
+                        </div>
+                    </div>
+                    <div class="col-12">
+                        <textarea class="form-control form-control-sm border-light-subtle shadow-none mb-2" 
+                                  placeholder="What did you like or dislike? How was the quality?" 
+                                  rows="2" id="text-${item.product_id}">${item.review_text || ''}</textarea>
+                        <div class="text-end">
+                            ${isReviewed ? 
+                                `<button class="btn btn-outline-primary btn-sm rounded-pill px-4 fw-bold" onclick="updateExistingReview(${item.review_id}, ${item.product_id}, this)">Update Review</button>` : 
+                                `<button class="btn btn-danger btn-sm rounded-pill px-4 fw-bold" onclick="submitSingleReview(${item.product_id}, this)">Post Review</button>`
+                            }
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+    }).join('');
+}
+
+async function updateExistingReview(reviewId, productId, btn) {
+    const rating = document.getElementById(`stars-${productId}`).getAttribute('data-rating');
+    const text = document.getElementById(`text-${productId}`).value.trim();
+
+    if (!rating || rating == 0) {
+        alert('Please select a star rating.');
+        return;
+    }
+    if (!text) {
+        alert('Please enter your review text.');
+        return;
+    }
+
+    const originalText = btn.innerHTML;
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Updating...';
+
+    try {
+        const response = await fetch('api/reviews.php', {
+            method: 'PUT',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({
+                review_id: reviewId,
+                rating: parseInt(rating),
+                review_text: text
+            })
+        });
+        const data = await response.json();
+
+        if (data.success) {
+            showNotification(data.message, 'success');
+            // Refresh modal items to show updated state
+            const orderId = new URLSearchParams(window.location.search).get('id') || btn.closest('.modal-content').querySelector('input[name="order_id"]')?.value; 
+            // Better: just find the card and update it visually or just refresh the modal.
+            // Since we don't store orderId easily, let's just show success in the card.
+            const card = btn.closest('.review-item-card');
+            card.innerHTML = `<div class="text-center py-3 text-success fw-bold"><i class="fas fa-check-circle me-2"></i>Updated! Your review is awaiting re-approval.</div>`;
+        } else {
+            alert(data.error || 'Failed to update review');
+            btn.disabled = false;
+            btn.innerHTML = originalText;
+        }
+    } catch (err) {
+        alert('Connection error.');
+        btn.disabled = false;
+        btn.innerHTML = originalText;
+    }
+}
+
+function setRating(productId, rating) {
+    const starsContainer = document.getElementById(`stars-${productId}`);
+    starsContainer.setAttribute('data-rating', rating);
+    const stars = starsContainer.querySelectorAll('i');
+    stars.forEach((star, index) => {
+        if (index < rating) {
+            star.classList.remove('far');
+            star.classList.add('fas');
+        } else {
+            star.classList.remove('fas');
+            star.classList.add('far');
+        }
+    });
+}
+
+async function submitSingleReview(productId, btn) {
+    const card = document.querySelector(`.review-item-card[data-product-id="${productId}"]`);
+    const rating = document.getElementById(`stars-${productId}`).getAttribute('data-rating');
+    const text = document.getElementById(`text-${productId}`).value.trim();
+
+    if (!rating) {
+        alert('Please select a star rating.');
+        return;
+    }
+    if (!text) {
+        alert('Please enter your review text.');
+        return;
+    }
+
+    const originalText = btn.innerHTML;
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Submitting...';
+
+    try {
+        const response = await fetch('api/reviews.php', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({
+                product_id: productId,
+                rating: parseInt(rating),
+                review_text: text
+            })
+        });
+        const data = await response.json();
+
+        if (data.success) {
+            card.innerHTML = `<div class="text-center py-3 text-success fw-bold"><i class="fas fa-check-circle me-2"></i>Thank you! Your review is awaiting approval.</div>`;
+            setTimeout(() => {
+                if (document.querySelectorAll('.review-item-card').length === 0) {
+                    reviewModal.hide();
+                }
+            }, 2000);
+        } else {
+            alert(data.error || 'Failed to submit review');
+            btn.disabled = false;
+            btn.innerHTML = originalText;
+        }
+    } catch (err) {
+        alert('Connection error.');
+        btn.disabled = false;
+        btn.innerHTML = originalText;
+    }
+}
+</script>
+
+<!-- Edit Review Modal -->
+<div class="modal fade" id="editReviewModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content border-0 rounded-4 shadow-lg">
+      <div class="modal-header border-0 pb-0">
+        <h5 class="modal-title fw-bold"><i class="fas fa-edit text-primary me-2"></i>Edit Your Review</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body p-4">
+        <input type="hidden" id="editReviewId">
+        <div class="text-center mb-4">
+            <div class="rating-stars" id="edit-stars-container">
+                <i class="far fa-star text-warning pointer fs-3 mx-1" onclick="setEditRating(1)"></i>
+                <i class="far fa-star text-warning pointer fs-3 mx-1" onclick="setEditRating(2)"></i>
+                <i class="far fa-star text-warning pointer fs-3 mx-1" onclick="setEditRating(3)"></i>
+                <i class="far fa-star text-warning pointer fs-3 mx-1" onclick="setEditRating(4)"></i>
+                <i class="far fa-star text-warning pointer fs-3 mx-1" onclick="setEditRating(5)"></i>
+            </div>
+            <p class="text-muted small mt-2">Update your star rating and feedback</p>
+        </div>
+        <div class="mb-0">
+            <label class="form-label small fw-bold text-muted text-uppercase">Your Feedback</label>
+            <textarea class="form-control border-light-subtle shadow-none" id="editReviewInput" rows="4" required></textarea>
+        </div>
+      </div>
+      <div class="modal-footer border-0 p-4 pt-0">
+        <button type="button" class="btn btn-light rounded-pill px-4 fw-bold small border shadow-xs" data-bs-dismiss="modal">Cancel</button>
+        <button type="button" class="btn btn-primary rounded-pill px-4 fw-bold shadow-sm" onclick="saveReviewEdit(this)">Update Review</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Initialize modals
+    reviewModal = new bootstrap.Modal(document.getElementById('reviewModal'));
+    editReviewModal = new bootstrap.Modal(document.getElementById('editReviewModal'));
+
+    // Restore active tab
+
     // Restore active tab
     let activeTabId = localStorage.getItem('activeAccountTab') || '#dashboard';
     if (!activeTabId.startsWith('#')) activeTabId = '#' + activeTabId;
@@ -1090,6 +1325,74 @@ if (typeof loadUnreadCount === 'function') {
                 }
             });
     }, 30000);
+}
+
+function openEditReviewModal(review) {
+    document.getElementById('editReviewId').value = review.id;
+    document.getElementById('editReviewInput').value = review.review_text;
+    setEditRating(review.rating);
+    editReviewModal.show();
+}
+
+function setEditRating(rating) {
+    const container = document.getElementById('edit-stars-container');
+    container.setAttribute('data-rating', rating);
+    const stars = container.querySelectorAll('i');
+    stars.forEach((star, index) => {
+        if (index < rating) {
+            star.classList.remove('far');
+            star.classList.add('fas');
+        } else {
+            star.classList.remove('fas');
+            star.classList.add('far');
+        }
+    });
+}
+
+async function saveReviewEdit(btn) {
+    const id = document.getElementById('editReviewId').value;
+    const rating = document.getElementById('edit-stars-container').getAttribute('data-rating');
+    const text = document.getElementById('editReviewInput').value.trim();
+
+    if (!rating) {
+        alert('Please select a star rating.');
+        return;
+    }
+    if (!text) {
+        alert('Please enter your review text.');
+        return;
+    }
+
+    const originalText = btn.innerHTML;
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Updating...';
+
+    try {
+        const response = await fetch('api/reviews.php', {
+            method: 'PUT',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({
+                review_id: id,
+                rating: parseInt(rating),
+                review_text: text
+            })
+        });
+        const data = await response.json();
+
+        if (data.success) {
+            showNotification(data.message, 'success');
+            editReviewModal.hide();
+            setTimeout(() => location.reload(), 1500);
+        } else {
+            alert(data.error || 'Failed to update review');
+            btn.disabled = false;
+            btn.innerHTML = originalText;
+        }
+    } catch (err) {
+        alert('Connection error.');
+        btn.disabled = false;
+        btn.innerHTML = originalText;
+    }
 }
 </script>
 

@@ -1,7 +1,7 @@
 <?php
 // models/Review.php - Product reviews model
 
-require_once 'db_connect.php';
+require_once __DIR__ . '/../db_connect.php';
 
 class Review {
     private $pdo;
@@ -178,22 +178,26 @@ class Review {
         return $stmt->fetchAll();
     }
     
-    public function getRecentReviews($limit = 10) {
-        $sql = "SELECT r.*, c.first_name, c.last_name, p.name_en as product_name
-                FROM reviews r
-                JOIN customers c ON r.customer_id = c.id
-                JOIN products p ON r.product_id = p.id
-                WHERE r.is_approved = 1
-                ORDER BY r.created_at DESC
-                LIMIT ?";
-        
-        $stmt = $this->pdo->prepare($sql);
-        $stmt->execute([$limit]);
-        return $stmt->fetchAll();
-    }
+        public function getRecentReviews($limit = 10) {
+            $sql = "SELECT r.*, c.first_name, c.last_name, p.name_en as product_name
+                    FROM reviews r
+                    JOIN customers c ON r.customer_id = c.id
+                    JOIN products p ON r.product_id = p.id
+                    ORDER BY r.created_at DESC
+                    LIMIT ?";
+            
+            $stmt = $this->pdo->prepare($sql);
+            $stmt->execute([$limit]);
+            return $stmt->fetchAll();
+        }
     
-    public function hasPurchasedProduct($customerId, $productId) {
-        $sql = "SELECT COUNT(*) 
+        public function addReply($reviewId, $replyText) {
+            $sql = "UPDATE reviews SET reply_text = ?, replied_at = NOW(), updated_at = NOW() WHERE id = ?";
+            $stmt = $this->pdo->prepare($sql);
+            return $stmt->execute([$replyText, $reviewId]);
+        }
+    
+        public function hasPurchasedProduct($customerId, $productId) {        $sql = "SELECT COUNT(*) 
                 FROM orders o 
                 JOIN order_items oi ON o.id = oi.order_id 
                 WHERE o.customer_id = ? 

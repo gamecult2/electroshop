@@ -93,4 +93,31 @@ try {
     }
 } catch (Exception $e) { echo "Table not found: " . $e->getMessage() . "\n"; }
 
+echo "\n=== REVIEWS TABLE STRUCTURE ===\n";
+try {
+    $stmt = $pdo->query("DESCRIBE reviews");
+    $columns = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    foreach ($columns as $col) {
+        echo "{$col['Field']}: {$col['Type']}\n";
+    }
+} catch (Exception $e) { echo "Table not found: " . $e->getMessage() . "\n"; }
+
+echo "\n=== REVIEW_IMAGES TABLE STRUCTURE ===\n";
+try {
+    $stmt = $pdo->query("DESCRIBE review_images");
+    $columns = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    foreach ($columns as $col) {
+        echo "{$col['Field']}: {$col['Type']}\n";
+    }
+} catch (Exception $e) { echo "Table not found: " . $e->getMessage() . "\n"; }
+
+echo "\n=== REVIEW_VOTES TABLE STRUCTURE ===\n";
+try {
+    $stmt = $pdo->query("DESCRIBE review_votes");
+    $columns = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    foreach ($columns as $col) {
+        echo "{$col['Field']}: {$col['Type']}\n";
+    }
+} catch (Exception $e) { echo "Table not found: " . $e->getMessage() . "\n"; }
+
 

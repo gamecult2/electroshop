@@ -4,9 +4,12 @@ require_once __DIR__ . '/../db_connect.php';
 
 class Product {
     private $pdo;
+    private $skuGenerator;
     
     public function __construct($database = null) {
         $this->pdo = $database ? $database->getConnection() : $GLOBALS['pdo'];
+        require_once __DIR__ . '/../helpers/SKUGenerator.php';
+        $this->skuGenerator = new SKUGenerator($database);
     }
     
     public function getAll($limit = 20, $offset = 0, $filters = []) {
@@ -437,15 +440,36 @@ class Product {
     }
     
     private function addProductVariants($productId, $variants) {
+        // Get Parent SKU
+        $stmt = $this->pdo->prepare("SELECT sku FROM products WHERE id = ?");
+        $stmt->execute([$productId]);
+        $parentSku = $stmt->fetchColumn();
+
+        if (!$parentSku) {
+            throw new Exception("Parent product SKU required for variant generation.");
+        }
+
         $sqlVariant = "INSERT INTO product_variants (product_id, sku, variant_name, price, stock_quantity) VALUES (?, ?, ?, ?, ?)";
         $stmtVariant = $this->pdo->prepare($sqlVariant);
 
         $sqlAttribute = "INSERT INTO variant_attributes (product_variant_id, attribute_name, attribute_value) VALUES (?, ?, ?)";
         $stmtAttribute = $this->pdo->prepare($sqlAttribute);
         
+        $batchOffset = 0;
         foreach ($variants as $variant) {
-            // Generate or use provided SKU
-            $sku = !empty($variant['sku']) ? $variant['sku'] : $this->generateVariantSKU($productId, $variant);
+            // Generate or validate SKU
+            if (!empty($variant['sku'])) {
+                $sku = strtoupper(trim($variant['sku']));
+                if (!$this->skuGenerator->validateSKU($sku)) {
+                    throw new Exception("Invalid variant SKU format: $sku");
+                }
+                if ($this->skuGenerator->skuExists($sku)) {
+                    throw new Exception("Duplicate variant SKU detected: $sku");
+                }
+            } else {
+                $sku = $this->skuGenerator->generateVariantSKU($parentSku, $batchOffset);
+                $batchOffset++;
+            }
             
             // Insert into product_variants
             $stmtVariant->execute([
@@ -466,11 +490,6 @@ class Product {
         }
     }
 
-    private function generateVariantSKU($productId, $variant) {
-        // Simple SKU generator: PROD-{ID}-{RAND}
-        return 'PROD-' . $productId . '-' . strtoupper(substr(md5(uniqid()), 0, 6));
-    }
-    
     private function updateProductVariants($productId, $variants) {
         // Remove existing variants (Cascade will remove attributes)
         $sql = "DELETE FROM product_variants WHERE product_id = ?";

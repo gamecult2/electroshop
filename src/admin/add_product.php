@@ -411,11 +411,14 @@ include 'header.php';
                     </div>
                 </div>
 
-                <!-- Sticky Actions Bar -->
-                <div class="sticky-bottom bg-white border-top p-4 mt-5 mx-n4 mb-n4 shadow-sm z-3">
-                    <div class="d-flex justify-content-end align-items-center gap-3 container-fluid max-width-1200 mx-auto px-1">
+                <!-- Spacer to prevent content hiding behind fixed footer -->
+                <div style="height: 100px;"></div>
+
+                <!-- Fixed Floating Action Bar -->
+                <div class="position-fixed bottom-0 start-0 w-100 bg-white border-top shadow-lg p-3 z-3" style="z-index: 1050;">
+                    <div class="container-fluid d-flex justify-content-end align-items-center gap-3">
                         <a href="products.php" class="btn btn-light btn-lg rounded-pill px-4 fw-bold text-muted border border-light-subtle">Cancel</a>
-                        <button type="submit" class="btn btn-primary btn-lg rounded-pill px-5 fw-bold shadow">
+                        <button type="submit" class="btn btn-primary btn-lg rounded-pill px-5 fw-bold shadow-sm">
                             <i class="fas fa-save me-2"></i> Save Product
                         </button>
                     </div>
