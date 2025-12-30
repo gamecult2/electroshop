@@ -404,13 +404,23 @@ function showChatForm() {
     `;
 }
 
-function openProductChat(productId, productName) {
+function openProductChat(productId, productName, productImage, productSku) {
     currentProductId = productId;
     document.getElementById('currentProductId').value = productId;
     
     // Show product context
     document.getElementById('productContext').classList.remove('d-none');
     document.getElementById('productContextName').textContent = productName;
+    
+    if (productImage) {
+        document.getElementById('productContextImage').src = productImage;
+    }
+    
+    if (productSku) {
+        document.getElementById('productContextSku').textContent = 'SKU: ' + productSku;
+    } else {
+        document.getElementById('productContextSku').textContent = '';
+    }
     
     toggleChatModal();
     showChatForm();

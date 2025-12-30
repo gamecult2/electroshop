@@ -51,6 +51,104 @@ if ($step == 2 && $_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 }
 
+// Function to properly parse SQL statements, respecting semicolons within strings
+function parseSQLStatements($sql) {
+    $statements = [];
+    $currentStatement = '';
+    $inString = false;
+    $stringDelimiter = null;
+    $escaped = false;
+    $inComment = false;
+    $commentType = null; // 'single' for --, 'multi' for /* */
+
+    $chars = str_split($sql);
+    $i = 0;
+
+    while ($i < count($chars)) {
+        $char = $chars[$i];
+        $nextChar = isset($chars[$i + 1]) ? $chars[$i + 1] : '';
+
+        // Check for comment start
+        if (!$inString && !$inComment) {
+            if ($char === '-' && $nextChar === '-') {
+                $inComment = true;
+                $commentType = 'single';
+                $currentStatement .= $char;
+                $i++;
+                continue;
+            } elseif ($char === '/' && $nextChar === '*') {
+                $inComment = true;
+                $commentType = 'multi';
+                $currentStatement .= $char . $nextChar;
+                $i += 2;
+                continue;
+            }
+        }
+
+        // Check for comment end
+        if ($inComment) {
+            if ($commentType === 'single' && ($char === "\n" || $char === "\r")) {
+                $inComment = false;
+                $commentType = null;
+            } elseif ($commentType === 'multi' && $char === '*' && $nextChar === '/') {
+                $inComment = false;
+                $commentType = null;
+                $currentStatement .= $char . $nextChar;
+                $i += 2;
+                continue;
+            }
+            $currentStatement .= $char;
+            $i++;
+            continue;
+        }
+
+        // Inside a string or comment, so we don't check for statement terminators
+        if ($escaped) {
+            $currentStatement .= $char;
+            $escaped = false;
+        } elseif ($char === '\\') {
+            $currentStatement .= $char;
+            $escaped = true;
+        } elseif ($inString) {
+            if ($char === $stringDelimiter) {
+                // Check if next character is also the delimiter (for escaping)
+                if ($nextChar === $stringDelimiter) {
+                    $currentStatement .= $char . $nextChar;
+                    $i += 2; // Skip next character
+                    continue;
+                } else {
+                    $inString = false;
+                }
+            }
+            $currentStatement .= $char;
+        } else {
+            if ($char === ';' && !$inString && !$inComment) {
+                $stmt = trim($currentStatement);
+                if (!empty($stmt)) {
+                    $statements[] = $stmt;
+                }
+                $currentStatement = '';
+            } else {
+                if ($char === '"' || $char === "'" || $char === '`') {
+                    $inString = true;
+                    $stringDelimiter = $char;
+                }
+                $currentStatement .= $char;
+            }
+        }
+
+        $i++;
+    }
+
+    // Add the last statement if it doesn't end with semicolon
+    $stmt = trim($currentStatement);
+    if (!empty($stmt)) {
+        $statements[] = $stmt;
+    }
+
+    return $statements;
+}
+
 if ($step == 3 && $_SERVER['REQUEST_METHOD'] === 'POST') {
     if (!isset($_SESSION['db_config'])) {
         header('Location: ?step=2');
@@ -67,14 +165,19 @@ if ($step == 3 && $_SERVER['REQUEST_METHOD'] === 'POST') {
         $sqlFile = 'DB.sql';
         if (file_exists($sqlFile)) {
             $sql = file_get_contents($sqlFile);
-            
-            // Remove comments and execute queries
-            // Basic SQL split by semicolon (careful with semicolons in strings, but for standard schema it's okay)
-            $queries = explode(';', $sql);
+
+            // Properly parse SQL statements, respecting semicolons within strings
+            $queries = parseSQLStatements($sql);
             foreach ($queries as $query) {
                 $query = trim($query);
                 if (!empty($query)) {
-                    $pdo->exec($query);
+                    try {
+                        $pdo->exec($query);
+                    } catch (PDOException $e) {
+                        // Log the problematic query for debugging
+                        error_log("SQL Error on query: " . $query . " - Error: " . $e->getMessage());
+                        throw $e; // Re-throw to stop execution
+                    }
                 }
             }
             

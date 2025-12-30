@@ -489,7 +489,7 @@ if (is_logged_in()) {
                         <button class="btn btn-link text-decoration-none text-muted p-0 small add-to-wishlist-btn" data-product-id="<?php echo $productId; ?>">
                             <i class="<?php echo $isWishlisted ? 'fas text-danger' : 'far'; ?> fa-heart me-1"></i> <?php echo t('wishlist'); ?>
                         </button>
-                        <button class="btn btn-link text-decoration-none text-muted p-0 small" onclick="openProductChat(<?php echo $productId; ?>, '<?php echo htmlspecialchars($product['name'], ENT_QUOTES); ?>')">
+                        <button class="btn btn-link text-decoration-none text-muted p-0 small" onclick="openProductChat(<?php echo $productId; ?>, '<?php echo htmlspecialchars($product['name'], ENT_QUOTES); ?>', '<?php echo htmlspecialchars($product['images'][0] ?? ''); ?>', '<?php echo htmlspecialchars($product['sku'] ?? ''); ?>')">
                             <i class="fas fa-comment-dots me-1"></i> Ask about this product
                         </button>
                         <button class="btn btn-link text-decoration-none text-muted p-0 small"><i class="fas fa-share-alt me-1"></i> Share</button>
@@ -831,41 +831,7 @@ function updateOptionAvailability() {
 }
 
 // Function to open chat about a product
-async function openProductChat(productId, productName) {
-    try {
-        // Create a product card message with key product details
-        const productCardMessage = `Hello, I'm interested in this product:
-
-Product: ${productName}
-Link: ${window.location.href}
-
-Could you provide more information about this product?`;
-
-        // First, try to create a conversation with the product information
-        const response = await fetch('api/messages/send.php', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-                product_id: productId,
-                message: productCardMessage
-            })
-        });
-
-        const data = await response.json();
-
-        if (data.success) {
-            // Redirect to the messages page with the conversation ID
-            window.location.href = `messages.php?conversation_id=${data.conversation_id}`;
-        } else {
-            showNotification(data.message || 'Error starting chat', 'error');
-        }
-    } catch (error) {
-        console.error('Error creating product chat:', error);
-        showNotification('Connection error. Please try again.', 'error');
-    }
-}
+// openProductChat is now handled by chat-widget.php
 
 async function buyNow(id) {
     await addToCart(id, true);
