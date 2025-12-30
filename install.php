@@ -33,7 +33,7 @@ if ($step == 2 && $_SERVER['REQUEST_METHOD'] === 'POST') {
         $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
         
         // Create database if not exists
-        $pdo->exec("CREATE DATABASE IF NOT EXISTS `$name` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci");
+        $pdo->exec("CREATE DATABASE IF NOT EXISTS `$name` CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci");
         
         // Store in session for next step
         $_SESSION['db_config'] = [
@@ -166,18 +166,15 @@ if ($step == 3 && $_SERVER['REQUEST_METHOD'] === 'POST') {
         if (file_exists($sqlFile)) {
             $sql = file_get_contents($sqlFile);
 
+            // Replace newer MySQL 8.0 collations with older compatible ones
+            $sql = str_replace('utf8mb4_0900_ai_ci', 'utf8mb4_general_ci', $sql);
+
             // Properly parse SQL statements, respecting semicolons within strings
             $queries = parseSQLStatements($sql);
             foreach ($queries as $query) {
                 $query = trim($query);
                 if (!empty($query)) {
-                    try {
-                        $pdo->exec($query);
-                    } catch (PDOException $e) {
-                        // Log the problematic query for debugging
-                        error_log("SQL Error on query: " . $query . " - Error: " . $e->getMessage());
-                        throw $e; // Re-throw to stop execution
-                    }
+                    $pdo->exec($query);
                 }
             }
             
