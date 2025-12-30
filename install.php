@@ -177,7 +177,28 @@ if ($step == 3 && $_SERVER['REQUEST_METHOD'] === 'POST') {
                     $pdo->exec($query);
                 }
             }
-            
+
+            // Add missing columns that may be expected by the application
+            try {
+                // Check if is_archived column exists in orders table, if not, add it
+                $columnCheck = $pdo->query("SHOW COLUMNS FROM orders LIKE 'is_archived'")->rowCount();
+                if ($columnCheck == 0) {
+                    $pdo->exec("ALTER TABLE orders ADD COLUMN is_archived TINYINT(1) DEFAULT 0 AFTER updated_at");
+                }
+
+                // Check if conversations table exists and if is_archived column exists, if not, add it
+                $tableCheck = $pdo->query("SHOW TABLES LIKE 'conversations'")->rowCount();
+                if ($tableCheck > 0) {
+                    $columnCheck = $pdo->query("SHOW COLUMNS FROM conversations LIKE 'is_archived'")->rowCount();
+                    if ($columnCheck == 0) {
+                        $pdo->exec("ALTER TABLE conversations ADD COLUMN is_archived TINYINT(1) DEFAULT 0 AFTER closed_at");
+                    }
+                }
+            } catch (Exception $e) {
+                // If there's an issue adding the column, log it but continue
+                error_log("Could not add is_archived column: " . $e->getMessage());
+            }
+
             // Update src/config.php with new credentials
             $configFile = 'src/config.php';
             if (file_exists($configFile)) {

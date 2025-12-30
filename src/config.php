@@ -3,7 +3,7 @@
 define('DB_HOST', 'localhost');
 define('DB_USER', 'root');
 define('DB_PASS', '');
-define('DB_NAME', 'gamecult');
+define('DB_NAME', 'qwenshop');
 
 // Site Configuration
 // Define site URL components
