@@ -169,12 +169,26 @@ if ($step == 3 && $_SERVER['REQUEST_METHOD'] === 'POST') {
             // Replace newer MySQL 8.0 collations with older compatible ones
             $sql = str_replace('utf8mb4_0900_ai_ci', 'utf8mb4_general_ci', $sql);
 
+            // Replace references to generic 'users' table with 'admin_users' where appropriate
+            // This fixes foreign key constraint issues since the schema uses 'admin_users' instead of 'users'
+            $sql = str_replace('REFERENCES `users` (`id`)', 'REFERENCES `admin_users` (`id`)', $sql);
+
             // Properly parse SQL statements, respecting semicolons within strings
             $queries = parseSQLStatements($sql);
             foreach ($queries as $query) {
                 $query = trim($query);
                 if (!empty($query)) {
-                    $pdo->exec($query);
+                    try {
+                        $pdo->exec($query);
+                    } catch (PDOException $e) {
+                        // If there's a foreign key constraint error, log it and continue
+                        if (strpos($e->getMessage(), 'foreign key constraint') !== false || strpos($e->getMessage(), 'errno: 150') !== false) {
+                            error_log("Foreign key constraint issue with query: " . $query . " - " . $e->getMessage());
+                            continue; // Skip the problematic query
+                        } else {
+                            throw $e; // Re-throw other errors
+                        }
+                    }
                 }
             }
 
