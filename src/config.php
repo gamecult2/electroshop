@@ -5,6 +5,14 @@ define('DB_USER', 'root');
 define('DB_PASS', '');
 define('DB_NAME', 'qwenshop');
 
+// Autoload Dependencies
+require_once __DIR__ . '/../vendor/autoload.php';
+
+// Chargily Pay Configuration
+define('CHARGILY_MODE', 'test'); // 'test' or 'live'
+define('CHARGILY_PUBLIC_KEY', 'test_pk_Ixwyn2nTdmWhl3KJLNxOMNVWoUEB8me2dCZzPzpJ');
+define('CHARGILY_SECRET_KEY', 'test_sk_l7vZZseMSkr4avzpSUpzKDS2zUAJR5hlC4V5YrJh');
+
 // Site Configuration
 // Define site URL components
 define('SITE_PROTOCOL', (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? 'https' : 'http'));

@@ -84,6 +84,35 @@ if (!$order) {
     die("Order not found.");
 }
 
+// Auto-Verify Chargily Status if still pending
+if ($order['payment_method'] === 'chargily' && $order['payment_status'] !== 'paid' && !empty($order['transaction_id'])) {
+    require_once '../services/ChargilyService.php';
+    try {
+        $logFile = __DIR__ . '/../debug_payment.log';
+        file_put_contents($logFile, date('Y-m-d H:i:s') . " - Auto-Checking Details Order #{$orderId} (Tx: {$order['transaction_id']})\n", FILE_APPEND);
+        
+        $chargily = new ChargilyService();
+        $checkout = $chargily->getCheckout($order['transaction_id']);
+        if ($checkout) {
+            $remoteStatus = $checkout->getStatus();
+            file_put_contents($logFile, date('Y-m-d H:i:s') . " - Order #{$orderId} Details Remote Status: {$remoteStatus}\n", FILE_APPEND);
+            
+            if ($remoteStatus === 'paid') {
+                $orderModel->updatePaymentDetails($orderId, 'paid', $order['transaction_id'], $checkout->toArray());
+                $orderModel->updateStatus($orderId, 'processing', null, 'Payment verified automatically on admin view');
+                $order = $orderModel->getById($orderId); // Refresh data
+                file_put_contents($logFile, date('Y-m-d H:i:s') . " - Order #{$orderId} Details Direct Sync SUCCESS\n", FILE_APPEND);
+            } else {
+                file_put_contents($logFile, date('Y-m-d H:i:s') . " - Order #{$orderId} Details Status is not PAID: {$remoteStatus}\n", FILE_APPEND);
+            }
+        } else {
+            file_put_contents($logFile, date('Y-m-d H:i:s') . " - Order #{$orderId} Details API returned NULL\n", FILE_APPEND);
+        }
+    } catch (Exception $e) {
+        file_put_contents($logFile, date('Y-m-d H:i:s') . " - Order #{$orderId} Details Sync Error: " . $e->getMessage() . "\n", FILE_APPEND);
+    }
+}
+
 $items = $orderModel->getItems($orderId);
 $history = $orderModel->getOrderStatusHistory($orderId);
 $customer = $customerModel->getById($order['customer_id']);
@@ -201,7 +230,20 @@ function format_address_detailed($json) {
                     <i class="fas <?php echo $pStatus === 'paid' ? 'fa-check-circle' : ($pStatus === 'failed' ? 'fa-times-circle' : 'fa-clock'); ?> me-1"></i>
                     <?php echo htmlspecialchars($pStatus); ?>
                 </div>
-                <div class="text-muted x-small"><?php echo strtoupper($order['payment_method']); ?></div>
+                <div class="text-muted x-small">
+                    <?php 
+                    if (!empty($order['payment_gateway_response'])) {
+                        $resp = json_decode($order['payment_gateway_response'], true);
+                        $subMethod = $resp['payment_method'] ?? $order['payment_method'];
+                        $formattedSubMethod = (strtolower($subMethod) === 'cib') ? 'CIB' : ucfirst($subMethod);
+                        echo "Chargily (" . $formattedSubMethod . ")";
+                    } else if (($order['payment_method'] ?? '') === 'chargily') {
+                        echo "Chargily (Waiting for Payment)";
+                    } else {
+                        echo strtoupper($order['payment_method'] ?? 'COD');
+                    }
+                    ?>
+                </div>
             </div>
         </div>
     </div>
@@ -479,7 +521,7 @@ function format_address_detailed($json) {
                 <h6 class="mb-0 fw-bold text-dark"><i class="fas fa-credit-card me-2 text-primary"></i> Payment Management</h6>
             </div>
             <div class="card-body p-4">
-                <form method="POST">
+                <form method="POST" class="mb-3">
                     <input type="hidden" name="action" value="update_payment_status">
                     <label class="form-label small fw-bold text-muted text-uppercase ls-1">Payment Status</label>
                     <div class="d-flex gap-2">
@@ -492,8 +534,47 @@ function format_address_detailed($json) {
                         </select>
                         <button type="submit" class="btn btn-primary px-3"><i class="fas fa-check"></i></button>
                     </div>
-                    <div class="mt-2 text-muted x-small">Method: <strong><?php echo strtoupper($order['payment_method']); ?></strong></div>
                 </form>
+                
+                <div class="mt-3 pt-3 border-top">
+                    <div class="mb-2">
+                        <label class="x-small fw-bold text-muted text-uppercase ls-1 d-block">Payment Method</label>
+                        <span class="fw-bold text-dark">
+                            <?php 
+                            if (!empty($order['payment_gateway_response'])) {
+                                $resp = json_decode($order['payment_gateway_response'], true);
+                                $subMethod = $resp['payment_method'] ?? $order['payment_method'];
+                                $formattedSubMethod = (strtolower($subMethod) === 'cib') ? 'CIB' : ucfirst($subMethod);
+                                echo "Chargily (" . $formattedSubMethod . ")";
+                            } else if ($order['payment_method'] === 'chargily') {
+                                echo "Chargily (Pending checkout)";
+                            } else {
+                                echo strtoupper($order['payment_method'] ?? 'COD');
+                            }
+                            ?>
+                        </span>
+                    </div>
+                    <?php if (!empty($order['transaction_id'])): ?>
+                    <div class="mb-2">
+                        <label class="x-small fw-bold text-muted text-uppercase ls-1 d-block">Transaction ID</label>
+                        <code class="text-danger small fw-bold"><?php echo htmlspecialchars($order['transaction_id']); ?></code>
+                    </div>
+                    <?php endif; ?>
+                    
+                    <?php if (!empty($order['payment_gateway_response'])): ?>
+                    <div class="mt-3">
+                        <button class="btn btn-outline-secondary btn-sm rounded-pill w-100 x-small fw-bold" type="button" data-bs-toggle="collapse" data-bs-target="#gatewayResponse">
+                            View Gateway Response <i class="fas fa-chevron-down ms-1"></i>
+                        </button>
+                        <div class="collapse mt-2" id="gatewayResponse">
+                            <pre class="bg-light p-2 rounded small border x-small overflow-auto" style="max-height: 200px;"><code><?php 
+                                $resp = json_decode($order['payment_gateway_response'], true);
+                                echo htmlspecialchars(json_encode($resp, JSON_PRETTY_PRINT)); 
+                            ?></code></pre>
+                        </div>
+                    </div>
+                    <?php endif; ?>
+                </div>
             </div>
         </div>
 

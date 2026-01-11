@@ -157,9 +157,8 @@ if (is_logged_in()) {
     ?>
     
     <div class="row g-3">
-<<<<<<< Updated upstream
         <!-- Main Content Area (Media + Tabs) -->
-        <div class="col-lg-8">
+        <div class="col-lg-8 col-12">
             <div class="row g-3">
                 <!-- Media Viewer -->
                 <div class="col-12">
@@ -176,24 +175,6 @@ if (is_logged_in()) {
                                                 <i class="fas fa-play-circle text-danger fs-4"></i>
                                             </div>
                                         <?php endif; ?>
-=======
-        <!-- Media Viewer (Order 1 on mobile) -->
-        <div class="col-lg-8 order-1">
-            <!-- Gallery Section -->
-            <div class="card border-0 shadow-sm mb-3">
-                <div class="card-body">
-                    <div class="row g-3">
-                        <!-- Thumbnails -->
-                        <div class="col-2 col-md-2 order-2 order-md-1">
-                            <div class="d-flex flex-column gap-2 overflow-auto product-thumbnails" style="max-height: 500px; scrollbar-width: none;">
-                                <?php if (!empty($product['video_url'])): ?>
-                                    <div class="thumbnail border rounded overflow-hidden d-flex align-items-center justify-content-center bg-light video-thumb" 
-                                         onclick="toggleVideo(true)" 
-                                         style="aspect-ratio: 1; min-height: 50px; cursor: pointer;">
-                                        <i class="fas fa-play-circle text-danger fs-4"></i>
-                                    </div>
-                                <?php endif; ?>
->>>>>>> Stashed changes
 
                                         <?php foreach ($product['images'] as $index => $image): ?>
                                             <div class="thumbnail border rounded overflow-hidden <?php echo $index === 0 && empty($product['video_url']) ? 'border-danger border-2' : ''; ?>" 
@@ -228,7 +209,118 @@ if (is_logged_in()) {
                         </div>
                     </div>
                 </div>
-<<<<<<< Updated upstream
+
+
+                <!-- Price Card (Mobile Only) -->
+                <div class="col-12 d-lg-none">
+                     <div class="card border-0 shadow-sm mb-4">
+                        <div class="card-body p-4">
+                            <h1 class="h3 fw-bold mb-2 text-dark"><?php echo htmlspecialchars($product['name'] ?? ''); ?></h1>
+                            <p class="text-muted small mb-4"><?php echo htmlspecialchars($product['subtitle'] ?? ''); ?></p>
+        
+                            <div class="d-flex align-items-center gap-4 mb-4 pb-3 border-bottom overflow-auto">
+                                <div class="text-center border-end pe-4">
+                                    <div class="text-warning small mb-1"><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i></div>
+                                    <div class="fw-bold h5 mb-0">4.5</div>
+                                    <div class="text-muted small"><?php echo number_format($product['rating_count'] ?? 0); ?> Reviews</div>
+                                </div>
+                                <div class="text-center">
+                                    <div class="text-muted small mb-1">Sales</div>
+                                    <div class="fw-bold h5 mb-0">1.2k+</div>
+                                    <div class="text-muted small">Orders</div>
+                                </div>
+                            </div>
+        
+                            <div class="bg-light p-3 rounded-3 mb-4">
+                                <div class="d-flex align-items-baseline gap-2 mb-2">
+                                    <span class="text-danger h2 fw-bold mb-0 product-final-price-mobile"><?php echo format_price($product['final_price']); ?></span>
+                                    <div class="product-discount-display-mobile <?php echo $product['discount_percentage'] > 0 ? 'd-flex' : 'd-none'; ?> align-items-baseline gap-2">
+                                        <span class="text-muted text-decoration-line-through x-small product-base-price-mobile"><?php echo format_price($product['price']); ?></span>
+                                        <span class="badge bg-danger rounded-pill x-small product-discount-badge-mobile">-<?php echo (int)$product['discount_percentage']; ?>%</span>
+                                    </div>
+                                </div>
+                                <div class="d-flex gap-2 flex-wrap">
+                                    <?php foreach ($product['promotions'] as $promo): ?>
+                                        <span class="badge bg-white text-danger border border-danger fw-normal"><?php echo htmlspecialchars($promo['text'] ?? ''); ?></span>
+                                    <?php endforeach; ?>
+                                </div>
+                            </div>
+        
+                            <!-- Options -->
+                            <?php if (!empty($product['options'])): ?>
+                                <div class="mb-4">
+                                    <?php foreach ($product['options'] as $optionName => $values): ?>
+                                        <div class="option-row mb-3" data-option-name="<?php echo htmlspecialchars($optionName); ?>">
+                                            <label class="form-label small fw-bold text-muted text-uppercase mb-2"><?php echo htmlspecialchars($optionName); ?>:</label>
+                                            <div class="d-flex flex-wrap gap-2">
+                                                <?php foreach ($values as $val): ?>
+                                                    <button type="button"
+                                                            class="btn btn-sm btn-outline-secondary px-3 rounded-pill option-item shadow-none"
+                                                            onclick="selectOption(this, '<?php echo htmlspecialchars($optionName); ?>', '<?php echo htmlspecialchars($val); ?>')">
+                                                        <?php echo htmlspecialchars($val); ?>
+                                                    </button>
+                                                <?php endforeach; ?>
+                                            </div>
+                                        </div>
+                                    <?php endforeach; ?>
+                                </div>
+                            <?php endif; ?>
+        
+                            <div class="row align-items-center g-3 mb-4">
+                                <div class="col-auto">
+                                    <div class="input-group overflow-hidden rounded-3 shadow-none border" style="width: 130px;">
+                                        <button class="btn btn-white border-0 px-3" onclick="changeQuantity(-1, 'quantity-mobile')"><i class="fas fa-minus small"></i></button>
+                                        <input type="number" class="form-control border-0 text-center fw-bold shadow-none p-0" value="1" min="1" id="quantity-mobile">
+                                        <button class="btn btn-white border-0 px-3" onclick="changeQuantity(1, 'quantity-mobile')"><i class="fas fa-plus small"></i></button>
+                                    </div>
+                                </div>
+                                <div class="col">
+                                    <div class="small <?php echo $product['stock_quantity'] > 0 ? 'text-success' : 'text-danger'; ?> fw-bold product-stock-status-mobile">
+                                        <i class="fas <?php echo $product['stock_quantity'] > 0 ? 'fa-check-circle' : 'fa-times-circle'; ?> me-1"></i>
+                                        <?php echo $product['stock_quantity'] > 0 ? $product['stock_quantity'] . ' in stock' : 'Out of Stock'; ?>
+                                    </div>
+                                </div>
+                            </div>
+        
+                            <div class="d-grid gap-3 mb-4">
+                                <button class="btn btn-danger btn-lg py-3 rounded-3 shadow-sm btn-add-cart-mobile d-flex align-items-center justify-content-center gap-2" onclick="addToCart(<?php echo $productId; ?>)">
+                                    <i class="fas fa-shopping-cart"></i> <span><?php echo t('add_to_cart'); ?></span>
+                                </button>
+                                <button class="btn btn-outline-danger btn-lg py-3 rounded-3 btn-buy-now d-flex align-items-center justify-content-center gap-2" onclick="buyNow(<?php echo $productId; ?>)">
+                                    <i class="fas fa-bolt"></i> <span><?php echo t('buy_now'); ?></span>
+                                </button>
+                            </div>
+        
+                            <div class="row g-2 mb-4">
+                                <?php 
+                                $promises = [
+                                    ['icon' => 'fa-shield-alt', 'text' => 'Authentic Guarantee'],
+                                    ['icon' => 'fa-truck-loading', 'text' => 'Fast Delivery'],
+                                    ['icon' => 'fa-undo', 'text' => '7-Day Returns'],
+                                    ['icon' => 'fa-check-circle', 'text' => 'Warranty Included']
+                                ];
+                                foreach ($promises as $p): ?>
+                                    <div class="col-6">
+                                        <div class="d-flex align-items-center gap-2 text-muted small">
+                                            <i class="fas <?php echo $p['icon']; ?> text-success"></i>
+                                            <span><?php echo $p['text']; ?></span>
+                                        </div>
+                                    </div>
+                                <?php endforeach; ?>
+                            </div>
+        
+                            <div class="d-flex justify-content-between align-items-center pt-3 border-top flex-wrap gap-2">
+                                <button class="btn btn-link text-decoration-none text-muted p-0 small add-to-wishlist-btn" data-product-id="<?php echo $productId; ?>">
+                                    <i class="<?php echo $isWishlisted ? 'fas text-danger' : 'far'; ?> fa-heart me-1"></i> <?php echo t('wishlist'); ?>
+                                </button>
+                                <button class="btn btn-link text-decoration-none text-muted p-0 small" onclick="openProductChat(<?php echo $productId; ?>, '<?php echo htmlspecialchars($product['name'], ENT_QUOTES); ?>', '<?php echo htmlspecialchars($product['images'][0] ?? ''); ?>', '<?php echo htmlspecialchars($product['sku'] ?? ''); ?>')">
+                                    <i class="fas fa-comment-dots me-1"></i> Ask about this product
+                                </button>
+                                <button class="btn btn-link text-decoration-none text-muted p-0 small"><i class="fas fa-share-alt me-1"></i> Share</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
 
                 <!-- Product Details / Tabs -->
                 <div class="col-12">
@@ -245,145 +337,6 @@ if (is_logged_in()) {
                                     <button class="nav-link rounded-0 border-0 py-3 px-4 fw-bold text-dark" id="reviews-tab" data-bs-toggle="tab" data-bs-target="#reviews" type="button" role="tab">Reviews (<?php echo $totalReviews; ?>)</button>
                                 </li>
                             </ul>
-=======
-            </div>
-        </div>
-
-        <!-- Price Card Column (Order 2 on mobile, last on desktop) -->
-        <div class="col-lg-4 order-2 order-lg-last">
-            <div class="card border-0 shadow-sm sticky-top" style="top: 20px;">
-                <div class="card-body p-4">
-                    <h1 class="h3 fw-bold mb-2 text-dark"><?php echo htmlspecialchars($product['name'] ?? ''); ?></h1>
-                    <p class="text-muted small mb-4"><?php echo htmlspecialchars($product['subtitle'] ?? ''); ?></p>
-
-                    <div class="d-flex align-items-center gap-4 mb-4 pb-3 border-bottom overflow-auto">
-                        <div class="text-center border-end pe-4">
-                            <div class="text-warning small mb-1"><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i></div>
-                            <div class="fw-bold h5 mb-0">4.5</div>
-                            <div class="text-muted small"><?php echo number_format($product['rating_count'] ?? 0); ?> Reviews</div>
-                        </div>
-                        <div class="text-center">
-                            <div class="text-muted small mb-1">Sales</div>
-                            <div class="fw-bold h5 mb-0">1.2k+</div>
-                            <div class="text-muted small">Orders</div>
-                        </div>
-                    </div>
-
-                    <div class="bg-light p-3 rounded-3 mb-4">
-                        <div class="d-flex align-items-baseline gap-2 mb-2">
-                            <span class="text-danger h2 fw-bold mb-0" id="product-final-price"><?php echo format_price($product['final_price']); ?></span>
-                            <div id="discount-display" class="<?php echo $product['discount_percentage'] > 0 ? 'd-flex' : 'd-none'; ?> align-items-baseline gap-2">
-                                <span class="text-muted text-decoration-line-through x-small" id="product-base-price"><?php echo format_price($product['price']); ?></span>
-                                <span class="badge bg-danger rounded-pill x-small" id="product-discount-badge">-<?php echo (int)$product['discount_percentage']; ?>%</span>
-                            </div>
-                        </div>
-                        <div class="d-flex gap-2 flex-wrap">
-                            <?php foreach ($product['promotions'] as $promo): ?>
-                                <span class="badge bg-white text-danger border border-danger fw-normal"><?php echo htmlspecialchars($promo['text'] ?? ''); ?></span>
-                            <?php endforeach; ?>
-                        </div>
-                    </div>
-
-                    <!-- Options -->
-                    <?php if (!empty($product['options'])): ?>
-                        <div class="mb-4">
-                            <?php foreach ($product['options'] as $optionName => $values): ?>
-                                <div class="option-row mb-3" data-option-name="<?php echo htmlspecialchars($optionName); ?>">
-                                    <label class="form-label small fw-bold text-muted text-uppercase mb-2"><?php echo htmlspecialchars($optionName); ?>:</label>
-                                    <div class="d-flex flex-wrap gap-2">
-                                        <?php foreach ($values as $val): ?>
-                                            <button type="button"
-                                                    class="btn btn-sm btn-outline-secondary px-3 rounded-pill option-item shadow-none"
-                                                    onclick="selectOption(this, '<?php echo htmlspecialchars($optionName); ?>', '<?php echo htmlspecialchars($val); ?>')">
-                                                <?php echo htmlspecialchars($val); ?>
-                                            </button>
-                                        <?php endforeach; ?>
-                                    </div>
-                                </div>
-                            <?php endforeach; ?>
-                        </div>
-                    <?php endif; ?>
-
-                    <div class="row align-items-center g-3 mb-4">
-                        <div class="col-auto">
-                            <div class="input-group overflow-hidden rounded-3 shadow-none border" style="width: 130px;">
-                                <button class="btn btn-white border-0 px-3" onclick="changeQuantity(-1)"><i class="fas fa-minus small"></i></button>
-                                <input type="number" class="form-control border-0 text-center fw-bold shadow-none p-0" value="1" min="1" id="quantity">
-                                <button class="btn btn-white border-0 px-3" onclick="changeQuantity(1)"><i class="fas fa-plus small"></i></button>
-                            </div>
-                        </div>
-                        <div class="col">
-                            <div class="small <?php echo $product['stock_quantity'] > 0 ? 'text-success' : 'text-danger'; ?> fw-bold" id="product-stock-status">
-                                <i class="fas <?php echo $product['stock_quantity'] > 0 ? 'fa-check-circle' : 'fa-times-circle'; ?> me-1"></i>
-                                <?php echo $product['stock_quantity'] > 0 ? $product['stock_quantity'] . ' in stock' : 'Out of Stock'; ?>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="d-grid gap-3 mb-4">
-                        <button class="btn btn-danger btn-lg py-3 rounded-3 shadow-sm btn-add-cart d-flex align-items-center justify-content-center gap-2" onclick="addToCart(<?php echo $productId; ?>)">
-                            <i class="fas fa-shopping-cart"></i> <span><?php echo t('add_to_cart'); ?></span>
-                        </button>
-                        <button class="btn btn-outline-danger btn-lg py-3 rounded-3 btn-buy-now d-flex align-items-center justify-content-center gap-2" onclick="buyNow(<?php echo $productId; ?>)">
-                            <i class="fas fa-bolt"></i> <span><?php echo t('buy_now'); ?></span>
-                        </button>
-                    </div>
-
-                    <div class="row g-2 mb-4">
-                        <?php 
-                        $promises = [
-                            ['icon' => 'fa-shield-alt', 'text' => 'Authentic Guarantee'],
-                            ['icon' => 'fa-truck-loading', 'text' => 'Fast Delivery'],
-                            ['icon' => 'fa-undo', 'text' => '7-Day Returns'],
-                            ['icon' => 'fa-check-circle', 'text' => 'Warranty Included']
-                        ];
-                        foreach ($promises as $p): ?>
-                            <div class="col-6">
-                                <div class="d-flex align-items-center gap-2 text-muted small">
-                                    <i class="fas <?php echo $p['icon']; ?> text-success"></i>
-                                    <span><?php echo $p['text']; ?></span>
-                                </div>
-                            </div>
-                        <?php endforeach; ?>
-                    </div>
-
-                    <div class="d-flex justify-content-between align-items-center pt-3 border-top flex-wrap gap-2">
-                        <button class="btn btn-link text-decoration-none text-muted p-0 small add-to-wishlist-btn" data-product-id="<?php echo $productId; ?>">
-                            <i class="<?php echo $isWishlisted ? 'fas text-danger' : 'far'; ?> fa-heart me-1"></i> <?php echo t('wishlist'); ?>
-                        </button>
-                        <button class="btn btn-link text-decoration-none text-muted p-0 small" onclick="openProductChat(<?php echo $productId; ?>, '<?php echo htmlspecialchars($product['name'], ENT_QUOTES); ?>')">
-                            <i class="fas fa-comment-dots me-1"></i> Ask about this product
-                        </button>
-                        <button class="btn btn-link text-decoration-none text-muted p-0 small"><i class="fas fa-share-alt me-1"></i> Share</button>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Product Details / Tabs (Order 3 on mobile) -->
-        <div class="col-lg-8 order-3 order-lg-2">
-            <!-- Tabs Section -->
-            <div class="card border-0 shadow-sm mb-4">
-                <div class="card-header bg-white border-0 p-0">
-                    <ul class="nav nav-tabs border-0" id="productTabs" role="tablist">
-                        <li class="nav-item" role="presentation">
-                            <button class="nav-link active rounded-0 border-0 py-3 px-4 fw-bold text-dark" id="intro-tab" data-bs-toggle="tab" data-bs-target="#intro" type="button" role="tab">About Product</button>
-                        </li>
-                        <li class="nav-item" role="presentation">
-                            <button class="nav-link rounded-0 border-0 py-3 px-4 fw-bold text-dark" id="specs-tab" data-bs-toggle="tab" data-bs-target="#specs" type="button" role="tab">Specifications</button>
-                        </li>
-                        <li class="nav-item" role="presentation">
-                            <button class="nav-link rounded-0 border-0 py-3 px-4 fw-bold text-dark" id="reviews-tab" data-bs-toggle="tab" data-bs-target="#reviews" type="button" role="tab">Reviews (<?php echo $product['rating_count']; ?>)</button>
-                        </li>
-                    </ul>
-                </div>
-                <div class="card-body">
-                    <div class="tab-content" id="productTabsContent">
-                        <div class="tab-pane fade show active" id="intro" role="tabpanel">
-                            <div class="lh-lg text-muted">
-                                <?php echo ($product['description'] ?? ''); ?>
-                            </div>
->>>>>>> Stashed changes
                         </div>
                         <div class="card-body">
                             <div class="tab-content" id="productTabsContent">
@@ -545,10 +498,9 @@ if (is_logged_in()) {
                 </div>
             </div>
         </div>
-<<<<<<< Updated upstream
 
-        <!-- Price Card Column -->
-        <div class="col-lg-4">
+        <!-- Price Card Column (Desktop Sidebar) -->
+        <div class="col-lg-4 d-none d-lg-block">
             <div class="card border-0 shadow-sm sticky-top" style="top: 20px;">
                 <div class="card-body p-4">
                     <h1 class="h3 fw-bold mb-2 text-dark"><?php echo htmlspecialchars($product['name'] ?? ''); ?></h1>
@@ -569,10 +521,10 @@ if (is_logged_in()) {
 
                     <div class="bg-light p-3 rounded-3 mb-4">
                         <div class="d-flex align-items-baseline gap-2 mb-2">
-                            <span class="text-danger h2 fw-bold mb-0" id="product-final-price"><?php echo format_price($product['final_price']); ?></span>
-                            <div id="discount-display" class="<?php echo $product['discount_percentage'] > 0 ? 'd-flex' : 'd-none'; ?> align-items-baseline gap-2">
-                                <span class="text-muted text-decoration-line-through x-small" id="product-base-price"><?php echo format_price($product['price']); ?></span>
-                                <span class="badge bg-danger rounded-pill x-small" id="product-discount-badge">-<?php echo (int)$product['discount_percentage']; ?>%</span>
+                            <span class="text-danger h2 fw-bold mb-0 product-final-price"><?php echo format_price($product['final_price']); ?></span>
+                            <div class="product-discount-display <?php echo $product['discount_percentage'] > 0 ? 'd-flex' : 'd-none'; ?> align-items-baseline gap-2">
+                                <span class="text-muted text-decoration-line-through x-small product-base-price"><?php echo format_price($product['price']); ?></span>
+                                <span class="badge bg-danger rounded-pill x-small product-discount-badge">-<?php echo (int)$product['discount_percentage']; ?>%</span>
                             </div>
                         </div>
                         <div class="d-flex gap-2 flex-wrap">
@@ -605,13 +557,13 @@ if (is_logged_in()) {
                     <div class="row align-items-center g-3 mb-4">
                         <div class="col-auto">
                             <div class="input-group overflow-hidden rounded-3 shadow-none border" style="width: 130px;">
-                                <button class="btn btn-white border-0 px-3" onclick="changeQuantity(-1)"><i class="fas fa-minus small"></i></button>
+                                <button class="btn btn-white border-0 px-3" onclick="changeQuantity(-1, 'quantity')"><i class="fas fa-minus small"></i></button>
                                 <input type="number" class="form-control border-0 text-center fw-bold shadow-none p-0" value="1" min="1" id="quantity">
-                                <button class="btn btn-white border-0 px-3" onclick="changeQuantity(1)"><i class="fas fa-plus small"></i></button>
+                                <button class="btn btn-white border-0 px-3" onclick="changeQuantity(1, 'quantity')"><i class="fas fa-plus small"></i></button>
                             </div>
                         </div>
                         <div class="col">
-                            <div class="small <?php echo $product['stock_quantity'] > 0 ? 'text-success' : 'text-danger'; ?> fw-bold" id="product-stock-status">
+                            <div class="small <?php echo $product['stock_quantity'] > 0 ? 'text-success' : 'text-danger'; ?> fw-bold product-stock-status">
                                 <i class="fas <?php echo $product['stock_quantity'] > 0 ? 'fa-check-circle' : 'fa-times-circle'; ?> me-1"></i>
                                 <?php echo $product['stock_quantity'] > 0 ? $product['stock_quantity'] . ' in stock' : 'Out of Stock'; ?>
                             </div>
@@ -657,8 +609,8 @@ if (is_logged_in()) {
                 </div>
             </div>
         </div>
-=======
->>>>>>> Stashed changes
+
+
     </div>
 </div>
 
@@ -777,67 +729,102 @@ function findMatchingVariant() {
         return true;
     });
 
-    const finalPriceEl = document.getElementById('product-final-price');
-    const basePriceEl = document.getElementById('product-base-price');
-    const discountBadgeEl = document.getElementById('product-discount-badge');
-    const discountDisplay = document.getElementById('discount-display');
-    const stockStatus = document.getElementById('product-stock-status');
+    // BUG FIX: Update global selectedVariant
+    selectedVariant = matched || null;
+
+    // Define price variables for UI updates
+    let variantPrice = basePrice;
+    let variantFinalPrice = baseFinalPrice;
 
     if (matched) {
-        selectedVariant = matched;
+        variantPrice = parseFloat(matched.price);
+        // Calculate final price with discount
+        variantFinalPrice = variantPrice * (1 - (discountPercentage / 100));
+        
+        // Update stock
         availableStock = parseInt(matched.stock_quantity);
-        
-        // Update Price
-        const variantPrice = parseFloat(matched.price);
-        const variantFinalPrice = variantPrice * (1 - (discountPercentage / 100));
-        
-        if (finalPriceEl) finalPriceEl.textContent = formatPrice(variantFinalPrice);
-        if (basePriceEl) basePriceEl.textContent = formatPrice(variantPrice);
-        if (discountDisplay) discountDisplay.className = discountPercentage > 0 ? 'd-flex align-items-baseline gap-2' : 'd-none';
-        
-        // Update Stock Display
-        if (stockStatus) {
-            stockStatus.innerHTML = `<i class="fas ${availableStock > 0 ? 'fa-check-circle text-success' : 'fa-times-circle text-danger'} me-1"></i> ${availableStock > 0 ? availableStock + ' in stock' : 'Out of Stock'}`;
-            stockStatus.className = `small ${availableStock > 0 ? 'text-success' : 'text-danger'} fw-bold`;
+    } else {
+        // Reset stock to base if fully deselected, or 0 if invalid combo
+        // For simplicity, if no specific variant matched but we have selection, it's unavailable
+        if (Object.keys(currentSelection).length > 0) {
+            availableStock = 0;
+        } else {
+            availableStock = <?php echo $product['stock_quantity']; ?>;
         }
-        
-        // Update SKU display if available
+    }
+
+    // Elements to update - Arrays of {desktop_id, mobile_class_or_id}
+    const elementsToUpdate = [
+        { id: 'product-final-price', val: formatPrice(variantFinalPrice) },
+        { id: 'product-base-price', val: formatPrice(variantPrice) },
+        // Mobile elements
+        { class: 'product-final-price-mobile', val: formatPrice(variantFinalPrice) },
+        { class: 'product-base-price-mobile', val: formatPrice(variantPrice) }
+    ];
+
+    elementsToUpdate.forEach(item => {
+        if (item.id) {
+            const el = document.getElementById(item.id);
+            if (el) el.textContent = item.val;
+        }
+        if (item.class) {
+            document.querySelectorAll('.' + item.class).forEach(el => el.textContent = item.val);
+        }
+    });
+
+    const discDisplayClass = discountPercentage > 0 ? 'd-flex align-items-baseline gap-2' : 'd-none';
+    const discountDisplays = [
+        document.getElementById('discount-display'),
+        ...document.querySelectorAll('.product-discount-display-mobile')
+    ];
+    discountDisplays.forEach(el => { if(el) el.className = discDisplayClass; });
+
+    // Update Stock Display
+    const stockHTML = `<i class="fas ${availableStock > 0 ? 'fa-check-circle text-success' : 'fa-times-circle text-danger'} me-1"></i> ${availableStock > 0 ? availableStock + ' in stock' : 'Out of Stock'}`;
+    const stockClass = `small ${availableStock > 0 ? 'text-success' : 'text-danger'} fw-bold`;
+    
+    // Desktop Stock
+    const deskStock = document.querySelector('.product-stock-status');
+    if (deskStock) {
+        deskStock.innerHTML = stockHTML;
+        deskStock.className = stockClass + ' product-stock-status';
+    }
+    // Mobile Stock
+    const mobStock = document.querySelector('.product-stock-status-mobile');
+    if (mobStock) {
+        mobStock.innerHTML = stockHTML;
+        mobStock.className = stockClass + ' product-stock-status-mobile';
+    }
+
+    if (matched) {
+         // Update SKU display if available
         const subtitleEl = document.querySelector('p.text-muted.small.mb-4');
         if (subtitleEl && matched.sku) {
             subtitleEl.textContent = 'SKU: ' + matched.sku;
+            // TODO: Update second subtitle if needed (for mobile duplication if subtitle is duplicated)
         }
-
     } else {
-        // No match found for this combination or no selection
-        selectedVariant = null;
-        availableStock = hasSelection ? 0 : <?php echo $product['stock_quantity']; ?>;
-        
-        // Revert to base price if no specific variant is matched but we are at "base" state
+        // Revert subtitle
         if (!hasSelection) {
-            if (finalPriceEl) finalPriceEl.textContent = formatPrice(baseFinalPrice);
-            if (basePriceEl) basePriceEl.textContent = formatPrice(basePrice);
-            if (discountDisplay) discountDisplay.className = discountPercentage > 0 ? 'd-flex align-items-baseline gap-2' : 'd-none';
-            
-            const subtitleEl = document.querySelector('p.text-muted.small.mb-4');
-            if (subtitleEl) subtitleEl.textContent = <?php echo json_encode($product['subtitle']); ?>;
+             const subtitleEl = document.querySelector('p.text-muted.small.mb-4');
+             if (subtitleEl) subtitleEl.textContent = <?php echo json_encode($product['subtitle']); ?>;
         }
-
-        if (stockStatus) {
-            if (hasSelection) {
-                stockStatus.innerHTML = `<i class="fas fa-times-circle text-danger me-1"></i> Unavailable`;
-                stockStatus.className = 'small text-danger fw-bold';
-            } else {
-                stockStatus.innerHTML = `<i class="fas ${availableStock > 0 ? 'fa-check-circle text-success' : 'fa-times-circle text-danger'} me-1"></i> ${availableStock > 0 ? availableStock + ' in stock' : 'Out of Stock'}`;
-                stockStatus.className = `small ${availableStock > 0 ? 'text-success' : 'text-danger'} fw-bold`;
-            }
+        
+        if (hasSelection) {
+             const unavailableHTML = `<i class="fas fa-times-circle text-danger me-1"></i> Unavailable`;
+             const unavailableClass = 'small text-danger fw-bold';
+             if (deskStock) { deskStock.innerHTML = unavailableHTML; deskStock.className = unavailableClass + ' product-stock-status'; }
+             if (mobStock) { mobStock.innerHTML = unavailableHTML; mobStock.className = unavailableClass + ' product-stock-status-mobile'; }
         }
     }
 }
 
 
 
-function changeQuantity(delta) {
-    const input = document.getElementById('quantity');
+function changeQuantity(delta, inputId = 'quantity') {
+    const input = document.getElementById(inputId);
+    if (!input) return;
+    
     let val = parseInt(input.value) + delta;
 
     // Ensure quantity doesn't go below 1
@@ -867,7 +854,17 @@ const notify = (msg, type) => {
  * Add to Cart logic for Single Product Page
  */
 async function addToCart(id, redirect = false) {
-    const quantity = parseInt(document.getElementById('quantity').value) || 1;
+    let quantity = 1;
+    // Check which quantity input is visible/active
+    const desktopInput = document.getElementById('quantity');
+    const mobileInput = document.getElementById('quantity-mobile');
+    
+    // Simple visibility check (offsetParent is null if hidden)
+    if (desktopInput && desktopInput.offsetParent !== null) {
+        quantity = parseInt(desktopInput.value) || 1;
+    } else if (mobileInput) {
+        quantity = parseInt(mobileInput.value) || 1;
+    }
 
     // Check if quantity exceeds available stock
     if (quantity > availableStock) {
@@ -876,12 +873,23 @@ async function addToCart(id, redirect = false) {
     }
 
     // Check if all options are selected
-    const requiredOptions = document.querySelectorAll('.option-row').length;
+    // Note: Option Row logic uses currentSelection which is shared
+    const rowCounts = document.querySelectorAll('.d-lg-block .option-row').length > 0 ? 
+                     document.querySelectorAll('.d-lg-block .option-row').length : 
+                     (document.querySelectorAll('.option-row').length / 2); // Approximate if duplicated without unique identifiers
+                     
+    // Better way: Count unique option names from data attributes
+    const uniqueOptions = new Set();
+    document.querySelectorAll('.option-row').forEach(row => uniqueOptions.add(row.dataset.optionName));
+    const requiredOptions = uniqueOptions.size;
+    
     const selectedOptionsCount = Object.keys(currentSelection).length;
     
     if (requiredOptions > 0 && selectedOptionsCount < requiredOptions) {
         notify('Please select all product options', 'info');
-        document.querySelector('.options-section').scrollIntoView({ behavior: 'smooth', block: 'center' });
+        // Scroll to visible options
+        const visibleOptions = document.querySelector('.option-row:not(.d-none)');
+        if (visibleOptions) visibleOptions.scrollIntoView({ behavior: 'smooth', block: 'center' });
         return;
     }
     
@@ -889,8 +897,22 @@ async function addToCart(id, redirect = false) {
         notify('This combination is currently unavailable', 'error');
         return;
     }
-
-    const btn = redirect ? document.querySelector('.btn-buy-now') : document.querySelector('.btn-add-cart');
+    
+    // Select button based on visibility or class (mobile vs desktop)
+    let btn = null;
+    if (redirect) {
+         btn = document.querySelector('.btn-buy-now:not(.d-none)') || document.querySelector('.btn-buy-now');
+         // Check visibility
+         document.querySelectorAll('.btn-buy-now').forEach(b => {
+             if (b.offsetParent !== null) btn = b;
+         });
+    } else {
+         // Try to find the visible one
+         document.querySelectorAll('.btn-add-cart, .btn-add-cart-mobile').forEach(b => {
+             if (b.offsetParent !== null) btn = b;
+         });
+    }
+    
     if (!btn) return;
 
     const originalContent = btn.innerHTML;
@@ -993,45 +1015,7 @@ function updateOptionAvailability() {
 }
 
 // Function to open chat about a product
-<<<<<<< Updated upstream
 // openProductChat is now handled by chat-widget.php
-=======
-async function openProductChat(productId, productName) {
-    try {
-        // Create a product card message with key product details
-        const productCardMessage = `Hello, I'm interested in this product:
-
-Product: ${productName}
-Link: ${window.location.href}
-
-Could you provide more information about this product?`;
-
-        // First, try to create a conversation with the product information
-        const response = await fetch('api/messages/send.php', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-                product_id: productId,
-                message: productCardMessage
-            })
-        });
-
-        const data = await response.json();
-
-        if (data.success) {
-            // Redirect to the messages page with the conversation ID
-            window.location.href = `messages.php?conversation_id=${data.conversation_id}`;
-        } else {
-            showNotification(data.message || 'Error starting chat', 'error');
-        }
-    } catch (error) {
-        console.error('Error creating product chat:', error);
-        showNotification('Connection error. Please try again.', 'error');
-    }
-}
->>>>>>> Stashed changes
 
 async function buyNow(id) {
     await addToCart(id, true);

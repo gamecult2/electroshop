@@ -1,0 +1,979 @@
+2026-01-11 05:23:50 - Accessing checkout_chargily.php
+Session ID: ljn1a0difr9hthr9v3v96dhgdt
+Session Data: Array
+(
+    [initialized] => 1
+    [customer_id] => 2
+    [user_email] => djerradabderrahim@outlook.fr
+    [user_first_name] => Abderrahim
+    [user_last_name] => DJERRAD
+    [csrf_token] => c6534e8a52198f16f82b64cab0816b6fb3fd712ed77c8fc90c6876214a1bb686
+)
+
+Order ID GET: 63
+2026-01-11 05:23:52 - Product Response: Chargily\ChargilyPay\Elements\ProductElement Object
+(
+    [attributes:protected] => Array
+        (
+            [id] => 01kenr5kqpk4ejzqq0qkde55n9
+            [name] => Order #63
+            [description] => Payment for Order #63
+            [images] => Array
+                (
+                )
+
+            [metadata] => Array
+                (
+                )
+
+            [created_at] => Chargily\ChargilyPay\Core\Helpers\Carbon Object
+                (
+                    [endOfTime:protected] => 
+                    [startOfTime:protected] => 
+                    [constructedObjectId:protected] => 00000000000000810000000000000000
+                    [clock:Carbon\Carbon:private] => 
+                    [localMonthsOverflow:protected] => 
+                    [localYearsOverflow:protected] => 
+                    [localStrictModeEnabled:protected] => 
+                    [localHumanDiffOptions:protected] => 
+                    [localToStringFormat:protected] => 
+                    [localSerializer:protected] => 
+                    [localMacros:protected] => 
+                    [localGenericMacros:protected] => 
+                    [localFormatFunction:protected] => 
+                    [localTranslator:protected] => 
+                    [dumpProperties:protected] => Array
+                        (
+                            [0] => date
+                            [1] => timezone_type
+                            [2] => timezone
+                        )
+
+                    [dumpLocale:protected] => 
+                    [dumpDateProperties:protected] => 
+                    [date] => 2026-01-11 05:23:55.000000
+                    [timezone_type] => 1
+                    [timezone] => +00:00
+                )
+
+            [updated_at] => Chargily\ChargilyPay\Core\Helpers\Carbon Object
+                (
+                    [endOfTime:protected] => 
+                    [startOfTime:protected] => 
+                    [constructedObjectId:protected] => 00000000000000930000000000000000
+                    [clock:Carbon\Carbon:private] => 
+                    [localMonthsOverflow:protected] => 
+                    [localYearsOverflow:protected] => 
+                    [localStrictModeEnabled:protected] => 
+                    [localHumanDiffOptions:protected] => 
+                    [localToStringFormat:protected] => 
+                    [localSerializer:protected] => 
+                    [localMacros:protected] => 
+                    [localGenericMacros:protected] => 
+                    [localFormatFunction:protected] => 
+                    [localTranslator:protected] => 
+                    [dumpProperties:protected] => Array
+                        (
+                            [0] => date
+                            [1] => timezone_type
+                            [2] => timezone
+                        )
+
+                    [dumpLocale:protected] => 
+                    [dumpDateProperties:protected] => 
+                    [date] => 2026-01-11 05:23:55.000000
+                    [timezone_type] => 1
+                    [timezone] => +00:00
+                )
+
+        )
+
+    [methods:protected] => Array
+        (
+            [prices] => Chargily\ChargilyPay\Relation\ProductHasManyPricesRelation Object
+                (
+                    [local] => Chargily\ChargilyPay\Api\Products Object
+                        (
+                            [credentials:protected] => Chargily\ChargilyPay\Auth\Credentials Object
+                                (
+                                    [mode] => test
+                                    [test_mode] => 1
+                                    [live_mode] => 
+                                    [public] => test_pk_Ixwyn2nTdmWhl3KJLNxOMNVWoUEB8me2dCZzPzpJ
+                                    [secret] => test_sk_l7vZZseMSkr4avzpSUpzKDS2zUAJR5hlC4V5YrJh
+                                )
+
+                        )
+
+                    [foreign] => Chargily\ChargilyPay\Api\Prices Object
+                        (
+                            [credentials:protected] => Chargily\ChargilyPay\Auth\Credentials Object
+                                (
+                                    [mode] => test
+                                    [test_mode] => 1
+                                    [live_mode] => 
+                                    [public] => test_pk_Ixwyn2nTdmWhl3KJLNxOMNVWoUEB8me2dCZzPzpJ
+                                    [secret] => test_sk_l7vZZseMSkr4avzpSUpzKDS2zUAJR5hlC4V5YrJh
+                                )
+
+                        )
+
+                    [attributes] => Array
+                        (
+                            [id] => 01kenr5kqpk4ejzqq0qkde55n9
+                        )
+
+                )
+
+        )
+
+)
+
+2026-01-11 05:23:52 - Product creation failed. Response: Chargily\ChargilyPay\Elements\ProductElement Object
+(
+    [attributes:protected] => Array
+        (
+            [id] => 01kenr5kqpk4ejzqq0qkde55n9
+            [name] => Order #63
+            [description] => Payment for Order #63
+            [images] => Array
+                (
+                )
+
+            [metadata] => Array
+                (
+                )
+
+            [created_at] => Chargily\ChargilyPay\Core\Helpers\Carbon Object
+                (
+                    [endOfTime:protected] => 
+                    [startOfTime:protected] => 
+                    [constructedObjectId:protected] => 00000000000000810000000000000000
+                    [clock:Carbon\Carbon:private] => 
+                    [localMonthsOverflow:protected] => 
+                    [localYearsOverflow:protected] => 
+                    [localStrictModeEnabled:protected] => 
+                    [localHumanDiffOptions:protected] => 
+                    [localToStringFormat:protected] => 
+                    [localSerializer:protected] => 
+                    [localMacros:protected] => 
+                    [localGenericMacros:protected] => 
+                    [localFormatFunction:protected] => 
+                    [localTranslator:protected] => 
+                    [dumpProperties:protected] => Array
+                        (
+                            [0] => date
+                            [1] => timezone_type
+                            [2] => timezone
+                        )
+
+                    [dumpLocale:protected] => 
+                    [dumpDateProperties:protected] => 
+                    [date] => 2026-01-11 05:23:55.000000
+                    [timezone_type] => 1
+                    [timezone] => +00:00
+                )
+
+            [updated_at] => Chargily\ChargilyPay\Core\Helpers\Carbon Object
+                (
+                    [endOfTime:protected] => 
+                    [startOfTime:protected] => 
+                    [constructedObjectId:protected] => 00000000000000930000000000000000
+                    [clock:Carbon\Carbon:private] => 
+                    [localMonthsOverflow:protected] => 
+                    [localYearsOverflow:protected] => 
+                    [localStrictModeEnabled:protected] => 
+                    [localHumanDiffOptions:protected] => 
+                    [localToStringFormat:protected] => 
+                    [localSerializer:protected] => 
+                    [localMacros:protected] => 
+                    [localGenericMacros:protected] => 
+                    [localFormatFunction:protected] => 
+                    [localTranslator:protected] => 
+                    [dumpProperties:protected] => Array
+                        (
+                            [0] => date
+                            [1] => timezone_type
+                            [2] => timezone
+                        )
+
+                    [dumpLocale:protected] => 
+                    [dumpDateProperties:protected] => 
+                    [date] => 2026-01-11 05:23:55.000000
+                    [timezone_type] => 1
+                    [timezone] => +00:00
+                )
+
+        )
+
+    [methods:protected] => Array
+        (
+            [prices] => Chargily\ChargilyPay\Relation\ProductHasManyPricesRelation Object
+                (
+                    [local] => Chargily\ChargilyPay\Api\Products Object
+                        (
+                            [credentials:protected] => Chargily\ChargilyPay\Auth\Credentials Object
+                                (
+                                    [mode] => test
+                                    [test_mode] => 1
+                                    [live_mode] => 
+                                    [public] => test_pk_Ixwyn2nTdmWhl3KJLNxOMNVWoUEB8me2dCZzPzpJ
+                                    [secret] => test_sk_l7vZZseMSkr4avzpSUpzKDS2zUAJR5hlC4V5YrJh
+                                )
+
+                        )
+
+                    [foreign] => Chargily\ChargilyPay\Api\Prices Object
+                        (
+                            [credentials:protected] => Chargily\ChargilyPay\Auth\Credentials Object
+                                (
+                                    [mode] => test
+                                    [test_mode] => 1
+                                    [live_mode] => 
+                                    [public] => test_pk_Ixwyn2nTdmWhl3KJLNxOMNVWoUEB8me2dCZzPzpJ
+                                    [secret] => test_sk_l7vZZseMSkr4avzpSUpzKDS2zUAJR5hlC4V5YrJh
+                                )
+
+                        )
+
+                    [attributes] => Array
+                        (
+                            [id] => 01kenr5kqpk4ejzqq0qkde55n9
+                        )
+
+                )
+
+        )
+
+)
+
+2026-01-11 05:23:52 - Chargily Exception: Failed to create product in Chargily
+#0 C:\wamp64\www\QwenShop - Bootstrap\src\checkout_chargily.php(58): ChargilyService->createPayment(63, '4000.00')
+#1 {main}
+2026-01-11 05:26:04 - Accessing checkout_chargily.php
+Session ID: ljn1a0difr9hthr9v3v96dhgdt
+Session Data: Array
+(
+    [initialized] => 1
+    [customer_id] => 2
+    [user_email] => djerradabderrahim@outlook.fr
+    [user_first_name] => Abderrahim
+    [user_last_name] => DJERRAD
+    [csrf_token] => c6534e8a52198f16f82b64cab0816b6fb3fd712ed77c8fc90c6876214a1bb686
+)
+
+Order ID GET: 64
+2026-01-11 05:26:06 - Product Response: Chargily\ChargilyPay\Elements\ProductElement Object
+(
+    [attributes:protected] => Array
+        (
+            [id] => 01kenr9phj26mhkx0tpm1rhkrz
+            [name] => Order #64
+            [description] => Payment for Order #64
+            [images] => Array
+                (
+                )
+
+            [metadata] => Array
+                (
+                )
+
+            [created_at] => Chargily\ChargilyPay\Core\Helpers\Carbon Object
+                (
+                    [endOfTime:protected] => 
+                    [startOfTime:protected] => 
+                    [constructedObjectId:protected] => 00000000000000810000000000000000
+                    [clock:Carbon\Carbon:private] => 
+                    [localMonthsOverflow:protected] => 
+                    [localYearsOverflow:protected] => 
+                    [localStrictModeEnabled:protected] => 
+                    [localHumanDiffOptions:protected] => 
+                    [localToStringFormat:protected] => 
+                    [localSerializer:protected] => 
+                    [localMacros:protected] => 
+                    [localGenericMacros:protected] => 
+                    [localFormatFunction:protected] => 
+                    [localTranslator:protected] => 
+                    [dumpProperties:protected] => Array
+                        (
+                            [0] => date
+                            [1] => timezone_type
+                            [2] => timezone
+                        )
+
+                    [dumpLocale:protected] => 
+                    [dumpDateProperties:protected] => 
+                    [date] => 2026-01-11 05:26:09.000000
+                    [timezone_type] => 1
+                    [timezone] => +00:00
+                )
+
+            [updated_at] => Chargily\ChargilyPay\Core\Helpers\Carbon Object
+                (
+                    [endOfTime:protected] => 
+                    [startOfTime:protected] => 
+                    [constructedObjectId:protected] => 00000000000000930000000000000000
+                    [clock:Carbon\Carbon:private] => 
+                    [localMonthsOverflow:protected] => 
+                    [localYearsOverflow:protected] => 
+                    [localStrictModeEnabled:protected] => 
+                    [localHumanDiffOptions:protected] => 
+                    [localToStringFormat:protected] => 
+                    [localSerializer:protected] => 
+                    [localMacros:protected] => 
+                    [localGenericMacros:protected] => 
+                    [localFormatFunction:protected] => 
+                    [localTranslator:protected] => 
+                    [dumpProperties:protected] => Array
+                        (
+                            [0] => date
+                            [1] => timezone_type
+                            [2] => timezone
+                        )
+
+                    [dumpLocale:protected] => 
+                    [dumpDateProperties:protected] => 
+                    [date] => 2026-01-11 05:26:09.000000
+                    [timezone_type] => 1
+                    [timezone] => +00:00
+                )
+
+        )
+
+    [methods:protected] => Array
+        (
+            [prices] => Chargily\ChargilyPay\Relation\ProductHasManyPricesRelation Object
+                (
+                    [local] => Chargily\ChargilyPay\Api\Products Object
+                        (
+                            [credentials:protected] => Chargily\ChargilyPay\Auth\Credentials Object
+                                (
+                                    [mode] => test
+                                    [test_mode] => 1
+                                    [live_mode] => 
+                                    [public] => test_pk_Ixwyn2nTdmWhl3KJLNxOMNVWoUEB8me2dCZzPzpJ
+                                    [secret] => test_sk_l7vZZseMSkr4avzpSUpzKDS2zUAJR5hlC4V5YrJh
+                                )
+
+                        )
+
+                    [foreign] => Chargily\ChargilyPay\Api\Prices Object
+                        (
+                            [credentials:protected] => Chargily\ChargilyPay\Auth\Credentials Object
+                                (
+                                    [mode] => test
+                                    [test_mode] => 1
+                                    [live_mode] => 
+                                    [public] => test_pk_Ixwyn2nTdmWhl3KJLNxOMNVWoUEB8me2dCZzPzpJ
+                                    [secret] => test_sk_l7vZZseMSkr4avzpSUpzKDS2zUAJR5hlC4V5YrJh
+                                )
+
+                        )
+
+                    [attributes] => Array
+                        (
+                            [id] => 01kenr9phj26mhkx0tpm1rhkrz
+                        )
+
+                )
+
+        )
+
+)
+
+2026-01-11 05:26:06 - Product creation failed. Response: Chargily\ChargilyPay\Elements\ProductElement Object
+(
+    [attributes:protected] => Array
+        (
+            [id] => 01kenr9phj26mhkx0tpm1rhkrz
+            [name] => Order #64
+            [description] => Payment for Order #64
+            [images] => Array
+                (
+                )
+
+            [metadata] => Array
+                (
+                )
+
+            [created_at] => Chargily\ChargilyPay\Core\Helpers\Carbon Object
+                (
+                    [endOfTime:protected] => 
+                    [startOfTime:protected] => 
+                    [constructedObjectId:protected] => 00000000000000810000000000000000
+                    [clock:Carbon\Carbon:private] => 
+                    [localMonthsOverflow:protected] => 
+                    [localYearsOverflow:protected] => 
+                    [localStrictModeEnabled:protected] => 
+                    [localHumanDiffOptions:protected] => 
+                    [localToStringFormat:protected] => 
+                    [localSerializer:protected] => 
+                    [localMacros:protected] => 
+                    [localGenericMacros:protected] => 
+                    [localFormatFunction:protected] => 
+                    [localTranslator:protected] => 
+                    [dumpProperties:protected] => Array
+                        (
+                            [0] => date
+                            [1] => timezone_type
+                            [2] => timezone
+                        )
+
+                    [dumpLocale:protected] => 
+                    [dumpDateProperties:protected] => 
+                    [date] => 2026-01-11 05:26:09.000000
+                    [timezone_type] => 1
+                    [timezone] => +00:00
+                )
+
+            [updated_at] => Chargily\ChargilyPay\Core\Helpers\Carbon Object
+                (
+                    [endOfTime:protected] => 
+                    [startOfTime:protected] => 
+                    [constructedObjectId:protected] => 00000000000000930000000000000000
+                    [clock:Carbon\Carbon:private] => 
+                    [localMonthsOverflow:protected] => 
+                    [localYearsOverflow:protected] => 
+                    [localStrictModeEnabled:protected] => 
+                    [localHumanDiffOptions:protected] => 
+                    [localToStringFormat:protected] => 
+                    [localSerializer:protected] => 
+                    [localMacros:protected] => 
+                    [localGenericMacros:protected] => 
+                    [localFormatFunction:protected] => 
+                    [localTranslator:protected] => 
+                    [dumpProperties:protected] => Array
+                        (
+                            [0] => date
+                            [1] => timezone_type
+                            [2] => timezone
+                        )
+
+                    [dumpLocale:protected] => 
+                    [dumpDateProperties:protected] => 
+                    [date] => 2026-01-11 05:26:09.000000
+                    [timezone_type] => 1
+                    [timezone] => +00:00
+                )
+
+        )
+
+    [methods:protected] => Array
+        (
+            [prices] => Chargily\ChargilyPay\Relation\ProductHasManyPricesRelation Object
+                (
+                    [local] => Chargily\ChargilyPay\Api\Products Object
+                        (
+                            [credentials:protected] => Chargily\ChargilyPay\Auth\Credentials Object
+                                (
+                                    [mode] => test
+                                    [test_mode] => 1
+                                    [live_mode] => 
+                                    [public] => test_pk_Ixwyn2nTdmWhl3KJLNxOMNVWoUEB8me2dCZzPzpJ
+                                    [secret] => test_sk_l7vZZseMSkr4avzpSUpzKDS2zUAJR5hlC4V5YrJh
+                                )
+
+                        )
+
+                    [foreign] => Chargily\ChargilyPay\Api\Prices Object
+                        (
+                            [credentials:protected] => Chargily\ChargilyPay\Auth\Credentials Object
+                                (
+                                    [mode] => test
+                                    [test_mode] => 1
+                                    [live_mode] => 
+                                    [public] => test_pk_Ixwyn2nTdmWhl3KJLNxOMNVWoUEB8me2dCZzPzpJ
+                                    [secret] => test_sk_l7vZZseMSkr4avzpSUpzKDS2zUAJR5hlC4V5YrJh
+                                )
+
+                        )
+
+                    [attributes] => Array
+                        (
+                            [id] => 01kenr9phj26mhkx0tpm1rhkrz
+                        )
+
+                )
+
+        )
+
+)
+
+2026-01-11 05:26:06 - Chargily Exception: Failed to create product in Chargily
+#0 C:\wamp64\www\QwenShop - Bootstrap\src\checkout_chargily.php(58): ChargilyService->createPayment(64, '4000.00')
+#1 {main}
+2026-01-11 05:33:38 - Accessing checkout_chargily.php
+Session ID: ljn1a0difr9hthr9v3v96dhgdt
+Session Data: Array
+(
+    [initialized] => 1
+    [customer_id] => 2
+    [user_email] => djerradabderrahim@outlook.fr
+    [user_first_name] => Abderrahim
+    [user_last_name] => DJERRAD
+    [csrf_token] => c6534e8a52198f16f82b64cab0816b6fb3fd712ed77c8fc90c6876214a1bb686
+)
+
+Order ID GET: 65
+2026-01-11 05:33:39 - Product created: 
+2026-01-11 05:33:39 - Chargily Exception: Validation failed for (Prices::create):  [(product_id) : The Product id is required] ; 
+#0 C:\wamp64\www\QwenShop - Bootstrap\vendor\chargily\chargily-pay\src\Api\Prices.php(66): Chargily\ChargilyPay\Exceptions\ValidationException::message('Validation fail...', Array, 422)
+#1 C:\wamp64\www\QwenShop - Bootstrap\src\services\ChargilyService.php(56): Chargily\ChargilyPay\Api\Prices->create(Array)
+#2 C:\wamp64\www\QwenShop - Bootstrap\src\checkout_chargily.php(58): ChargilyService->createPayment(65, '4000.00')
+#3 {main}
+2026-01-11 05:34:38 - Accessing checkout_chargily.php
+Session ID: ljn1a0difr9hthr9v3v96dhgdt
+Session Data: Array
+(
+    [initialized] => 1
+    [customer_id] => 2
+    [user_email] => djerradabderrahim@outlook.fr
+    [user_first_name] => Abderrahim
+    [user_last_name] => DJERRAD
+    [csrf_token] => c6534e8a52198f16f82b64cab0816b6fb3fd712ed77c8fc90c6876214a1bb686
+)
+
+Order ID GET: 65
+2026-01-11 05:34:39 - Product created: 01kenrsc3frfz154axrvmk8aqm
+2026-01-11 05:34:40 - Price created: 01kenrsdq4y7kh8e2w008jacw8
+2026-01-11 05:34:40 - Chargily Exception: Validation failed for (Checkout::create):  [(failure_url) : The Failure url is not valid url] ;  [(success_url) : The Success url is not valid url] ; 
+#0 C:\wamp64\www\QwenShop - Bootstrap\vendor\chargily\chargily-pay\src\Api\Checkouts.php(65): Chargily\ChargilyPay\Exceptions\ValidationException::message('Validation fail...', Array, 422)
+#1 C:\wamp64\www\QwenShop - Bootstrap\src\services\ChargilyService.php(68): Chargily\ChargilyPay\Api\Checkouts->create(Array)
+#2 C:\wamp64\www\QwenShop - Bootstrap\src\checkout_chargily.php(58): ChargilyService->createPayment(65, '4000.00')
+#3 {main}
+2026-01-11 05:34:58 - Accessing checkout_chargily.php
+Session ID: ljn1a0difr9hthr9v3v96dhgdt
+Session Data: Array
+(
+    [initialized] => 1
+    [customer_id] => 2
+    [user_email] => djerradabderrahim@outlook.fr
+    [user_first_name] => Abderrahim
+    [user_last_name] => DJERRAD
+    [csrf_token] => c6534e8a52198f16f82b64cab0816b6fb3fd712ed77c8fc90c6876214a1bb686
+)
+
+Order ID GET: 66
+2026-01-11 05:34:59 - Product created: 01kenrszf6gscf3faxqyagf7fx
+2026-01-11 05:35:00 - Price created: 01kenrt0rmz1mjcej73hyfc043
+2026-01-11 05:35:00 - Chargily Exception: Validation failed for (Checkout::create):  [(failure_url) : The Failure url is not valid url] ;  [(success_url) : The Success url is not valid url] ; 
+#0 C:\wamp64\www\QwenShop - Bootstrap\vendor\chargily\chargily-pay\src\Api\Checkouts.php(65): Chargily\ChargilyPay\Exceptions\ValidationException::message('Validation fail...', Array, 422)
+#1 C:\wamp64\www\QwenShop - Bootstrap\src\services\ChargilyService.php(68): Chargily\ChargilyPay\Api\Checkouts->create(Array)
+#2 C:\wamp64\www\QwenShop - Bootstrap\src\checkout_chargily.php(58): ChargilyService->createPayment(66, '4000.00')
+#3 {main}
+2026-01-11 05:39:38 - Accessing checkout_chargily.php
+Session ID: ljn1a0difr9hthr9v3v96dhgdt
+Session Data: Array
+(
+    [initialized] => 1
+    [customer_id] => 2
+    [user_email] => djerradabderrahim@outlook.fr
+    [user_first_name] => Abderrahim
+    [user_last_name] => DJERRAD
+    [csrf_token] => c6534e8a52198f16f82b64cab0816b6fb3fd712ed77c8fc90c6876214a1bb686
+)
+
+Order ID GET: 67
+2026-01-11 05:39:39 - Product created: 01kens2hb6dmq87894cjta9xdq
+2026-01-11 05:39:41 - Price created: 01kens2k0t85hqa4zezhm33w8z
+2026-01-11 05:39:41 - Success URL: http://localhost/QwenShop - Bootstrap/src/order_confirmation.php?id=67&payment_status=success
+2026-01-11 05:39:41 - Failure URL: http://localhost/QwenShop - Bootstrap/src/checkout.php?error=payment_failed&order_id=67
+2026-01-11 05:39:41 - Chargily Exception: Validation failed for (Checkout::create):  [(failure_url) : The Failure url is not valid url] ;  [(success_url) : The Success url is not valid url] ; 
+#0 C:\wamp64\www\QwenShop - Bootstrap\vendor\chargily\chargily-pay\src\Api\Checkouts.php(65): Chargily\ChargilyPay\Exceptions\ValidationException::message('Validation fail...', Array, 422)
+#1 C:\wamp64\www\QwenShop - Bootstrap\src\services\ChargilyService.php(76): Chargily\ChargilyPay\Api\Checkouts->create(Array)
+#2 C:\wamp64\www\QwenShop - Bootstrap\src\checkout_chargily.php(58): ChargilyService->createPayment(67, '4000.00')
+#3 {main}
+2026-01-11 05:51:13 - Accessing checkout_chargily.php
+Session ID: ljn1a0difr9hthr9v3v96dhgdt
+Session Data: Array
+(
+    [initialized] => 1
+    [customer_id] => 2
+    [user_email] => djerradabderrahim@outlook.fr
+    [user_first_name] => Abderrahim
+    [user_last_name] => DJERRAD
+    [csrf_token] => c6534e8a52198f16f82b64cab0816b6fb3fd712ed77c8fc90c6876214a1bb686
+)
+
+Order ID GET: 68
+2026-01-11 05:51:13 - Starting Payment for Order #68 Amount: 13500.00
+2026-01-11 05:51:13 - Success URL: http://localhost/QwenShop%20-%20Bootstrap/src/order_confirmation.php?id=68&payment_status=success
+2026-01-11 05:51:13 - Failure URL: http://localhost/QwenShop%20-%20Bootstrap/src/checkout.php?error=payment_failed&order_id=68
+2026-01-11 05:51:14 - Checkout URL: 
+2026-01-11 06:05:45 - Accessing checkout_chargily.php
+Session ID: ljn1a0difr9hthr9v3v96dhgdt
+Session Data: Array
+(
+    [initialized] => 1
+    [customer_id] => 2
+    [user_email] => djerradabderrahim@outlook.fr
+    [user_first_name] => Abderrahim
+    [user_last_name] => DJERRAD
+    [csrf_token] => c6534e8a52198f16f82b64cab0816b6fb3fd712ed77c8fc90c6876214a1bb686
+)
+
+Order ID GET: 69
+2026-01-11 06:05:45 - Starting Payment for Order #69
+2026-01-11 06:05:45 - Creating Customer: {"name":"Abderrahim DJERRAD","email":"djerradabderrahim@outlook.fr","phone":"13091435037","address":{"country":"dz","state":"Setif","address":"Yangpu District Siping Road 2065 Building 6 apartment 405"}}
+2026-01-11 06:05:47 - Customer Created: 01kentjc1cv94cre9xx581vbz9
+2026-01-11 06:05:48 - Checkout URL: 
+2026-01-11 06:18:28 - Accessing checkout_chargily.php
+Session ID: ljn1a0difr9hthr9v3v96dhgdt
+Session Data: Array
+(
+    [initialized] => 1
+    [customer_id] => 2
+    [user_email] => djerradabderrahim@outlook.fr
+    [user_first_name] => Abderrahim
+    [user_last_name] => DJERRAD
+    [csrf_token] => c6534e8a52198f16f82b64cab0816b6fb3fd712ed77c8fc90c6876214a1bb686
+)
+
+Order ID GET: 70
+2026-01-11 06:18:28 - Starting Payment for Order #70
+2026-01-11 06:18:28 - Creating Customer: {"name":"Abderrahim DJERRAD","email":"djerradabderrahim@outlook.fr","phone":"13091435037","address":{"country":"dz","state":"Setif","address":"Yangpu District Siping Road 2065 Building 6 apartment 405"}}
+2026-01-11 06:18:30 - Customer Created: 01kenv9n5vrtbq9yp6eb6g5r6k
+2026-01-11 06:18:31 - Checkout URL: http://pay.chargily.dz/test/checkouts/01kenv9pn1wp557vs7wna4nzeb/pay
+2026-01-11 06:26:53 - Accessing checkout_chargily.php
+Session ID: ljn1a0difr9hthr9v3v96dhgdt
+Session Data: Array
+(
+    [initialized] => 1
+    [customer_id] => 2
+    [user_email] => djerradabderrahim@outlook.fr
+    [user_first_name] => Abderrahim
+    [user_last_name] => DJERRAD
+    [csrf_token] => c6534e8a52198f16f82b64cab0816b6fb3fd712ed77c8fc90c6876214a1bb686
+)
+
+Order ID GET: 72
+2026-01-11 06:26:53 - Starting Payment for Order #72
+2026-01-11 06:26:53 - Creating Customer: {"name":"Abderrahim DJERRAD","email":"djerradabderrahim@outlook.fr","phone":"13091435037","address":{"country":"dz","state":"Setif","address":"Yangpu District Siping Road 2065 Building 6 apartment 405"}}
+2026-01-11 06:26:55 - Customer Created: 01kenvs29nxjh7qavxts0sbba2
+2026-01-11 06:26:56 - Checkout URL: http://pay.chargily.dz/test/checkouts/01kenvs3zct9q3qmd1nbtfy8h1/pay
+2026-01-11 06:36:31 - Accessing checkout_chargily.php
+Session ID: ljn1a0difr9hthr9v3v96dhgdt
+Session Data: Array
+(
+    [initialized] => 1
+    [customer_id] => 2
+    [user_email] => djerradabderrahim@outlook.fr
+    [user_first_name] => Abderrahim
+    [user_last_name] => DJERRAD
+    [csrf_token] => c6534e8a52198f16f82b64cab0816b6fb3fd712ed77c8fc90c6876214a1bb686
+)
+
+Order ID GET: 73
+2026-01-11 06:36:31 - Starting Payment for Order #73
+2026-01-11 06:36:31 - Creating Customer: {"name":"Abderrahim DJERRAD","email":"djerradabderrahim@outlook.fr","phone":"13091435037","address":{"country":"dz","state":"Setif","address":"Yangpu District Siping Road 2065 Building 6 apartment 405"}}
+2026-01-11 06:36:33 - Customer Created: 01kenwap8z1fg3rf1337am7wk4
+2026-01-11 06:36:33 - Checkout URL: http://pay.chargily.dz/test/checkouts/01kenwaqrnk7kx366x94jzmw8h/pay
+2026-01-11 06:43:40 - Accessing checkout_chargily.php
+Session ID: ljn1a0difr9hthr9v3v96dhgdt
+Session Data: Array
+(
+    [initialized] => 1
+    [customer_id] => 2
+    [user_email] => djerradabderrahim@outlook.fr
+    [user_first_name] => Abderrahim
+    [user_last_name] => DJERRAD
+    [csrf_token] => c6534e8a52198f16f82b64cab0816b6fb3fd712ed77c8fc90c6876214a1bb686
+)
+
+Order ID GET: 74
+2026-01-11 06:43:40 - Starting Payment for Order #74
+2026-01-11 06:43:40 - Creating Customer: {"name":"Abderrahim DJERRAD","email":"djerradabderrahim@outlook.fr","phone":"13091435037","address":{"country":"dz","state":"Setif","address":"Yangpu District Siping Road 2065 Building 6 apartment 405"}}
+2026-01-11 06:43:42 - Customer Created: 01kenwqsakf4h415yy1qz2x9ax
+2026-01-11 06:43:43 - Checkout URL: http://pay.chargily.dz/test/checkouts/01kenwqtrgv3233825ryan1d64/pay
+2026-01-11 06:44:46 - Accessing checkout_chargily.php
+Session ID: ljn1a0difr9hthr9v3v96dhgdt
+Session Data: Array
+(
+    [initialized] => 1
+    [customer_id] => 2
+    [user_email] => djerradabderrahim@outlook.fr
+    [user_first_name] => Abderrahim
+    [user_last_name] => DJERRAD
+    [csrf_token] => c6534e8a52198f16f82b64cab0816b6fb3fd712ed77c8fc90c6876214a1bb686
+)
+
+Order ID GET: 74
+2026-01-11 06:44:46 - Starting Payment for Order #74
+2026-01-11 06:44:46 - Creating Customer: {"name":"Abderrahim DJERRAD","email":"djerradabderrahim@outlook.fr","phone":"13091435037","address":{"country":"dz","state":"Setif","address":"Yangpu District Siping Road 2065 Building 6 apartment 405"}}
+2026-01-11 06:44:48 - Customer Created: 01kenwst8sryc3s9j88r35qts7
+2026-01-11 06:44:49 - Checkout URL: http://pay.chargily.dz/test/checkouts/01kenwsvz9rvrmwvn616wzw06f/pay
+2026-01-11 06:45:11 - Accessing checkout_chargily.php
+Session ID: ljn1a0difr9hthr9v3v96dhgdt
+Session Data: Array
+(
+    [initialized] => 1
+    [customer_id] => 2
+    [user_email] => djerradabderrahim@outlook.fr
+    [user_first_name] => Abderrahim
+    [user_last_name] => DJERRAD
+    [csrf_token] => c6534e8a52198f16f82b64cab0816b6fb3fd712ed77c8fc90c6876214a1bb686
+)
+
+Order ID GET: 74
+2026-01-11 06:45:11 - Starting Payment for Order #74
+2026-01-11 06:45:11 - Creating Customer: {"name":"Abderrahim DJERRAD","email":"djerradabderrahim@outlook.fr","phone":"13091435037","address":{"country":"dz","state":"Setif","address":"Yangpu District Siping Road 2065 Building 6 apartment 405"}}
+2026-01-11 06:45:13 - Customer Created: 01kenwtjq48m6n7qpchsgzr7ah
+2026-01-11 06:45:14 - Checkout URL: http://pay.chargily.dz/test/checkouts/01kenwtmhsend1zw5c6qcyyk9f/pay
+2026-01-11 07:09:11 - Accessing checkout_chargily.php
+Session ID: ljn1a0difr9hthr9v3v96dhgdt
+Session Data: Array
+(
+    [initialized] => 1
+    [customer_id] => 2
+    [user_email] => djerradabderrahim@outlook.fr
+    [user_first_name] => Abderrahim
+    [user_last_name] => DJERRAD
+    [csrf_token] => c6534e8a52198f16f82b64cab0816b6fb3fd712ed77c8fc90c6876214a1bb686
+)
+
+Order ID GET: 75
+2026-01-11 07:09:11 - Starting Payment for Order #75
+2026-01-11 07:09:11 - Creating Customer: {"name":"Abderrahim DJERRAD","email":"djerradabderrahim@outlook.fr","phone":"13091435037","address":{"country":"dz","state":"Setif","address":"Yangpu District Siping Road 2065 Building 6 apartment 405"}}
+2026-01-11 07:09:13 - Customer Created: 01keny6gpqh7sctqbdgtrfctb2
+2026-01-11 07:09:14 - Checkout URL: http://pay.chargily.dz/test/checkouts/01keny6jg53sdr9wg8r1v0w4mh/pay
+2026-01-11 07:14:28 - Accessing checkout_chargily.php
+Session ID: ljn1a0difr9hthr9v3v96dhgdt
+Session Data: Array
+(
+    [initialized] => 1
+    [customer_id] => 2
+    [user_email] => djerradabderrahim@outlook.fr
+    [user_first_name] => Abderrahim
+    [user_last_name] => DJERRAD
+    [csrf_token] => c6534e8a52198f16f82b64cab0816b6fb3fd712ed77c8fc90c6876214a1bb686
+)
+
+Order ID GET: 76
+2026-01-11 07:14:28 - Starting Payment for Order #76
+2026-01-11 07:14:28 - Creating Customer: {"name":"Abderrahim DJERRAD","email":"djerradabderrahim@outlook.fr","phone":"13091435037","address":{"country":"dz","state":"Setif","address":"Yangpu District Siping Road 2065 Building 6 apartment 405"}}
+2026-01-11 07:14:30 - Customer Created: 01kenyg655yaqj0rddw1fvzw5z
+2026-01-11 07:14:31 - Checkout URL: http://pay.chargily.dz/test/checkouts/01kenyg7pjqddc8zwxz02mhzpf/pay
+2026-01-11 07:18:46 - Accessing checkout_chargily.php
+Session ID: ljn1a0difr9hthr9v3v96dhgdt
+Session Data: Array
+(
+    [initialized] => 1
+    [customer_id] => 2
+    [user_email] => djerradabderrahim@outlook.fr
+    [user_first_name] => Abderrahim
+    [user_last_name] => DJERRAD
+    [csrf_token] => c6534e8a52198f16f82b64cab0816b6fb3fd712ed77c8fc90c6876214a1bb686
+)
+
+Order ID GET: 77
+2026-01-11 07:18:46 - Starting Payment for Order #77
+2026-01-11 07:18:46 - Creating Customer: {"name":"Abderrahim DJERRAD","email":"djerradabderrahim@outlook.fr","phone":"13091435037","address":{"country":"dz","state":"Setif","address":"Yangpu District Siping Road 2065 Building 6 apartment 405"}}
+2026-01-11 07:18:48 - Customer Created: 01kenyr1y720n7yr46mzh2sy52
+2026-01-11 07:18:49 - Checkout URL: http://pay.chargily.dz/test/checkouts/01kenyr3ek4yxjs9gfa84fjns5/pay
+2026-01-11 07:26:03 - Accessing checkout_chargily.php
+Session ID: ljn1a0difr9hthr9v3v96dhgdt
+Session Data: Array
+(
+    [initialized] => 1
+    [customer_id] => 2
+    [user_email] => djerradabderrahim@outlook.fr
+    [user_first_name] => Abderrahim
+    [user_last_name] => DJERRAD
+    [csrf_token] => c6534e8a52198f16f82b64cab0816b6fb3fd712ed77c8fc90c6876214a1bb686
+)
+
+Order ID GET: 78
+2026-01-11 07:26:03 - Starting Payment for Order #78
+2026-01-11 07:26:03 - Creating Customer: {"name":"Abderrahim DJERRAD","email":"djerradabderrahim@outlook.fr","phone":"13091435037","address":{"country":"dz","state":"Setif","address":"Yangpu District Siping Road 2065 Building 6 apartment 405"}}
+2026-01-11 07:26:04 - Customer Created: 01kenz5cne5gtfytxghn59w8eq
+2026-01-11 07:26:06 - Checkout URL: http://pay.chargily.dz/test/checkouts/01kenz5ehzqbgww15en603rjz6/pay
+2026-01-11 07:30:42 - Accessing checkout_chargily.php
+Session ID: ljn1a0difr9hthr9v3v96dhgdt
+Session Data: Array
+(
+    [initialized] => 1
+    [customer_id] => 2
+    [user_email] => djerradabderrahim@outlook.fr
+    [user_first_name] => Abderrahim
+    [user_last_name] => DJERRAD
+    [csrf_token] => c6534e8a52198f16f82b64cab0816b6fb3fd712ed77c8fc90c6876214a1bb686
+)
+
+Order ID GET: 78
+2026-01-11 07:30:42 - Starting Payment for Order #78
+2026-01-11 07:30:42 - Creating Customer: {"name":"Abderrahim DJERRAD","email":"djerradabderrahim@outlook.fr","phone":"13091435037","address":{"country":"dz","state":"Setif","address":"Yangpu District Siping Road 2065 Building 6 apartment 405"}}
+2026-01-11 07:30:44 - Customer Created: 01kenzdxzkvka4st4gvscvpvtv
+2026-01-11 07:30:46 - Checkout URL: http://pay.chargily.dz/test/checkouts/01kenzdzwxhhch7zkrp65hnhqy/pay
+2026-01-11 07:32:33 - Accessing checkout_chargily.php
+Session ID: ljn1a0difr9hthr9v3v96dhgdt
+Session Data: Array
+(
+    [initialized] => 1
+    [customer_id] => 2
+    [user_email] => djerradabderrahim@outlook.fr
+    [user_first_name] => Abderrahim
+    [user_last_name] => DJERRAD
+    [csrf_token] => c6534e8a52198f16f82b64cab0816b6fb3fd712ed77c8fc90c6876214a1bb686
+)
+
+Order ID GET: 79
+2026-01-11 07:32:33 - Starting Payment for Order #79
+2026-01-11 07:32:33 - Creating Customer: {"name":"Abderrahim DJERRAD","email":"djerradabderrahim@outlook.fr","phone":"13091435037","address":{"country":"dz","state":"Setif","address":"Yangpu District Siping Road 2065 Building 6 apartment 405"}}
+2026-01-11 07:32:34 - Customer Created: 01kenzh9dmw3axceq3x4f8m7sj
+2026-01-11 07:32:35 - Checkout URL: http://pay.chargily.dz/test/checkouts/01kenzhb0wj7bqj70z7e8qnsgx/pay
+2026-01-11 07:40:45 - Accessing checkout_chargily.php
+Session ID: ljn1a0difr9hthr9v3v96dhgdt
+Session Data: Array
+(
+    [initialized] => 1
+    [customer_id] => 2
+    [user_email] => djerradabderrahim@outlook.fr
+    [user_first_name] => Abderrahim
+    [user_last_name] => DJERRAD
+    [csrf_token] => c6534e8a52198f16f82b64cab0816b6fb3fd712ed77c8fc90c6876214a1bb686
+)
+
+Order ID GET: 80
+2026-01-11 07:40:45 - Starting Payment for Order #80
+2026-01-11 07:40:45 - Creating Customer: {"name":"Abderrahim DJERRAD","email":"djerradabderrahim@outlook.fr","phone":"13091435037","address":{"country":"dz","state":"Setif","address":"Yangpu District Siping Road 2065 Building 6 apartment 405"}}
+2026-01-11 07:40:47 - Customer Created: 01kep00afra4nzmqcfy0s0jwtr
+2026-01-11 07:40:48 - Checkout URL: http://pay.chargily.dz/test/checkouts/01kep00ccay1t3mtt7g8znefw5/pay
+2026-01-11 07:54:53 - Accessing checkout_chargily.php
+Session ID: ljn1a0difr9hthr9v3v96dhgdt
+Session Data: Array
+(
+    [initialized] => 1
+    [customer_id] => 2
+    [user_email] => djerradabderrahim@outlook.fr
+    [user_first_name] => Abderrahim
+    [user_last_name] => DJERRAD
+    [csrf_token] => c6534e8a52198f16f82b64cab0816b6fb3fd712ed77c8fc90c6876214a1bb686
+)
+
+Order ID GET: 81
+2026-01-11 07:54:53 - Starting Payment for Order #81
+2026-01-11 07:54:53 - Creating Customer: {"name":"Abderrahim DJERRAD","email":"djerradabderrahim@outlook.fr","phone":"13091435037","address":{"country":"dz","state":"Setif","address":"Yangpu District Siping Road 2065 Building 6 apartment 405"}}
+2026-01-11 07:54:56 - Customer Created: 01kep0t7597a4md1nz670y9xf3
+2026-01-11 07:54:57 - Checkout URL: http://pay.chargily.dz/test/checkouts/01kep0t97pvptc7bbgxmhceghe/pay
+2026-01-11 07:54:57 - Save Checkout ID for Order #81: SUCCESS (ID: 01kep0t97pvptc7bbgxmhceghe)
+2026-01-11 07:55:58 - Accessing checkout_chargily.php
+Session ID: ljn1a0difr9hthr9v3v96dhgdt
+Session Data: Array
+(
+    [initialized] => 1
+    [customer_id] => 2
+    [user_email] => djerradabderrahim@outlook.fr
+    [user_first_name] => Abderrahim
+    [user_last_name] => DJERRAD
+    [csrf_token] => c6534e8a52198f16f82b64cab0816b6fb3fd712ed77c8fc90c6876214a1bb686
+)
+
+Order ID GET: 82
+2026-01-11 07:55:58 - Starting Payment for Order #82
+2026-01-11 07:55:58 - Creating Customer: {"name":"Abderrahim DJERRAD","email":"djerradabderrahim@outlook.fr","phone":"13091435037","address":{"country":"dz","state":"Setif","address":"Yangpu District Siping Road 2065 Building 6 apartment 405"}}
+2026-01-11 07:56:00 - Customer Created: 01kep0w615vd3szcp99jhk3k18
+2026-01-11 07:56:01 - Checkout URL: http://pay.chargily.dz/test/checkouts/01kep0w7trebghw81f2ckx9yg6/pay
+2026-01-11 07:56:01 - Save Checkout ID for Order #82: SUCCESS (ID: 01kep0w7trebghw81f2ckx9yg6)
+2026-01-11 08:05:49 - Accessing checkout_chargily.php
+Session ID: ljn1a0difr9hthr9v3v96dhgdt
+Session Data: Array
+(
+    [initialized] => 1
+    [customer_id] => 2
+    [user_email] => djerradabderrahim@outlook.fr
+    [user_first_name] => Abderrahim
+    [user_last_name] => DJERRAD
+    [csrf_token] => c6534e8a52198f16f82b64cab0816b6fb3fd712ed77c8fc90c6876214a1bb686
+)
+
+Order ID GET: 83
+2026-01-11 08:05:49 - Starting Payment for Order #83
+2026-01-11 08:05:49 - Creating Customer: {"name":"Abderrahim DJERRAD","email":"djerradabderrahim@outlook.fr","phone":"13091435037","address":{"country":"dz","state":"Setif","address":"Yangpu District Siping Road 2065 Building 6 apartment 405"}}
+2026-01-11 08:05:51 - Customer Created: 01kep1e70w3816845d7c2yr246
+2026-01-11 08:05:52 - Checkout URL: http://pay.chargily.dz/test/checkouts/01kep1e8r2cw9yp6jxs7nwwept/pay
+2026-01-11 08:05:52 - Save Checkout ID for Order #83: SUCCESS (ID: 01kep1e8r2cw9yp6jxs7nwwept)
+2026-01-11 08:07:05 - Webhook Request Received. Method: GET
+2026-01-11 08:07:05 - Webhook Signature Header: MISSING
+2026-01-11 08:07:05 - Webhook Error: Invalid Webhook Payload
+2026-01-11 08:14:54 - Webhook Request Received. Method: GET
+2026-01-11 08:14:54 - Webhook Signature Header: MISSING
+2026-01-11 08:14:54 - Webhook Error: Invalid Webhook Payload
+2026-01-11 08:14:56 - Webhook Request Received. Method: GET
+2026-01-11 08:14:56 - Webhook Signature Header: MISSING
+2026-01-11 08:14:56 - Webhook Error: Invalid Webhook Payload
+2026-01-11 08:14:56 - Webhook Request Received. Method: GET
+2026-01-11 08:14:56 - Webhook Signature Header: MISSING
+2026-01-11 08:14:56 - Webhook Error: Invalid Webhook Payload
+2026-01-11 08:14:56 - Webhook Request Received. Method: GET
+2026-01-11 08:14:56 - Webhook Signature Header: MISSING
+2026-01-11 08:14:56 - Webhook Error: Invalid Webhook Payload
+2026-01-11 08:30:20 - Webhook Request Received. Method: POST
+2026-01-11 08:30:20 - Webhook Signature Header: 97b7b32b2c2f3fc5dcae4b714f4f764db68d18905800d50cb3f84c2cbe9273b5
+2026-01-11 08:30:20 - Webhook Error: Invalid Webhook Payload
+2026-01-11 08:41:36 - Webhook Request Received. Method: POST
+2026-01-11 08:41:36 - Webhook Signature Header: 4bc81c6c656a785f5b41d326efce3a60ee6df8434de6dc07045da87c3ad5e103
+2026-01-11 08:41:36 - Webhook Error: Invalid Webhook Payload
+2026-01-11 08:42:28 - SIMULATOR: Payload: {"id":"evt_69636274dd50a","entity":"event","livemode":"false","type":"checkout.paid","data":{"id":"01kep0w7trebghw81f2ckx9yg6","entity":"checkout","status":"paid","amount":6500,"currency":"dzd","payment_method":"edahabia","metadata":{"order_id":"82"},"customer_id":"cust_69636274dd50d","updated_at":1768120948,"created_at":1768120948},"created_at":1768120948}
+2026-01-11 08:42:28 - SIMULATOR: Calculated Sig: fba363e2e434b82c060e758c47e357dc54f8073081ea5683a25b8c3e291d4f3e
+2026-01-11 08:42:28 - Webhook Request Received. Method: POST
+2026-01-11 08:42:28 - WEBHOOK: Received Sig: fba363e2e434b82c060e758c47e357dc54f8073081ea5683a25b8c3e291d4f3e
+2026-01-11 08:42:28 - WEBHOOK: Raw Body: {"id":"evt_69636274dd50a","entity":"event","livemode":"false","type":"checkout.paid","data":{"id":"01kep0w7trebghw81f2ckx9yg6","entity":"checkout","status":"paid","amount":6500,"currency":"dzd","payment_method":"edahabia","metadata":{"order_id":"82"},"customer_id":"cust_69636274dd50d","updated_at":1768120948,"created_at":1768120948},"created_at":1768120948}
+2026-01-11 08:42:28 - Webhook Verified Event: checkout.paid
+2026-01-11 08:42:28 - Order #82 PAID (Tx: 01kep0w7trebghw81f2ckx9yg6)
+2026-01-11 08:42:29 - SIMULATOR: Payload: {"id":"evt_69636275a5ab9","entity":"event","livemode":"false","type":"checkout.paid","data":{"id":"01kep0w7trebghw81f2ckx9yg6","entity":"checkout","status":"paid","amount":6500,"currency":"dzd","payment_method":"edahabia","metadata":{"order_id":"82"},"customer_id":"cust_69636275a5abd","updated_at":1768120949,"created_at":1768120949},"created_at":1768120949}
+2026-01-11 08:42:29 - SIMULATOR: Calculated Sig: 8a77de9df364c6ade54d2d1dd7502958827bc7623b09246c9f5524ee0c35171d
+2026-01-11 08:42:29 - Webhook Request Received. Method: POST
+2026-01-11 08:42:29 - WEBHOOK: Received Sig: 8a77de9df364c6ade54d2d1dd7502958827bc7623b09246c9f5524ee0c35171d
+2026-01-11 08:42:29 - WEBHOOK: Raw Body: {"id":"evt_69636275a5ab9","entity":"event","livemode":"false","type":"checkout.paid","data":{"id":"01kep0w7trebghw81f2ckx9yg6","entity":"checkout","status":"paid","amount":6500,"currency":"dzd","payment_method":"edahabia","metadata":{"order_id":"82"},"customer_id":"cust_69636275a5abd","updated_at":1768120949,"created_at":1768120949},"created_at":1768120949}
+2026-01-11 08:42:29 - Webhook Verified Event: checkout.paid
+2026-01-11 08:42:29 - Order #82 PAID (Tx: 01kep0w7trebghw81f2ckx9yg6)
+2026-01-11 08:42:54 - SIMULATOR: Payload: {"id":"evt_6963628e3c2ca","entity":"event","livemode":"false","type":"checkout.paid","data":{"id":"chk_6963628e3c2cc","entity":"checkout","status":"paid","amount":4000,"currency":"dzd","payment_method":"edahabia","metadata":{"order_id":"81"},"customer_id":"cust_6963628e3c2ce","updated_at":1768120974,"created_at":1768120974},"created_at":1768120974}
+2026-01-11 08:42:54 - SIMULATOR: Calculated Sig: c8942059300b8e23b3a9e6726e36078c62491a8b3cbc116e06a0a2613806519f
+2026-01-11 08:42:54 - Webhook Request Received. Method: POST
+2026-01-11 08:42:54 - WEBHOOK: Received Sig: c8942059300b8e23b3a9e6726e36078c62491a8b3cbc116e06a0a2613806519f
+2026-01-11 08:42:54 - WEBHOOK: Raw Body: {"id":"evt_6963628e3c2ca","entity":"event","livemode":"false","type":"checkout.paid","data":{"id":"chk_6963628e3c2cc","entity":"checkout","status":"paid","amount":4000,"currency":"dzd","payment_method":"edahabia","metadata":{"order_id":"81"},"customer_id":"cust_6963628e3c2ce","updated_at":1768120974,"created_at":1768120974},"created_at":1768120974}
+2026-01-11 08:42:54 - Webhook Verified Event: checkout.paid
+2026-01-11 08:42:54 - Order #81 PAID (Tx: chk_6963628e3c2cc)
+2026-01-11 08:43:08 - SIMULATOR: Payload: {"id":"evt_6963629c6571f","entity":"event","livemode":"false","type":"checkout.failed","data":{"id":"chk_6963629c65721","entity":"checkout","status":"failed","amount":4000,"currency":"dzd","payment_method":"edahabia","metadata":{"order_id":"81"},"customer_id":"cust_6963629c65722","updated_at":1768120988,"created_at":1768120988},"created_at":1768120988}
+2026-01-11 08:43:08 - SIMULATOR: Calculated Sig: aed86bf88277a66b38755d2cb291e725fc0f64f9483d3542de566d90aaab2144
+2026-01-11 08:43:08 - Webhook Request Received. Method: POST
+2026-01-11 08:43:08 - WEBHOOK: Received Sig: aed86bf88277a66b38755d2cb291e725fc0f64f9483d3542de566d90aaab2144
+2026-01-11 08:43:08 - WEBHOOK: Raw Body: {"id":"evt_6963629c6571f","entity":"event","livemode":"false","type":"checkout.failed","data":{"id":"chk_6963629c65721","entity":"checkout","status":"failed","amount":4000,"currency":"dzd","payment_method":"edahabia","metadata":{"order_id":"81"},"customer_id":"cust_6963629c65722","updated_at":1768120988,"created_at":1768120988},"created_at":1768120988}
+2026-01-11 08:43:08 - Webhook Verified Event: checkout.failed
+2026-01-11 08:43:08 - Order #81 FAILED via Webhook
+2026-01-11 09:07:46 - Accessing checkout_chargily.php
+Session ID: pgnat74i8g7o0ngo51g81597ja
+Session Data: Array
+(
+    [initialized] => 1
+    [customer_id] => 2
+    [user_email] => djerradabderrahim@outlook.fr
+    [user_first_name] => Abderrahim
+    [user_last_name] => DJERRAD
+    [csrf_token] => 275a441984dd69be8e7214cfee2266381f22c3340f9a3ab1f5ef381168e33a2e
+)
+
+Order ID GET: 84
+2026-01-11 09:07:46 - Starting Payment for Order #84
+2026-01-11 09:07:46 - Creating Customer: {"name":"Abderrahim DJERRAD","email":"djerradabderrahim@outlook.fr","phone":"13091435037","address":{"country":"dz","state":"Setif","address":"Yangpu District Siping Road 2065 Building 6 apartment 405"}}
+2026-01-11 09:07:48 - Customer Created: 01kep4zn7s7m6sdkwy3kkqxzm6
+2026-01-11 09:07:49 - Checkout URL: http://pay.chargily.dz/test/checkouts/01kep4zq4j4npakymfse4vrmmf/pay
+2026-01-11 09:07:49 - Save Checkout ID for Order #84: SUCCESS (ID: 01kep4zq4j4npakymfse4vrmmf)
+2026-01-11 09:08:05 - Accessing checkout_chargily.php
+Session ID: pgnat74i8g7o0ngo51g81597ja
+Session Data: Array
+(
+    [initialized] => 1
+    [customer_id] => 2
+    [user_email] => djerradabderrahim@outlook.fr
+    [user_first_name] => Abderrahim
+    [user_last_name] => DJERRAD
+    [csrf_token] => 275a441984dd69be8e7214cfee2266381f22c3340f9a3ab1f5ef381168e33a2e
+)
+
+Order ID GET: 85
+2026-01-11 09:08:05 - Starting Payment for Order #85
+2026-01-11 09:08:05 - Creating Customer: {"name":"Abderrahim DJERRAD","email":"djerradabderrahim@outlook.fr","phone":"13091435037","address":{"country":"dz","state":"Setif","address":"Yangpu District Siping Road 2065 Building 6 apartment 405"}}
+2026-01-11 09:08:07 - Customer Created: 01kep507bk5fq7a9dqfe6hhkw9
+2026-01-11 09:08:08 - Checkout URL: http://pay.chargily.dz/test/checkouts/01kep509jfahwzyycwszt1vh15/pay
+2026-01-11 09:08:08 - Save Checkout ID for Order #85: SUCCESS (ID: 01kep509jfahwzyycwszt1vh15)

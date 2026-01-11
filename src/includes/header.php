@@ -127,7 +127,7 @@ $cartCount = $headerCart->getItemCount();
                 </div>
 
                 <!-- Logo -->
-                <div class="col-auto">
+                <div class="col text-center col-lg-auto text-lg-start">
                     <a href="index.php" class="text-decoration-none h4 mb-0 fw-bold">
                         <?php 
                         $siteLogo = get_setting('site_logo');
@@ -168,7 +168,7 @@ $cartCount = $headerCart->getItemCount();
                 </div>
 
                 <!-- Search Bar -->
-                <div class="col-lg-5">
+                <div class="col-12 col-lg-5 order-last order-lg-0 mt-2 mt-lg-0">
                     <form action="search.php" method="GET" class="input-group">
                         <input type="text" name="q" class="form-control border-danger border-2 py-1 px-3" placeholder="<?php echo t('search_products'); ?>" value="<?php echo isset($_GET['q']) ? htmlspecialchars($_GET['q']) : ''; ?>">
                         <button class="btn btn-danger py-1 px-4" type="submit">
@@ -180,26 +180,19 @@ $cartCount = $headerCart->getItemCount();
                 <!-- Header Actions -->
                 <div class="col-auto">
                     <div class="d-flex align-items-center gap-1 gap-md-3">
-                        <a href="compare.php" class="btn btn-light border-0 bg-transparent text-secondary d-flex flex-column align-items-center p-1" style="font-size: 0.7rem;">
-                            <div class="position-relative">
-                                <i class="fas fa-balance-scale mb-1" style="font-size: 0.9rem;"></i>
-                                <span class="badge rounded-pill bg-danger position-absolute top-0 start-100 translate-middle" style="font-size: 0.6rem; margin-top: -2px; margin-left: -2px;">0</span>
-                            </div>
-                            <span class="d-none d-xl-inline"><?php echo t('compare'); ?></span>
-                        </a>
-                        
-                        <a href="wishlist.php" class="btn btn-light border-0 bg-transparent text-secondary d-flex flex-column align-items-center p-1" style="font-size: 0.7rem;">
+
+                        <a href="wishlist.php" class="action-btn btn btn-light border-0 bg-transparent text-secondary d-flex flex-column align-items-center p-1" style="font-size: 0.7rem;">
                             <div class="position-relative">
                                 <i class="fas fa-heart mb-1" style="font-size: 0.9rem;"></i>
-                                <span class="badge rounded-pill bg-danger position-absolute top-0 start-100 translate-middle" style="font-size: 0.6rem; margin-top: -2px; margin-left: -2px;">0</span>
+                                <span class="badge rounded-pill bg-danger position-absolute top-0 start-100 translate-middle" style="font-size: 0.6rem; margin-top: -2px; margin-left: -2px; display: none;">0</span>
                             </div>
                             <span class="d-none d-xl-inline"><?php echo t('wishlist'); ?></span>
                         </a>
                         
-                        <a href="cart.php" class="btn btn-light border-0 bg-transparent text-secondary d-flex flex-column align-items-center p-1" style="font-size: 0.7rem;">
+                        <a href="cart.php" class="action-btn btn btn-light border-0 bg-transparent text-secondary d-flex flex-column align-items-center p-1" style="font-size: 0.7rem;">
                             <div class="position-relative">
                                 <i class="fas fa-shopping-cart mb-1" style="font-size: 0.9rem;"></i>
-                                <span class="badge rounded-pill bg-danger position-absolute top-0 start-100 translate-middle" style="font-size: 0.6rem; margin-top: -2px; margin-left: -2px;"><?php echo $cartCount ?? 0; ?></span>
+                                <span class="badge rounded-pill bg-danger position-absolute top-0 start-100 translate-middle" style="font-size: 0.6rem; margin-top: -2px; margin-left: -2px; <?php echo ($cartCount > 0) ? '' : 'display: none;'; ?>"><?php echo $cartCount ?? 0; ?></span>
                             </div>
                             <span class="d-none d-xl-inline"><?php echo t('cart'); ?></span>
                         </a>
@@ -257,7 +250,7 @@ $cartCount = $headerCart->getItemCount();
                 <?php echo htmlspecialchars($siteTitle); ?>
             <?php endif; ?>
         </h5>
-        <button type="button" class="btn-close" data-bs-offcanvas="offcanvas" aria-label="Close"></button>
+        <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
     </div>
     <div class="offcanvas-body p-0">
         <!-- Will be populated if needed, or stick to categories for now -->

@@ -284,6 +284,7 @@ if ($isLoggedIn && !empty($addresses)) {
                             </label>
                         </div>
                         
+                        <?php if (get_setting('baridimob_enabled') == '1'): ?>
                         <div class="col-md-4">
                             <label class="d-flex align-items-center gap-3 p-3 border rounded-4 h-100 transition-all" for="baridimob">
                                 <div class="form-check mb-0">
@@ -295,6 +296,35 @@ if ($isLoggedIn && !empty($addresses)) {
                                 </div>
                             </label>
                         </div>
+                        <?php endif; ?>
+
+                        <?php if (get_setting('chargily_enabled') == '1'): ?>
+                        <div class="col-md-4">
+                            <label class="d-flex align-items-center gap-3 p-3 border rounded-4 h-100 transition-all" for="chargily">
+                                <div class="form-check mb-0">
+                                    <input class="form-check-input focus-ring-danger" type="radio" id="chargily" name="payment_method" value="chargily">
+                                </div>
+                                <div>
+                                    <i class="fas fa-credit-card text-danger fs-4 d-block mb-1"></i>
+                                    <span class="fw-bold text-dark small">Edahabia / CIB</span>
+                                </div>
+                            </label>
+                        </div>
+                        <?php endif; ?>
+
+                        <?php if (get_setting('paypal_enabled') == '1'): ?>
+                        <div class="col-md-4">
+                            <label class="d-flex align-items-center gap-3 p-3 border rounded-4 h-100 transition-all" for="paypal">
+                                <div class="form-check mb-0">
+                                    <input class="form-check-input focus-ring-danger" type="radio" id="paypal" name="payment_method" value="paypal">
+                                </div>
+                                <div>
+                                    <i class="fab fa-paypal text-primary fs-4 d-block mb-1"></i>
+                                    <span class="fw-bold text-dark small">PayPal</span>
+                                </div>
+                            </label>
+                        </div>
+                        <?php endif; ?>
                     </div>
                 </div>
             </div>
@@ -722,7 +752,15 @@ function placeOrder() {
     .then(data => {
         if (data.success) {
             showNotification('<?php echo addslashes(t('order_placed')); ?>', 'success');
-            setTimeout(() => { window.location.href = 'order_status.php?status=success&id=' + data.order_id; }, 1500);
+            
+            // Redirect based on payment method
+            setTimeout(() => { 
+                if (paymentMethod === 'chargily') {
+                    window.location.href = 'checkout_chargily.php?order_id=' + data.order_id;
+                } else {
+                    window.location.href = 'order_status.php?status=success&id=' + data.order_id; 
+                }
+            }, 1500);
         } else {
             window.location.href = `order_status.php?status=failed&error=${data.error_type || 'server_error'}&reason=${encodeURIComponent(data.message || '')}`;
         }

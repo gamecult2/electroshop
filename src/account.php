@@ -261,7 +261,6 @@ $loyaltyTier = 'Silver';
                                                 <td class="px-4 py-3 text-end">
                                                     <div class="d-flex justify-content-end gap-2">
                                                         <a href="order_details.php?id=<?php echo $order['id']; ?>" class="btn btn-outline-dark btn-sm rounded-pill px-3 fw-bold shadow-xs" style="font-size: 11px;"><?php echo t('view'); ?></a>
-<<<<<<< Updated upstream
                                                         <?php if ($order['status'] === 'delivered'): 
                                                             // Check if all items in this order are reviewed
                                                             $stmt = $pdo->prepare("SELECT COUNT(*) FROM order_items oi LEFT JOIN reviews r ON oi.product_id = r.product_id AND r.customer_id = ? WHERE oi.order_id = ? AND r.id IS NULL");
@@ -272,8 +271,6 @@ $loyaltyTier = 'Silver';
                                                         ?>
                                                             <button class="btn <?php echo $btnClass; ?> btn-sm rounded-pill px-3 fw-bold shadow-xs" style="font-size: 11px;" onclick="openReviewModal('<?php echo $order['id']; ?>')"><?php echo $btnText; ?></button>
                                                         <?php endif; ?>
-=======
->>>>>>> Stashed changes
                                                         <?php if ($order['status'] === 'shipped' || $order['status'] === 'delivered'): ?>
                                                             <button class="btn btn-outline-secondary btn-sm rounded-pill px-3 fw-bold shadow-xs" style="font-size: 11px;" onclick="trackOrder('<?php echo $order['id']; ?>')"><?php echo t('track_order'); ?></button>
                                                         <?php endif; ?>
@@ -1329,7 +1326,6 @@ if (typeof loadUnreadCount === 'function') {
             });
     }, 30000);
 }
-<<<<<<< Updated upstream
 
 function openEditReviewModal(review) {
     document.getElementById('editReviewId').value = review.id;
@@ -1398,8 +1394,6 @@ async function saveReviewEdit(btn) {
         btn.innerHTML = originalText;
     }
 }
-=======
->>>>>>> Stashed changes
 </script>
 
 

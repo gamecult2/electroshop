@@ -11,6 +11,23 @@ if ($status === 'success' && $orderId) {
     $orderModel = new Order();
     $order = $orderModel->getById($orderId);
     if (!$order) redirect('index.php');
+    
+    // Check for Chargily checkout_id to verify real-time if not already updated by webhook
+    $checkoutId = $_GET['checkout_id'] ?? null;
+    if ($checkoutId && $order['payment_status'] !== 'paid') {
+        require_once 'services/ChargilyService.php';
+        $chargily = new ChargilyService();
+        $checkout = $chargily->getCheckout($checkoutId);
+        
+        if ($checkout && $checkout->getStatus() === 'paid') {
+            // Update database immediately for better UX
+            $orderModel->updatePaymentDetails($orderId, 'paid', $checkoutId, $checkout->toArray());
+            $orderModel->updateStatus($orderId, 'processing', null, 'Payment verified on return page');
+            // Refresh order data
+            $order = $orderModel->getById($orderId);
+        }
+    }
+
     $isGuest = is_null($order['customer_id']);
     $orderItems = $orderModel->getItems($orderId);
     $shippingAddress = json_decode($order['shipping_address'], true);
@@ -229,7 +246,24 @@ $progressStep3Class = $status === 'success' ? 'active completed' : 'active error
                         <div class="p-3 bg-light rounded-3 border">
                             <div class="d-flex justify-content-between mb-2">
                                 <span class="text-muted small"><?php echo t('payment_method'); ?>:</span>
-                                <span class="badge bg-white text-dark border shadow-sm fw-bold"><?php echo t($order['payment_method'] ?? 'cod'); ?></span>
+                                <span class="badge bg-white text-dark border shadow-sm fw-bold">
+                                    <?php 
+                                    if (!empty($order['payment_gateway_response'])) {
+                                        $resp = json_decode($order['payment_gateway_response'], true);
+                                        $subMethod = $resp['payment_method'] ?? 'Edahabia / CIB';
+                                        $formattedSubMethod = (strtolower($subMethod) === 'cib') ? 'CIB' : ucfirst($subMethod);
+                                        echo "Chargily (" . $formattedSubMethod . ")";
+                                    } else {
+                                        echo t($order['payment_method'] ?? 'cod'); 
+                                    }
+                                    ?>
+                                </span>
+                            </div>
+                            <div class="d-flex justify-content-between mb-2">
+                                <span class="text-muted small"><?php echo t('payment_status'); ?>:</span>
+                                <span class="badge <?php echo $order['payment_status'] === 'paid' ? 'bg-success' : 'bg-warning text-dark'; ?> rounded-pill fw-bold">
+                                    <?php echo strtoupper($order['payment_status'] ?? 'pending'); ?>
+                                </span>
                             </div>
                             <div class="d-flex justify-content-between mb-0">
                                 <span class="text-muted small"><?php echo t('order_date'); ?>:</span>

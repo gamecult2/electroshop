@@ -404,11 +404,7 @@ function showChatForm() {
     `;
 }
 
-<<<<<<< Updated upstream
 function openProductChat(productId, productName, productImage, productSku) {
-=======
-function openProductChat(productId, productName) {
->>>>>>> Stashed changes
     currentProductId = productId;
     document.getElementById('currentProductId').value = productId;
     
@@ -416,7 +412,6 @@ function openProductChat(productId, productName) {
     document.getElementById('productContext').classList.remove('d-none');
     document.getElementById('productContextName').textContent = productName;
     
-<<<<<<< Updated upstream
     if (productImage) {
         document.getElementById('productContextImage').src = productImage;
     }
@@ -427,8 +422,6 @@ function openProductChat(productId, productName) {
         document.getElementById('productContextSku').textContent = '';
     }
     
-=======
->>>>>>> Stashed changes
     toggleChatModal();
     showChatForm();
 }

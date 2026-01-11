@@ -131,6 +131,13 @@ class Order {
         return $stmt->execute([$status, $id]);
     }
 
+    public function updatePaymentDetails($id, $status, $transactionId, $gatewayResponse = null) {
+        $responseJson = $gatewayResponse ? json_encode($gatewayResponse) : null;
+        $sql = "UPDATE orders SET payment_status = ?, transaction_id = ?, payment_gateway_response = ?, payment_method = 'chargily', updated_at = NOW() WHERE id = ?";
+        $stmt = $this->pdo->prepare($sql);
+        return $stmt->execute([$status, $transactionId, $responseJson, $id]);
+    }
+
     public function updateTracking($id, $trackingNumber, $estimatedDelivery = null) {
         $sql = "UPDATE orders SET tracking_number = ?, estimated_delivery = ? WHERE id = ?";
         $stmt = $this->pdo->prepare($sql);

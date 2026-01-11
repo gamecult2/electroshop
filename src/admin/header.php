@@ -30,6 +30,7 @@ $menu_items = [
     'users.php' => ['icon' => 'fas fa-users-cog', 'label' => 'Manage Staff'],
     'messages.php' => ['icon' => 'fas fa-envelope', 'label' => 'Messages'],
     'coupons.php' => ['icon' => 'fas fa-gift', 'label' => 'Coupons'],
+    'chargily_payments.php' => ['icon' => 'fas fa-file-invoice-dollar', 'label' => 'Chargily History'],
     'banners.php' => ['icon' => 'fas fa-ad', 'label' => 'Banners'],
     'pages.php' => ['icon' => 'fas fa-file-alt', 'label' => 'Homepage'],
     'inventory.php' => ['icon' => 'fas fa-warehouse', 'label' => 'Inventory'],
@@ -219,20 +220,22 @@ $menu_items = [
                             <div class="dropdown-menu dropdown-menu-end shadow-lg border-0 p-0 mt-2 rounded-4 overflow-hidden" style="width: 320px;">
                                 <div class="bg-white p-3 border-bottom d-flex justify-content-between align-items-center">
                                     <h6 class="mb-0 fw-bold text-dark">Notifications</h6>
-                                    <span class="badge bg-primary-subtle text-primary rounded-pill small"><?php echo $newOrdersCount; ?> New</span>
+                                    <?php if ($newOrdersCount > 0): ?>
+                                        <span class="badge bg-primary-subtle text-primary rounded-pill small"><?php echo $newOrdersCount; ?> New</span>
+                                    <?php endif; ?>
                                 </div>
                                 <div class="list-group list-group-flush" style="max-height: 300px; overflow-y: auto;">
                                     <?php if ($newOrdersCount > 0): ?>
-                                        <?php foreach ($newOrders as $order): ?>
-                                            <a href="admin_order_details.php?id=<?php echo $order['id']; ?>" class="list-group-item list-group-item-action p-3">
+                                        <?php foreach ($newOrders as $nOrder): ?>
+                                            <a href="admin_order_details.php?id=<?php echo $nOrder['id']; ?>" class="list-group-item list-group-item-action p-3">
                                                 <div class="d-flex align-items-center gap-3">
                                                     <div class="bg-success-subtle text-success rounded-circle d-flex align-items-center justify-content-center flex-shrink-0" style="width: 40px; height: 40px;">
                                                         <i class="fas fa-shopping-cart"></i>
                                                     </div>
                                                     <div>
                                                         <div class="fw-bold small text-dark">New Order Received</div>
-                                                        <div class="text-muted x-small">Order #<?php echo htmlspecialchars($order['order_number']); ?> placed</div>
-                                                        <div class="text-muted x-small mt-1"><?php echo time_elapsed_string($order['created_at']); ?></div>
+                                                        <div class="text-muted x-small">Order #<?php echo htmlspecialchars($nOrder['order_number']); ?> placed</div>
+                                                        <div class="text-muted x-small mt-1"><?php echo time_elapsed_string($nOrder['created_at']); ?></div>
                                                     </div>
                                                 </div>
                                             </a>

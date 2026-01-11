@@ -116,7 +116,8 @@ function get_default_settings($group) {
             'baridimob_rip' => '',
             'baridimob_holder' => '',
             'chargily_enabled' => '0',
-            'chargily_api_key' => '',
+            'chargily_mode' => 'test',
+            'chargily_public_key' => '',
             'chargily_secret_key' => ''
         ],
         'email' => [
@@ -285,7 +286,6 @@ include 'header.php';
                     </div>
                 </div>
 
-<<<<<<< Updated upstream
                 <div class="col-12">
                     <div class="card border-0 shadow-sm p-4 rounded-3">
                         <div class="d-flex align-items-center gap-2 mb-3 pb-2 border-bottom">
@@ -452,7 +452,7 @@ include 'header.php';
                                 'PayPal' => ['fab fa-paypal text-primary', 'paypal_enabled', ['client_id' => 'Client ID', 'secret' => 'Secret']],
                                 'Stripe' => ['fab fa-stripe text-info', 'stripe_enabled', ['publishable_key' => 'Pub Key', 'secret_key' => 'Secret']],
                                 'BaridiMob' => ['fas fa-mobile-alt text-danger', 'baridimob_enabled', ['ccp' => 'CCP', 'rip' => 'RIP', 'holder' => 'Name']],
-                                'Chargily' => ['fas fa-bolt text-warning', 'chargily_enabled', ['api_key' => 'Pub Key', 'secret_key' => 'Secret']]
+                                'Chargily' => ['fas fa-bolt text-warning', 'chargily_enabled', ['mode' => 'Mode (test/live)', 'public_key' => 'Public Key', 'secret_key' => 'Secret Key']]
                             ];
                             foreach ($gateways as $name => $cfg): ?>
                                 <div class="col-md-6">
@@ -470,10 +470,25 @@ include 'header.php';
                                             <div class="mb-2">
                                                 <label class="small fw-bold text-muted text-uppercase mb-1" style="font-size: 0.65rem;"><?php echo $label; ?></label>
                                                 <?php $inputKey = strtolower($name) . '_' . $fieldKey; ?>
-                                                <input type="<?php echo strpos($fieldKey, 'secret') !== false ? 'password' : 'text'; ?>" 
-                                                       class="form-control form-control-sm border-light-subtle shadow-none rounded-pill px-3" 
-                                                       name="ecommerce[<?php echo $inputKey; ?>]" 
-                                                       value="<?php echo htmlspecialchars($ecommerce_settings[$inputKey] ?? ''); ?>">
+                                                <?php 
+                                                    $placeholder = '';
+                                                    if ($name === 'Chargily') {
+                                                        if ($fieldKey === 'public_key' && defined('CHARGILY_PUBLIC_KEY')) $placeholder = CHARGILY_PUBLIC_KEY;
+                                                        if ($fieldKey === 'secret_key' && defined('CHARGILY_SECRET_KEY')) $placeholder = '********'; // Mask secret key
+                                                    }
+                                                ?>
+                                                <?php if ($fieldKey === 'mode'): ?>
+                                                    <select class="form-select form-select-sm border-light-subtle shadow-none rounded-pill px-3" name="ecommerce[<?php echo $inputKey; ?>]">
+                                                        <option value="test" <?php echo ($ecommerce_settings[$inputKey] ?? '') === 'test' ? 'selected' : ''; ?>>Test Mode</option>
+                                                        <option value="live" <?php echo ($ecommerce_settings[$inputKey] ?? '') === 'live' ? 'selected' : ''; ?>>Live Mode</option>
+                                                    </select>
+                                                <?php else: ?>
+                                                    <input type="<?php echo strpos($fieldKey, 'secret') !== false ? 'password' : 'text'; ?>" 
+                                                        class="form-control form-control-sm border-light-subtle shadow-none rounded-pill px-3" 
+                                                        name="ecommerce[<?php echo $inputKey; ?>]" 
+                                                        value="<?php echo htmlspecialchars($ecommerce_settings[$inputKey] ?? ''); ?>"
+                                                        placeholder="<?php echo htmlspecialchars($placeholder); ?>">
+                                                <?php endif; ?>
                                             </div>
                                         <?php endforeach; ?>
                                     </div>
@@ -567,156 +582,10 @@ include 'header.php';
                             <div class="d-flex align-items-center justify-content-between">
                                 <span class="fw-bold small">Cookie Consent</span>
                                 <div class="form-check form-switch"><input class="form-check-input shadow-none cursor-pointer" type="checkbox" name="security[cookie_consent_enabled]" value="1" <?php echo $security_settings['cookie_consent_enabled'] == '1' ? 'checked' : ''; ?>></div>
-=======
-                <!-- E-commerce Settings Tab -->
-                <div id="ecommerce" class="tab-pane fade" role="tabpanel">
-                    <div class="row g-4">
-                        <!-- Left Column: Currency -->
-                        <div class="col-lg-4">
-                            <div class="card border-0 shadow-sm p-4 h-100">
-                                <h3 class="h6 fw-bold text-uppercase text-muted mb-4 ls-1">
-                                    <i class="fas fa-coins me-2 text-warning"></i> Currency & Tax
-                                </h3>
-                                <div class="mb-4">
-                                    <label for="currency_code" class="form-label small fw-bold text-muted">Currency Code</label>
-                                    <select class="form-select border-light-subtle shadow-none" id="currency_code" name="ecommerce[currency_code]">
-                                        <option value="DZD" <?php echo $ecommerce_settings['currency_code'] === 'DZD' ? 'selected' : ''; ?>>DZD (Algerian Dinar)</option>
-                                        <option value="USD" <?php echo $ecommerce_settings['currency_code'] === 'USD' ? 'selected' : ''; ?>>USD (US Dollar)</option>
-                                        <option value="EUR" <?php echo $ecommerce_settings['currency_code'] === 'EUR' ? 'selected' : ''; ?>>EUR (Euro)</option>
-                                        <option value="GBP" <?php echo $ecommerce_settings['currency_code'] === 'GBP' ? 'selected' : ''; ?>>GBP (British Pound)</option>
-                                    </select>
-                                </div>
-                                <div class="mb-4">
-                                    <label for="currency_symbol" class="form-label small fw-bold text-muted">Symbol</label>
-                                    <input type="text" class="form-control border-light-subtle shadow-none" id="currency_symbol" name="ecommerce[currency_symbol]" value="<?php echo htmlspecialchars($ecommerce_settings['currency_symbol']); ?>">
-                                </div>
-                                <div class="row g-3">
-                                    <div class="col-md-6">
-                                        <label for="tax_rate" class="form-label small fw-bold text-muted">Tax Rate (%)</label>
-                                        <input type="number" class="form-control border-light-subtle shadow-none" id="tax_rate" name="ecommerce[tax_rate]" value="<?php echo htmlspecialchars($ecommerce_settings['tax_rate']); ?>" step="0.01" min="0">
-                                    </div>
-                                    <div class="col-md-6">
-                                        <label for="tax_calculation_method" class="form-label small fw-bold text-muted">Calculation</label>
-                                        <select class="form-select border-light-subtle shadow-none" id="tax_calculation_method" name="ecommerce[tax_calculation_method]">
-                                            <option value="exclusive" <?php echo $ecommerce_settings['tax_calculation_method'] === 'exclusive' ? 'selected' : ''; ?>>Exclusive</option>
-                                            <option value="inclusive" <?php echo $ecommerce_settings['tax_calculation_method'] === 'inclusive' ? 'selected' : ''; ?>>Inclusive</option>
-                                        </select>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Right Column: Payment Gateways -->
-                        <div class="col-lg-8">
-                            <div class="card border-0 shadow-sm p-4">
-                                <h3 class="h6 fw-bold text-uppercase text-muted mb-4 ls-1">
-                                    <i class="fas fa-credit-card me-2 text-success"></i> Payment Gateways
-                                </h3>
-                                
-                                <!-- Global Gateways -->
-                                <div class="row g-3 mb-4">
-                                    <div class="col-md-6">
-                                        <div class="p-3 border rounded-3 bg-light h-100">
-                                            <div class="d-flex align-items-center justify-content-between mb-3 pb-2 border-bottom">
-                                                <div class="d-flex align-items-center gap-2">
-                                                    <i class="fab fa-cc-paypal fs-4 text-primary"></i>
-                                                    <h6 class="fw-bold mb-0 small">PayPal</h6>
-                                                </div>
-                                                <div class="form-check form-switch">
-                                                    <input class="form-check-input shadow-none" type="checkbox" name="ecommerce[paypal_enabled]" value="1" <?php echo $ecommerce_settings['paypal_enabled'] == '1' ? 'checked' : ''; ?>>
-                                                </div>
-                                            </div>
-                                            <div class="mb-2">
-                                                <label class="form-label x-small fw-bold text-muted">Client ID</label>
-                                                <input type="text" class="form-control form-control-sm border-light-subtle shadow-none" name="ecommerce[paypal_client_id]" value="<?php echo htmlspecialchars($ecommerce_settings['paypal_client_id']); ?>">
-                                            </div>
-                                            <div>
-                                                <label class="form-label x-small fw-bold text-muted">Secret</label>
-                                                <input type="password" class="form-control form-control-sm border-light-subtle shadow-none" name="ecommerce[paypal_secret]" value="<?php echo htmlspecialchars($ecommerce_settings['paypal_secret']); ?>">
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div class="col-md-6">
-                                        <div class="p-3 border rounded-3 bg-light h-100">
-                                            <div class="d-flex align-items-center justify-content-between mb-3 pb-2 border-bottom">
-                                                <div class="d-flex align-items-center gap-2">
-                                                    <i class="fab fa-cc-stripe fs-4 text-info"></i>
-                                                    <h6 class="fw-bold mb-0 small">Stripe</h6>
-                                                </div>
-                                                <div class="form-check form-switch">
-                                                    <input class="form-check-input shadow-none" type="checkbox" name="ecommerce[stripe_enabled]" value="1" <?php echo $ecommerce_settings['stripe_enabled'] == '1' ? 'checked' : ''; ?>>
-                                                </div>
-                                            </div>
-                                            <div class="mb-2">
-                                                <label class="form-label x-small fw-bold text-muted">Publishable Key</label>
-                                                <input type="text" class="form-control form-control-sm border-light-subtle shadow-none" name="ecommerce[stripe_publishable_key]" value="<?php echo htmlspecialchars($ecommerce_settings['stripe_publishable_key']); ?>">
-                                            </div>
-                                            <div>
-                                                <label class="form-label x-small fw-bold text-muted">Secret Key</label>
-                                                <input type="password" class="form-control form-control-sm border-light-subtle shadow-none" name="ecommerce[stripe_secret_key]" value="<?php echo htmlspecialchars($ecommerce_settings['stripe_secret_key']); ?>">
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <!-- Local Gateways -->
-                                <div class="row g-3">
-                                    <div class="col-md-6">
-                                        <div class="p-3 border rounded-3 bg-light h-100">
-                                            <div class="d-flex align-items-center justify-content-between mb-3 pb-2 border-bottom">
-                                                <div class="d-flex align-items-center gap-2">
-                                                    <i class="fas fa-mobile-alt fs-4 text-danger"></i>
-                                                    <h6 class="fw-bold mb-0 small">BaridiMob / CCP</h6>
-                                                </div>
-                                                <div class="form-check form-switch">
-                                                    <input class="form-check-input shadow-none" type="checkbox" name="ecommerce[baridimob_enabled]" value="1" <?php echo $ecommerce_settings['baridimob_enabled'] == '1' ? 'checked' : ''; ?>>
-                                                </div>
-                                            </div>
-                                            <div class="mb-2">
-                                                <label class="form-label x-small fw-bold text-muted">CCP Number</label>
-                                                <input type="text" class="form-control form-control-sm border-light-subtle shadow-none" name="ecommerce[baridimob_ccp]" value="<?php echo htmlspecialchars($ecommerce_settings['baridimob_ccp']); ?>">
-                                            </div>
-                                            <div class="mb-2">
-                                                <label class="form-label x-small fw-bold text-muted">RIP Number</label>
-                                                <input type="text" class="form-control form-control-sm border-light-subtle shadow-none" name="ecommerce[baridimob_rip]" value="<?php echo htmlspecialchars($ecommerce_settings['baridimob_rip']); ?>">
-                                            </div>
-                                            <div>
-                                                <label class="form-label x-small fw-bold text-muted">Holder Name</label>
-                                                <input type="text" class="form-control form-control-sm border-light-subtle shadow-none" name="ecommerce[baridimob_holder]" value="<?php echo htmlspecialchars($ecommerce_settings['baridimob_holder']); ?>">
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div class="col-md-6">
-                                        <div class="p-3 border rounded-3 bg-light h-100">
-                                            <div class="d-flex align-items-center justify-content-between mb-3 pb-2 border-bottom">
-                                                <div class="d-flex align-items-center gap-2">
-                                                    <img src="https://chargily.com/wp-content/uploads/2022/03/Chargily-Pay-Logo-1.png" height="20" alt="Chargily">
-                                                    <h6 class="fw-bold mb-0 small">Chargily Pay</h6>
-                                                </div>
-                                                <div class="form-check form-switch">
-                                                    <input class="form-check-input shadow-none" type="checkbox" name="ecommerce[chargily_enabled]" value="1" <?php echo $ecommerce_settings['chargily_enabled'] == '1' ? 'checked' : ''; ?>>
-                                                </div>
-                                            </div>
-                                            <div class="mb-2">
-                                                <label class="form-label x-small fw-bold text-muted">API Public Key</label>
-                                                <input type="text" class="form-control form-control-sm border-light-subtle shadow-none" name="ecommerce[chargily_api_key]" value="<?php echo htmlspecialchars($ecommerce_settings['chargily_api_key']); ?>">
-                                            </div>
-                                            <div class="mb-3">
-                                                <label class="form-label x-small fw-bold text-muted">API Secret Key</label>
-                                                <input type="password" class="form-control form-control-sm border-light-subtle shadow-none" name="ecommerce[chargily_secret_key]" value="<?php echo htmlspecialchars($ecommerce_settings['chargily_secret_key']); ?>">
-                                            </div>
-                                            <div class="alert alert-info py-2 px-3 border-0 mb-0" style="font-size: 10px;">
-                                                <i class="fas fa-info-circle me-1"></i> Supports Edahabia and local CIB cards.
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
->>>>>>> Stashed changes
                             </div>
                         </div>
                     </div>
                 </div>
-<<<<<<< Updated upstream
 
                 <div class="col-md-6">
                     <div class="card border-0 shadow-sm p-4 h-100 rounded-3">
@@ -788,248 +657,6 @@ include 'header.php';
                         </div>
                     </div>
                 </div>
-=======
-                    </div>
-                </div>
-
-                <!-- Email & Notifications Tab -->
-                <div id="email" class="tab-pane fade" role="tabpanel">
-                    <div class="row g-4">
-                        <div class="col-lg-6">
-                            <div class="card border-0 shadow-sm p-4 h-100">
-                                <h3 class="h6 fw-bold text-uppercase text-muted mb-4 ls-1">
-                                    <i class="fas fa-server me-2 text-danger"></i> SMTP Configuration
-                                </h3>
-                                <div class="row g-3 mb-3">
-                                    <div class="col-8">
-                                        <label for="smtp_host" class="form-label small fw-bold text-muted">SMTP Host</label>
-                                        <input type="text" class="form-control" id="smtp_host" name="email[smtp_host]" value="<?php echo htmlspecialchars($email_settings['smtp_host']); ?>" placeholder="smtp.example.com">
-                                    </div>
-                                    <div class="col-4">
-                                        <label for="smtp_port" class="form-label small fw-bold text-muted">Port</label>
-                                        <input type="number" class="form-control" id="smtp_port" name="email[smtp_port]" value="<?php echo htmlspecialchars($email_settings['smtp_port']); ?>" placeholder="587">
-                                    </div>
-                                </div>
-                                <div class="row g-3 mb-3">
-                                    <div class="col-md-6">
-                                        <label for="smtp_username" class="form-label small fw-bold text-muted">Username</label>
-                                        <input type="text" class="form-control" id="smtp_username" name="email[smtp_username]" value="<?php echo htmlspecialchars($email_settings['smtp_username']); ?>">
-                                    </div>
-                                    <div class="col-md-6">
-                                        <label for="smtp_password" class="form-label small fw-bold text-muted">Password</label>
-                                        <input type="password" class="form-control" id="smtp_password" name="email[smtp_password]" value="<?php echo htmlspecialchars($email_settings['smtp_password']); ?>">
-                                    </div>
-                                </div>
-                                <div class="mb-0">
-                                    <label for="smtp_encryption" class="form-label small fw-bold text-muted">Encryption</label>
-                                    <select class="form-select" id="smtp_encryption" name="email[smtp_encryption]">
-                                        <option value="tls" <?php echo $email_settings['smtp_encryption'] === 'tls' ? 'selected' : ''; ?>>TLS</option>
-                                        <option value="ssl" <?php echo $email_settings['smtp_encryption'] === 'ssl' ? 'selected' : ''; ?>>SSL</option>
-                                        <option value="" <?php echo $email_settings['smtp_encryption'] === '' ? 'selected' : ''; ?>>None</option>
-                                    </select>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="col-lg-6">
-                            <div class="card border-0 shadow-sm p-4 h-100">
-                                <h3 class="h6 fw-bold text-uppercase text-muted mb-4 ls-1">
-                                    <i class="fas fa-bell me-2 text-primary"></i> Notifications
-                                </h3>
-                                <div class="mb-0">
-                                    <label for="admin_notification_email" class="form-label small fw-bold text-muted">Admin Alert Email</label>
-                                    <input type="email" class="form-control" id="admin_notification_email" name="email[admin_notification_email]" value="<?php echo htmlspecialchars($email_settings['admin_notification_email']); ?>" placeholder="admin@qwenshop.dz">
-                                    <div class="form-text small">Receive alerts for new orders and inquiries.</div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="col-md-6">
-                            <div class="card border-0 shadow-sm p-4 h-100">
-                                <h3 class="h6 fw-bold text-uppercase text-muted mb-4 ls-1">
-                                    <i class="fas fa-file-invoice me-2 text-success"></i> Order Confirmation
-                                </h3>
-                                <div class="mb-0">
-                                    <label class="form-label small fw-bold text-muted">Email Body Template</label>
-                                    <textarea class="form-control" name="email[order_confirmation_template]" rows="6"><?php echo htmlspecialchars($email_settings['order_confirmation_template']); ?></textarea>
-                                    <div class="form-text small">Placeholders: {customer_name}, {order_id}, {order_total}</div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="col-md-6">
-                            <div class="card border-0 shadow-sm p-4 h-100">
-                                <h3 class="h6 fw-bold text-uppercase text-muted mb-4 ls-1">
-                                    <i class="fas fa-truck-loading me-2 text-info"></i> Shipping Alert
-                                </h3>
-                                <div class="mb-0">
-                                    <label class="form-label small fw-bold text-muted">Email Body Template</label>
-                                    <textarea class="form-control" name="email[order_shipped_template]" rows="6"><?php echo htmlspecialchars($email_settings['order_shipped_template']); ?></textarea>
-                                    <div class="form-text small">Placeholders: {customer_name}, {order_id}, {tracking_number}</div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Security & Privacy Tab -->
-                <div id="security" class="tab-pane fade" role="tabpanel">
-                    <div class="row g-4">
-                        <div class="col-md-6">
-                            <div class="card border-0 shadow-sm p-4 h-100">
-                                <h3 class="h6 fw-bold text-uppercase text-muted mb-4 ls-1">
-                                    <i class="fas fa-user-shield me-2 text-danger"></i> Access Control
-                                </h3>
-                                <div class="d-flex align-items-center justify-content-between mb-4 pb-3 border-bottom">
-                                    <div>
-                                        <h6 class="fw-bold mb-1">User Registration</h6>
-                                        <p class="text-muted small mb-0">Allow new customers to create accounts.</p>
-                                    </div>
-                                    <div class="form-check form-switch fs-4">
-                                        <input class="form-check-input" type="checkbox" name="security[user_registration_enabled]" value="1" <?php echo $security_settings['user_registration_enabled'] == '1' ? 'checked' : ''; ?>>
-                                    </div>
-                                </div>
-                                <div class="mb-0">
-                                    <label class="form-label small fw-bold text-muted">Minimum Password Length</label>
-                                    <input type="number" class="form-control" name="security[min_password_length]" value="<?php echo htmlspecialchars($security_settings['min_password_length']); ?>" min="6" max="50">
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="col-md-6">
-                            <div class="card border-0 shadow-sm p-4 h-100">
-                                <h3 class="h6 fw-bold text-uppercase text-muted mb-4 ls-1">
-                                    <i class="fas fa-lock me-2 text-primary"></i> Login Security
-                                </h3>
-                                <div class="row g-3 mb-4 text-center">
-                                    <div class="col-6 border-end">
-                                        <div class="h3 fw-bold mb-0"><?php echo htmlspecialchars($security_settings['max_login_attempts']); ?></div>
-                                        <div class="text-muted small text-uppercase fw-bold">Max Attempts</div>
-                                    </div>
-                                    <div class="col-6">
-                                        <div class="h3 fw-bold mb-0"><?php echo round($security_settings['lockout_duration'] / 60); ?>m</div>
-                                        <div class="text-muted small text-uppercase fw-bold">Lockout Time</div>
-                                    </div>
-                                </div>
-                                <div class="row g-3">
-                                    <div class="col-6">
-                                        <label class="form-label small fw-bold text-muted">Max Attempts</label>
-                                        <input type="number" class="form-control" name="security[max_login_attempts]" value="<?php echo htmlspecialchars($security_settings['max_login_attempts']); ?>" min="1" max="20">
-                                    </div>
-                                    <div class="col-6">
-                                        <label class="form-label small fw-bold text-muted">Lockout (sec)</label>
-                                        <input type="number" class="form-control" name="security[lockout_duration]" value="<?php echo htmlspecialchars($security_settings['lockout_duration']); ?>" min="60">
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="col-md-12">
-                            <div class="card border-0 shadow-sm p-4">
-                                <h3 class="h6 fw-bold text-uppercase text-muted mb-4 ls-1">
-                                    <i class="fas fa-gavel me-2 text-dark"></i> Legal & Privacy
-                                </h3>
-                                <div class="row g-4 mb-4">
-                                    <div class="col-md-6">
-                                        <label class="form-label small fw-bold text-muted">Privacy Policy URL</label>
-                                        <input type="text" class="form-control" name="security[privacy_policy_url]" value="<?php echo htmlspecialchars($security_settings['privacy_policy_url']); ?>">
-                                    </div>
-                                    <div class="col-md-6">
-                                        <label class="form-label small fw-bold text-muted">Terms of Service URL</label>
-                                        <input type="text" class="form-control" name="security[terms_of_service_url]" value="<?php echo htmlspecialchars($security_settings['terms_of_service_url']); ?>">
-                                    </div>
-                                </div>
-                                <div class="p-3 border rounded-3 bg-light d-flex align-items-center justify-content-between">
-                                    <div>
-                                        <h6 class="fw-bold mb-1">Cookie Consent Banner</h6>
-                                        <p class="text-muted small mb-0">Show a banner to users for cookie acceptance (GDPR/APPI compliance).</p>
-                                    </div>
-                                    <div class="form-check form-switch fs-4">
-                                        <input class="form-check-input" type="checkbox" name="security[cookie_consent_enabled]" value="1" <?php echo $security_settings['cookie_consent_enabled'] == '1' ? 'checked' : ''; ?>>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Performance & SEO Tab -->
-                <div id="performance" class="tab-pane fade" role="tabpanel">
-                    <div class="row g-4">
-                        <div class="col-lg-4">
-                            <div class="card border-0 shadow-sm p-4 h-100">
-                                <h3 class="h6 fw-bold text-uppercase text-muted mb-4 ls-1">
-                                    <i class="fas fa-tachometer-alt me-2 text-danger"></i> Performance
-                                </h3>
-                                <div class="d-flex align-items-center justify-content-between mb-4 pb-3 border-bottom">
-                                    <div>
-                                        <h6 class="fw-bold mb-1">Page Caching</h6>
-                                        <p class="text-muted small mb-0">Speeds up page loading.</p>
-                                    </div>
-                                    <div class="form-check form-switch fs-4">
-                                        <input class="form-check-input" type="checkbox" name="performance[cache_enabled]" value="1" <?php echo $performance_settings['cache_enabled'] == '1' ? 'checked' : ''; ?>>
-                                    </div>
-                                </div>
-                                <div class="mb-0">
-                                    <label class="form-label small fw-bold text-muted">Cache TTL (sec)</label>
-                                    <input type="number" class="form-control" name="performance[cache_duration]" value="<?php echo htmlspecialchars($performance_settings['cache_duration']); ?>" min="60">
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="col-lg-8">
-                            <div class="card border-0 shadow-sm p-4 h-100">
-                                <h3 class="h6 fw-bold text-uppercase text-muted mb-4 ls-1">
-                                    <i class="fas fa-search me-2 text-primary"></i> SEO Settings
-                                </h3>
-                                <div class="row g-3">
-                                    <div class="col-12">
-                                        <label class="form-label small fw-bold text-muted">Global Meta Title</label>
-                                        <input type="text" class="form-control" name="performance[meta_title]" value="<?php echo htmlspecialchars($performance_settings['meta_title']); ?>">
-                                    </div>
-                                    <div class="col-12">
-                                        <label class="form-label small fw-bold text-muted">Global Meta Description</label>
-                                        <textarea class="form-control" name="performance[meta_description]" rows="3"><?php echo htmlspecialchars($performance_settings['meta_description']); ?></textarea>
-                                    </div>
-                                    <div class="col-md-6">
-                                        <label class="form-label small fw-bold text-muted">Keywords (Comma separated)</label>
-                                        <input type="text" class="form-control" name="performance[meta_keywords]" value="<?php echo htmlspecialchars($performance_settings['meta_keywords']); ?>">
-                                    </div>
-                                    <div class="col-md-6">
-                                        <label class="form-label small fw-bold text-muted">Google Analytics ID</label>
-                                        <input type="text" class="form-control" name="performance[google_analytics_id]" value="<?php echo htmlspecialchars($performance_settings['google_analytics_id']); ?>" placeholder="G-XXXXXXXXX">
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="col-12">
-                            <div class="card border-0 shadow-sm p-4 bg-light">
-                                <div class="d-flex align-items-center justify-content-between">
-                                    <div>
-                                        <h6 class="fw-bold mb-1">Automatic Sitemap</h6>
-                                        <p class="text-muted small mb-0">Regenerate `sitemap.xml` automatically when products change.</p>
-                                    </div>
-                                    <div class="form-check form-switch fs-4">
-                                        <input class="form-check-input" type="checkbox" name="performance[sitemap_auto_generate]" value="1" <?php echo $performance_settings['sitemap_auto_generate'] == '1' ? 'checked' : ''; ?>>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div> <!-- End Tab Content -->
-
-            <div class="sticky-bottom bg-white border-top p-4 mt-5 mx-n4 mb-n4 shadow-sm z-1">
-                <div class="container-fluid d-flex justify-content-end align-items-center gap-3">
-                    <span class="text-muted small d-none d-md-inline">
-                        <i class="fas fa-info-circle me-1"></i> Settings are applied globally
-                    </span>
-                    <button type="submit" name="save_settings" class="btn btn-primary btn-lg rounded-pill px-5 fw-bold shadow">
-                        <i class="fas fa-save me-2"></i> Save All Settings
-                    </button>
-                </div>
->>>>>>> Stashed changes
             </div>
         </div>
     </div>

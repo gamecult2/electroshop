@@ -1,0 +1,5 @@
+{
+    "require": {
+        "chargily/chargily-pay": "^2.0"
+    }
+}

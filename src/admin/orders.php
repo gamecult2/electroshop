@@ -94,6 +94,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $_SESSION['message'] = "Status updated for $count orders.";
                 $_SESSION['message_type'] = 'success';
                 break;
+
+                break;
         }
         header("Location: orders.php?view=$view" . ($search ? "&search=".urlencode($search) : "") . ($status_filter ? "&status_filter=".urlencode($status_filter) : ""));
         exit;
@@ -105,6 +107,47 @@ $orders = $orderModel->getAllOrdersWithUserDetails([
     'search' => $search,
     'status' => $status_filter
 ]);
+
+// Auto-Verify Pending Chargily Payments (Limit to first 5 to maintain performance)
+$pendingVerificationCount = 0;
+$logFile = __DIR__ . '/../debug_payment.log';
+
+foreach ($orders as &$o) {
+    if ($pendingVerificationCount >= 5) break;
+    if ($o['payment_method'] === 'chargily' && $o['payment_status'] !== 'paid' && !empty($o['transaction_id'])) {
+        try {
+            if (!isset($chargilySvc)) {
+                require_once '../services/ChargilyService.php';
+                $chargilySvc = new ChargilyService();
+            }
+            
+            file_put_contents($logFile, date('Y-m-d H:i:s') . " - Auto-Checking Order #{$o['id']} (Tx: {$o['transaction_id']})\n", FILE_APPEND);
+            
+            $checkout = $chargilySvc->getCheckout($o['transaction_id']);
+            if ($checkout) {
+                $remoteStatus = $checkout->getStatus();
+                file_put_contents($logFile, date('Y-m-d H:i:s') . " - Order #{$o['id']} Remote Status: {$remoteStatus}\n", FILE_APPEND);
+                
+                if ($remoteStatus === 'paid') {
+                    $orderModel->updatePaymentDetails($o['id'], 'paid', $o['transaction_id'], $checkout->toArray());
+                    $orderModel->updateStatus($o['id'], 'processing', null, 'Verified on list view');
+                    // Refresh local data for display
+                    $o['payment_status'] = 'paid';
+                    $o['status'] = 'processing';
+                    $o['payment_gateway_response'] = json_encode($checkout->toArray());
+                    file_put_contents($logFile, date('Y-m-d H:i:s') . " - Order #{$o['id']} Sync SUCCESS\n", FILE_APPEND);
+                }
+            } else {
+                file_put_contents($logFile, date('Y-m-d H:i:s') . " - Order #{$o['id']} API returned NULL\n", FILE_APPEND);
+            }
+        } catch (Exception $e) {
+            file_put_contents($logFile, date('Y-m-d H:i:s') . " - Order #{$o['id']} Sync Error: " . $e->getMessage() . "\n", FILE_APPEND);
+        }
+        $pendingVerificationCount++;
+    }
+}
+unset($o);
+
 $order_statuses = ['pending', 'confirmed', 'processing', 'shipped', 'delivered', 'cancelled', 'returned'];
 
 // Set page title and heading variables for the template
@@ -182,13 +225,14 @@ include 'header.php';
                                     <th class="border-0">Customer</th>
                                     <th class="border-0">Date & Time</th>
                                     <th class="border-0">Total Amount</th>
+                                    <th class="border-0">Payment</th>
                                     <th class="border-0">Status</th>
                                     <th class="border-0 text-center">Actions</th>
                                 </tr>
                             </thead>
                         <tbody>
                             <?php if (empty($orders)): ?>
-                                <tr><td colspan="8" class="text-center py-5 text-muted"><i class="fas fa-receipt fa-3x opacity-25 mb-3"></i><br>No orders found.</td></tr>
+                                <tr><td colspan="9" class="text-center py-5 text-muted"><i class="fas fa-receipt fa-3x opacity-25 mb-3"></i><br>No orders found.</td></tr>
                             <?php else: ?>
                                 <?php foreach ($orders as $order): ?>
                                     <tr>
@@ -212,6 +256,36 @@ include 'header.php';
                                                 <?php if (isset($order['discount_amount']) && $order['discount_amount'] > 0): ?>
                                                     <i class="fas fa-tag text-success small ms-2" title="Discount Applied: <?php echo format_price($order['discount_amount']); ?>"></i>
                                                 <?php endif; ?>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <?php 
+                                            $pStatus = $order['payment_status'] ?? 'pending';
+                                            $pClass = match($pStatus) {
+                                                'paid' => 'bg-success',
+                                                'failed' => 'bg-danger',
+                                                'refunded' => 'bg-info',
+                                                default => 'bg-warning text-dark'
+                                            };
+                                            ?>
+                                            <div class="d-flex flex-column align-items-start">
+                                                <span class="badge <?php echo $pClass; ?> rounded-pill mb-1 fw-bold text-uppercase" style="font-size: 8px; letter-spacing: 0.5px; padding: 3px 8px;">
+                                                    <?php echo $pStatus; ?>
+                                                </span>
+                                                <div class="x-small text-muted fw-bold" style="font-size: 10px;">
+                                                    <?php 
+                                                    if (!empty($order['payment_gateway_response'])) {
+                                                        $resp = json_decode($order['payment_gateway_response'], true);
+                                                        $subMethod = $resp['payment_method'] ?? $order['payment_method'];
+                                                        $formattedSubMethod = (strtolower($subMethod) === 'cib') ? 'CIB' : ucfirst($subMethod);
+                                                        echo "Chargily (" . $formattedSubMethod . ")";
+                                                    } else if (($order['payment_method'] ?? '') === 'chargily') {
+                                                        echo "Chargily (Waiting for Payment)";
+                                                    } else {
+                                                        echo strtoupper($order['payment_method'] ?? 'COD');
+                                                    }
+                                                    ?>
+                                                </div>
                                             </div>
                                         </td>
                                         <td>
