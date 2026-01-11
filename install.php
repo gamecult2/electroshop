@@ -33,7 +33,11 @@ if ($step == 2 && $_SERVER['REQUEST_METHOD'] === 'POST') {
         $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
         
         // Create database if not exists
+<<<<<<< Updated upstream
         $pdo->exec("CREATE DATABASE IF NOT EXISTS `$name` CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci");
+=======
+        $pdo->exec("CREATE DATABASE IF NOT EXISTS `$name` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci");
+>>>>>>> Stashed changes
         
         // Store in session for next step
         $_SESSION['db_config'] = [
@@ -51,6 +55,7 @@ if ($step == 2 && $_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 }
 
+<<<<<<< Updated upstream
 // Function to properly parse SQL statements, respecting semicolons within strings
 function parseSQLStatements($sql) {
     $statements = [];
@@ -149,6 +154,8 @@ function parseSQLStatements($sql) {
     return $statements;
 }
 
+=======
+>>>>>>> Stashed changes
 if ($step == 3 && $_SERVER['REQUEST_METHOD'] === 'POST') {
     if (!isset($_SESSION['db_config'])) {
         header('Location: ?step=2');
@@ -165,6 +172,7 @@ if ($step == 3 && $_SERVER['REQUEST_METHOD'] === 'POST') {
         $sqlFile = 'DB.sql';
         if (file_exists($sqlFile)) {
             $sql = file_get_contents($sqlFile);
+<<<<<<< Updated upstream
 
             // Replace newer MySQL 8.0 collations with older compatible ones
             $sql = str_replace('utf8mb4_0900_ai_ci', 'utf8mb4_general_ci', $sql);
@@ -213,6 +221,19 @@ if ($step == 3 && $_SERVER['REQUEST_METHOD'] === 'POST') {
                 error_log("Could not add is_archived column: " . $e->getMessage());
             }
 
+=======
+            
+            // Remove comments and execute queries
+            // Basic SQL split by semicolon (careful with semicolons in strings, but for standard schema it's okay)
+            $queries = explode(';', $sql);
+            foreach ($queries as $query) {
+                $query = trim($query);
+                if (!empty($query)) {
+                    $pdo->exec($query);
+                }
+            }
+            
+>>>>>>> Stashed changes
             // Update src/config.php with new credentials
             $configFile = 'src/config.php';
             if (file_exists($configFile)) {

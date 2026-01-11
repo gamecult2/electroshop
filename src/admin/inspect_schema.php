@@ -87,6 +87,7 @@ try {
 echo "\n=== MESSAGES TABLE STRUCTURE ===\n";
 try {
     $stmt = $pdo->query("DESCRIBE messages");
+<<<<<<< Updated upstream
     $columns = $stmt->fetchAll(PDO::FETCH_ASSOC);
     foreach ($columns as $col) {
         echo "{$col['Field']}: {$col['Type']}\n";
@@ -114,6 +115,8 @@ try {
 echo "\n=== REVIEW_VOTES TABLE STRUCTURE ===\n";
 try {
     $stmt = $pdo->query("DESCRIBE review_votes");
+=======
+>>>>>>> Stashed changes
     $columns = $stmt->fetchAll(PDO::FETCH_ASSOC);
     foreach ($columns as $col) {
         echo "{$col['Field']}: {$col['Type']}\n";
