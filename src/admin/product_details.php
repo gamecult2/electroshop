@@ -45,17 +45,17 @@ $page_heading = 'Product Details';
 require_once 'header.php';
 ?>
 
-<div class="container-fluid py-4">
+<div class="container-fluid py-4 admin-product-details">
     <!-- Header -->
-    <div class="d-flex justify-content-between align-items-center mb-4">
+    <div class="d-flex flex-wrap gap-3 justify-content-between align-items-center mb-4">
         <div>
             <h3 class="h4 mb-0 fw-bold">
                 <i class="fas fa-box text-primary me-2"></i><?php echo htmlspecialchars($product['name_en']); ?>
             </h3>
             <p class="text-muted mb-0">SKU: <?php echo htmlspecialchars($product['sku']); ?> | ID: #<?php echo $productId; ?></p>
         </div>
-        <div class="btn-group">
-            <a href="../product.php?id=<?php echo $productId; ?>" target="_blank" class="btn btn-outline-info btn-sm rounded-pill shadow-sm me-2 px-3">
+        <div class="admin-row-actions">
+            <a href="../product.php?id=<?php echo $productId; ?>" target="_blank" rel="noopener" class="btn btn-outline-secondary btn-sm rounded-pill shadow-sm me-2 px-3">
                 <i class="fas fa-external-link-alt me-1"></i> View in Store
             </a>
             <a href="edit_product.php?id=<?php echo $productId; ?>" class="btn btn-primary btn-sm rounded-pill shadow-sm me-2 px-4">
@@ -93,20 +93,20 @@ require_once 'header.php';
                             <?php echo $product['is_active'] ? 'Active' : 'Inactive'; ?>
                         </span>
                         <?php if ($product['is_featured']): ?>
-                            <span class="badge bg-warning-subtle text-warning rounded-pill px-3">Featured</span>
+                            <span class="badge bg-warning-subtle text-warning-emphasis rounded-pill px-3">Featured</span>
                         <?php endif; ?>
                         <?php if ($product['is_new_arrival']): ?>
-                            <span class="badge bg-info-subtle text-info rounded-pill px-3">New</span>
+                            <span class="badge bg-info-subtle text-info-emphasis rounded-pill px-3">New</span>
                         <?php endif; ?>
                         <?php if ($product['is_best_seller']): ?>
-                            <span class="badge bg-danger-subtle text-danger rounded-pill px-3">Best Seller</span>
+                            <span class="badge bg-danger-subtle text-danger-emphasis rounded-pill px-3">Best Seller</span>
                         <?php endif; ?>
                     </div>
 
                     <div class="row text-center g-0 border-top pt-3">
                         <div class="col-4 border-end">
                             <h6 class="fw-bold mb-0 text-dark"><?php echo $product['stock_quantity']; ?></h6>
-                            <small class="text-muted x-small text-uppercase">Stock</small>
+                            <small class="text-muted x-small text-uppercase"><?php echo CatalogRules::hasVariants($pdo, $productId) ? 'Total variant stock' : 'Stock'; ?></small>
                         </div>
                         <div class="col-4 border-end">
                             <h6 class="fw-bold mb-0 text-dark"><?php echo $reviewCount; ?></h6>
@@ -125,7 +125,7 @@ require_once 'header.php';
                 <div class="card-header bg-white py-3 border-0">
                     <h6 class="mb-0 fw-bold text-dark"><i class="fas fa-tag text-muted me-2"></i>Pricing & Identity</h6>
                 </div>
-                <div class="card-body pt-0">
+                <div class="card-body">
                     <div class="d-flex justify-content-between align-items-center mb-3">
                         <span class="text-muted small">Base Price</span>
                         <span class="fw-bold"><?php echo format_price($product['price']); ?></span>
@@ -152,19 +152,17 @@ require_once 'header.php';
                     <h6 class="mb-0 fw-bold text-dark"><i class="fas fa-images text-muted me-2"></i>Media Gallery</h6>
                     <span class="badge bg-light text-dark border"><?php echo count($images); ?></span>
                 </div>
-                <div class="card-body pt-0">
-                    <div class="row g-2">
+                <div class="card-body">
+                    <div class="admin-product-gallery">
                         <?php foreach ($images as $img): 
                             $imgUrl = $img['image_url'];
                             if (strpos($imgUrl, 'uploads/') === 0 || strpos($imgUrl, 'img/') === 0) {
                                 $imgUrl = '../' . $imgUrl;
                             }
                         ?>
-                            <div class="col-3">
-                                <a href="<?php echo htmlspecialchars($imgUrl); ?>" target="_blank">
-                                    <img src="<?php echo htmlspecialchars($imgUrl); ?>" class="img-thumbnail object-fit-cover w-100" style="height: 60px;">
+                                <a href="<?php echo htmlspecialchars($imgUrl); ?>" target="_blank" rel="noopener">
+                                    <img src="<?php echo htmlspecialchars($imgUrl); ?>" class="img-thumbnail" alt="Product image preview">
                                 </a>
-                            </div>
                         <?php endforeach; ?>
                     </div>
                 </div>
@@ -178,7 +176,7 @@ require_once 'header.php';
                 <div class="card-header bg-white py-3 border-0">
                     <h6 class="mb-0 fw-bold text-dark"><i class="fas fa-align-left text-muted me-2"></i>Product Description</h6>
                 </div>
-                <div class="card-body pt-0">
+                <div class="card-body">
                     <div class="mb-4">
                         <h6 class="fw-bold small text-uppercase text-muted mb-2">Short Description</h6>
                         <p class="text-muted small"><?php echo nl2br(htmlspecialchars($product['short_description_en'] ?? 'No short description provided.')); ?></p>
@@ -202,7 +200,7 @@ require_once 'header.php';
                 <div class="card-header bg-white py-3 border-0">
                     <h6 class="mb-0 fw-bold text-dark"><i class="fas fa-cogs text-muted me-2"></i>Technical Specifications</h6>
                 </div>
-                <div class="card-body pt-0">
+                <div class="card-body">
                     <?php 
                     $specs = json_decode($product['technical_specs_en'] ?? '[]', true);
                     if (empty($specs)): 

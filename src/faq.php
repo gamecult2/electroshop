@@ -28,7 +28,7 @@ if ($categoryId) {
     
     <div class="card border-0 shadow-sm rounded-4 overflow-hidden mb-5">
         <div class="card-body text-center py-5">
-            <h1 class="fw-bold text-dark mb-3"><?php echo t('frequently_asked_questions') ?? 'Frequently Asked Questions'; ?></h1>
+            <h1 class="app-page-title fw-bold text-dark mb-3"><?php echo app_label('frequently_asked_questions', 'Frequently Asked Questions'); ?></h1>
             <p class="text-muted fs-5 mx-auto mb-0" style="max-width: 700px;">
                 Find answers to common questions about our products, services, and policies. If you can't find what you're looking for, feel free to contact us.
             </p>
@@ -38,7 +38,7 @@ if ($categoryId) {
     <div class="row g-4">
         <!-- Sidebar: Categories -->
         <aside class="col-lg-3">
-            <div class="card border-0 shadow-sm rounded-4 sticky-top" style="top: 100px;">
+            <div class="card border-0 shadow-sm rounded-4 sticky-top sticky-below-header">
                 <div class="card-header bg-white py-3 border-bottom">
                     <h2 class="h6 fw-bold mb-0 text-dark">
                         <i class="fas fa-th-list text-danger me-2"></i> <?php echo t('faq_categories'); ?>
@@ -59,7 +59,7 @@ if ($categoryId) {
                             <a href="faq.php?category=<?php echo $category['id']; ?>" 
                                class="list-group-item list-group-item-action border-0 px-4 py-3 <?php echo $categoryId == $category['id'] ? 'active bg-danger' : ''; ?>">
                                 <div class="d-flex justify-content-between align-items-center">
-                                    <span><i class="fas fa-folder me-2"></i> <?php echo htmlspecialchars($category['name_en']); ?></span>
+                                    <span><i class="fas fa-folder me-2"></i> <?php echo htmlspecialchars(localized_field($category, 'name')); ?></span>
                                     <?php if ($category['faq_count'] > 0): ?>
                                         <span class="badge <?php echo $categoryId == $category['id'] ? 'bg-white text-danger' : 'bg-danger-subtle text-danger'; ?> rounded-pill small">
                                             <?php echo $category['faq_count']; ?>
@@ -83,7 +83,7 @@ if ($categoryId) {
                             return $cat['id'] == $categoryId;
                         });
                         $selectedCategory = reset($selectedCategory);
-                        echo htmlspecialchars($selectedCategory['name_en']);
+                        echo htmlspecialchars(localized_field($selectedCategory, 'name'));
                         ?>
                     <?php else: ?>
                         <?php echo t('all_questions') ?? 'All Questions'; ?>
@@ -139,3 +139,5 @@ if ($categoryId) {
         </div>
     </div>
 </div>
+
+<?php require_once 'includes/footer.php'; ?>

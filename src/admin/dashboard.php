@@ -181,11 +181,11 @@ include 'header.php';
             <input type="text" id="date-range" class="form-control form-control-sm border-light-subtle shadow-none" placeholder="Select date range" value="<?php echo "$startDate to $endDate"; ?>" style="width: 200px;">
         </div>
         <div class="col-auto">
-            <button class="btn btn-danger btn-sm rounded-pill px-4 fw-bold" onclick="applyDateFilter()">Filter</button>
+            <button class="btn btn-primary btn-sm rounded-pill px-4 fw-bold" onclick="applyDateFilter()">Filter</button>
         </div>
         <div class="col text-end">
             <div class="d-flex gap-2 justify-content-end flex-wrap">
-                <a href="add_product.php" class="btn btn-success btn-sm rounded-pill px-3 fw-bold shadow-sm d-inline-flex align-items-center gap-2"><i class="fas fa-plus"></i> Add Product</a>
+                <a href="add_product.php" class="btn btn-primary btn-sm rounded-pill px-3 fw-bold shadow-sm d-inline-flex align-items-center gap-2"><i class="fas fa-plus"></i> Add Product</a>
                 <a href="orders.php" class="btn btn-primary btn-sm rounded-pill px-3 fw-bold shadow-sm d-inline-flex align-items-center gap-2"><i class="fas fa-tasks"></i> Process Orders</a>
                 <a href="export_dashboard.php?type=csv&start_date=<?php echo $startDate; ?>&end_date=<?php echo $endDate; ?>" class="btn btn-outline-secondary btn-sm rounded-pill px-3 fw-bold shadow-sm d-inline-flex align-items-center gap-2"><i class="fas fa-file-export"></i> Export Report</a>
             </div>
@@ -193,7 +193,7 @@ include 'header.php';
     </div>
 </div>
 
-<div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-xl-6 g-3 mb-4">
+<div class="row row-cols-1 row-cols-sm-2 row-cols-xl-3 g-3 mb-4">
     <!-- Revenue & Sales -->
     <div class="col">
         <div class="card h-100 border-0 border-start border-danger border-4 shadow-sm p-3 bg-white">
@@ -254,13 +254,13 @@ include 'header.php';
     <div class="col-lg-8">
         <div class="card border-0 shadow-sm p-4 mb-4">
             <div class="h5 fw-bold mb-4 text-dark"><i class="fas fa-chart-line me-2 text-danger"></i> Sales Trend</div>
-            <canvas id="salesChart" height="120"></canvas>
+            <div class="admin-chart-area"><canvas id="salesChart" aria-label="Daily sales trend" role="img"></canvas></div>
         </div>
     </div>
     <div class="col-lg-4">
-        <div class="card border-0 shadow-sm p-4 mb-4 h-100">
+        <div class="card border-0 shadow-sm p-4 mb-4">
             <div class="h5 fw-bold mb-4 text-dark"><i class="fas fa-chart-pie me-2 text-primary"></i> Revenue by Category</div>
-            <canvas id="categoryChart"></canvas>
+            <div class="admin-chart-area"><canvas id="categoryChart" aria-label="Revenue by category" role="img"></canvas></div>
         </div>
     </div>
 </div>
@@ -299,7 +299,7 @@ include 'header.php';
                                         'cancelled' => 'bg-danger-subtle text-danger-emphasis border-danger-subtle',
                                         default => 'bg-secondary-subtle'
                                     };
-                                ?>" onchange="updateStatus(this, <?php echo $order['id']; ?>, this.value)" style="font-size: 10px; width: 120px;">
+                                ?>" onchange="updateStatus(this, <?php echo $order['id']; ?>, this.value)" style=" width: 120px;">
                                     <option value="pending" <?php echo $order['status'] == 'pending' ? 'selected' : ''; ?>>Pending</option>
                                     <option value="processing" <?php echo $order['status'] == 'processing' ? 'selected' : ''; ?>>Processing</option>
                                     <option value="shipped" <?php echo $order['status'] == 'shipped' ? 'selected' : ''; ?>>Shipped</option>
@@ -405,24 +405,25 @@ include 'header.php';
 
     // Sales Trend Chart
     const salesCtx = document.getElementById('salesChart').getContext('2d');
-    new Chart(salesCtx, {
+    if (AdminUI.chartHasData(salesCtx.canvas, <?php echo json_encode(array_column($dailySales, 'amount')); ?>)) new Chart(salesCtx, {
         type: 'line',
         data: {
             labels: <?php echo json_encode(array_column($dailySales, 'date')); ?>,
             datasets: [{
                 label: 'Daily Sales',
                 data: <?php echo json_encode(array_column($dailySales, 'amount')); ?>,
-                borderColor: '#e4393c',
-                backgroundColor: 'rgba(228, 57, 60, 0.1)',
+                borderColor: AdminUI.palette().brand,
+                backgroundColor: AdminUI.palette().brand + '18',
                 borderWidth: 3,
                 fill: true,
                 tension: 0.4,
                 pointRadius: 4,
-                pointBackgroundColor: '#e4393c'
+                pointBackgroundColor: AdminUI.palette().brand
             }]
         },
         options: {
             responsive: true,
+            maintainAspectRatio: false,
             plugins: { 
                 legend: { display: false },
                 tooltip: {
@@ -437,7 +438,7 @@ include 'header.php';
             scales: { 
                 y: { 
                     beginAtZero: true,
-                    grid: { borderDash: [5, 5], color: 'rgba(0,0,0,0.05)' }
+                    grid: { borderDash: [5, 5], color: AdminUI.palette().border }
                 }, 
                 x: { grid: { display: false } } 
             }
@@ -446,13 +447,13 @@ include 'header.php';
 
     // Category Distribution Chart
     const catCtx = document.getElementById('categoryChart').getContext('2d');
-    new Chart(catCtx, {
+    if (AdminUI.chartHasData(catCtx.canvas, <?php echo json_encode(array_column($revenueByCategory, 'revenue')); ?>)) new Chart(catCtx, {
         type: 'doughnut',
         data: {
             labels: <?php echo json_encode(array_column($revenueByCategory, 'category')); ?>,
             datasets: [{
                 data: <?php echo json_encode(array_column($revenueByCategory, 'revenue')); ?>,
-                backgroundColor: ['#e4393c', '#007bff', '#28a745', '#ffc107', '#17a2b8'],
+                backgroundColor: [AdminUI.palette().brand, AdminUI.palette().info, AdminUI.palette().success, AdminUI.palette().warning, AdminUI.palette().muted],
                 borderWidth: 0,
                 hoverOffset: 10
             }]
@@ -460,6 +461,7 @@ include 'header.php';
         options: {
             responsive: true,
             cutout: '75%',
+            maintainAspectRatio: false,
             plugins: { 
                 legend: { 
                     position: 'bottom',
@@ -475,6 +477,9 @@ include 'header.php';
 
     // AJAX Order Status Update
     function updateStatus(selectElement, orderId, status) {
+        const previousStatus = selectElement.dataset.savedStatus || selectElement.querySelector('option[selected]')?.value;
+        const previousClasses = selectElement.className;
+        AdminUI.busy(selectElement, true);
         const bgClasses = {
             'pending': 'bg-warning-subtle text-warning-emphasis border-warning-subtle',
             'processing': 'bg-info-subtle text-info-emphasis border-info-subtle',
@@ -501,20 +506,17 @@ include 'header.php';
         })
         .then(res => res.json())
         .then(data => {
-            showToast(data.message);
+            if (data.success === false || data.status === 'error') throw new Error(data.message || 'Status update failed.');
+            selectElement.dataset.savedStatus = status;
+            showToast(data.message || 'Order status updated.');
         })
         .catch(err => {
+            selectElement.value = previousStatus;
+            selectElement.className = previousClasses;
             showToast('An error occurred. Please try again.', 'error');
-        });
+        }).finally(() => AdminUI.busy(selectElement, false));
     }
 
-    function showToast(msg, type = 'success') {
-        if (typeof window.showToast === 'function') {
-            window.showToast(msg, type);
-        } else {
-            console.log('Toast:', msg);
-        }
-    }
 </script>
 
 <?php include 'footer.php'; ?>

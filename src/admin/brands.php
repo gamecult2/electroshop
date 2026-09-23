@@ -130,7 +130,7 @@ include 'header.php';
                                     <input type="file" id="logo" name="logo" class="form-control border-light-subtle shadow-none" accept="image/*">
                                     <div class="form-text small">Transparent PNG recommended.</div>
                                 </div>
-                                <button type="submit" name="add_brand" class="btn btn-danger w-100 py-2 fw-bold rounded-pill shadow-sm">
+                                <button type="submit" name="add_brand" class="btn btn-primary w-100 py-2 fw-bold rounded-pill shadow-sm">
                                     <i class="fas fa-check-circle me-1"></i> Create Brand
                                 </button>
                             </form>
@@ -140,9 +140,7 @@ include 'header.php';
 
                 <div class="col-lg-8">
                     <div class="card border-0 shadow-sm overflow-hidden mb-4">
-                        <div class="card-header bg-white py-3 border-0">
-                            <h2 class="h5 fw-bold mb-0 text-dark"><i class="fas fa-tags me-2 text-danger"></i> Brand List <span class="badge bg-light text-muted border ms-2 small fw-normal"><?php echo count($brands); ?> Total</span></h2>
-                        </div>
+                        <?php admin_card_header('Brands', 'fas fa-tags', count($brands)); ?>
                         <div class="table-responsive">
                             <table class="table table-hover align-middle mb-0 text-center">
                                 <thead class="table-light">
@@ -155,7 +153,7 @@ include 'header.php';
                                 </thead>
                                 <tbody>
                                     <?php if (empty($brands)): ?>
-                                        <tr><td colspan="4" class="text-center py-5 text-muted"><i class="fas fa-tag fa-3x opacity-25 mb-3"></i><br>No brands found.</td></tr>
+                                        <?php admin_empty_row(4, 'No brands found.', 'fas fa-tag'); ?>
                                     <?php else: ?>
                                         <?php foreach ($brands as $brand): ?>
                                             <tr>
@@ -171,11 +169,11 @@ include 'header.php';
                                                 </td>
                                                 <td><div class="fw-bold text-dark"><?php echo htmlspecialchars($brand['name']); ?></div></td>
                                                 <td>
-                                                    <div class="btn-group shadow-sm rounded">
+                                                    <div class="admin-row-actions">
                                                         <button onclick='openBrandEditModal(<?php echo json_encode($brand); ?>)' class="btn btn-white btn-sm border-light-subtle text-primary" title="Edit">
                                                             <i class="fas fa-edit"></i>
                                                         </button>
-                                                        <a href="brands.php?action=delete&id=<?php echo $brand['id']; ?>" class="btn btn-white btn-sm border-light-subtle text-danger" title="Delete" onclick="return confirm('Are you sure you want to delete this brand? This might fail if products are linked.');">
+                                                        <a href="brands.php?action=delete&id=<?php echo $brand['id']; ?>" class="btn btn-white btn-sm border-light-subtle text-danger" title="Delete" data-confirm="Are you sure you want to delete this brand? This might fail if products are linked.">
                                                             <i class="fas fa-trash"></i>
                                                         </a>
                                                     </div>
@@ -217,10 +215,7 @@ include 'header.php';
                             <div class="form-text small">Leave empty to keep current logo</div>
                         </div>
                     </div>
-                    <div class="modal-footer border-0 p-4 pt-0">
-                        <button type="button" class="btn btn-light rounded-pill px-4 fw-bold text-muted border" data-bs-dismiss="modal">Cancel</button>
-                        <button type="submit" class="btn btn-danger rounded-pill px-4 fw-bold shadow-sm">Save Changes</button>
-                    </div>
+                    <?php admin_modal_footer('Save Changes'); ?>
                 </form>
             </div>
         </div>
@@ -238,7 +233,7 @@ include 'header.php';
             
             const currentLogoDiv = document.getElementById('currentLogoPreview');
             if (brand.logo_url) {
-                currentLogoDiv.innerHTML = `<img src="../${brand.logo_url}" class="object-fit-contain" style="max-height: 40px; max-width: 100%;">`;
+                currentLogoDiv.innerHTML = `<img src="../${brand.logo_url}" class="object-fit-contain" style="max-height: 40px; max-width: 100%;" alt="Brand logo preview">`;
                 currentLogoDiv.classList.remove('d-none');
             } else {
                 currentLogoDiv.classList.add('d-none');

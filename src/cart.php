@@ -77,7 +77,7 @@ $total = $subtotal + $shippingCost;
                 <div class="bg-light rounded-circle d-flex align-items-center justify-content-center mx-auto mb-4" style="width: 100px; height: 100px;">
                     <i class="fas fa-shopping-cart text-muted opacity-50" style="font-size: 40px;"></i>
                 </div>
-                <h2 class="fw-bold text-dark mb-3"><?php echo t('empty_cart'); ?></h2>
+                <h1 class="app-page-title fw-bold text-dark mb-3"><?php echo t('empty_cart'); ?></h1>
                 <p class="text-muted fs-5 mb-5 mx-auto" style="max-width: 500px;"><?php echo t('empty_cart_description') ?? 'Your shopping cart is empty. Start adding some products to it!'; ?></p>
                 <a href="products.php" class="btn btn-danger btn-lg rounded-pill px-5 fw-bold shadow-sm">
                     <i class="fas fa-search me-2"></i> <?php echo t('start_shopping'); ?>
@@ -89,7 +89,7 @@ $total = $subtotal + $shippingCost;
             <div class="col-lg-8">
                 <div class="card border-0 shadow-sm rounded-4 overflow-hidden mb-4">
                     <div class="card-header bg-white py-3 border-bottom d-flex align-items-center justify-content-between">
-                        <h2 class="h5 fw-bold mb-0 text-dark"><i class="fas fa-shopping-cart text-danger me-2"></i> <?php echo t('shopping_cart'); ?></h2>
+                        <h1 class="app-page-title h5 fw-bold mb-0 text-dark"><i class="fas fa-shopping-cart text-danger me-2"></i> <?php echo t('shopping_cart'); ?></h1>
                         <span class="badge bg-light text-dark border rounded-pill px-3"><?php echo count($cartItems); ?> Items</span>
                     </div>
                     <div class="card-body p-0">
@@ -104,7 +104,7 @@ $total = $subtotal + $shippingCost;
                                 </div>
                                 <span id="selected-count" class="small text-muted fw-bold">0 Selected</span>
                             </div>
-                            <button class="btn btn-link text-danger btn-sm p-0 fw-bold text-decoration-none d-none" id="bulk-remove-btn" onclick="bulkRemoveFromCart()">
+                            <button type="button" class="btn btn-link text-danger btn-sm p-0 fw-bold text-decoration-none d-none" id="bulk-remove-btn" onclick="bulkRemoveFromCart()">
                                 <i class="fas fa-trash-alt me-1"></i> <?php echo t('remove_selected'); ?>
                             </button>
                         </div>
@@ -138,7 +138,7 @@ $total = $subtotal + $shippingCost;
                                 <div class="cart-item p-4 border-bottom position-relative <?php echo $index % 2 === 0 ? 'bg-white' : 'bg-light-subtle'; ?>" data-item-id="<?php echo $item['id']; ?>">
                                     <div class="row align-items-center g-3">
                                         <!-- Checkbox & Image -->
-                                        <div class="col-auto" style="width: 110px;">
+                                        <div class="col-auto cart-fixed-column" style="width: 110px;">
                                             <div class="d-flex align-items-center gap-3">
                                                 <div class="form-check mb-0">
                                                     <input class="form-check-input cart-item-check " type="checkbox" value="<?php echo $item['id']; ?>" onchange="updateBulkBar()">
@@ -158,6 +158,7 @@ $total = $subtotal + $shippingCost;
                                             </h3>
                                             
                                             <!-- Variant Badges -->
+                                            <?php if (!empty($item['unavailable_reason'])): ?><p class="small text-danger" role="alert"><?php echo htmlspecialchars($item['unavailable_reason']); ?></p><?php endif; ?>
                                             <div class="d-flex flex-wrap gap-2 mb-2">
                                                 <?php if (!empty($item['variant_id'])): 
                                                     $variantIds = explode(',', $item['variant_id']);
@@ -190,33 +191,33 @@ $total = $subtotal + $shippingCost;
                                         </div>
 
                                         <!-- Unit Price -->
-                                        <div class="col-md-auto text-md-center" style="width: 100px;">
+                                        <div class="col-md-auto text-md-center cart-fixed-column" style="width: 100px;">
                                             <div class="text-muted x-small text-uppercase fw-bold mb-1 d-md-none">Unit Price</div>
                                             <div class="text-danger fw-bold fs-6"><?php echo format_price($item['price_at_time']); ?></div>
                                         </div>
 
                                         <!-- Quantity -->
-                                        <div class="col-md-auto text-md-center" style="width: 100px;">
+                                        <div class="col-md-auto text-md-center cart-fixed-column" style="width: 100px;">
                                             <?php 
                                                 $availableStock = $item['variant_id'] ? $item['variant_stock'] : $item['product_stock'];
                                             ?>
                                             <div class="input-group input-group-sm rounded-pill overflow-hidden border border-light-subtle mx-auto">
-                                                <button class="btn btn-light border-0 px-2" type="button" onclick="updateQuantity(<?php echo $item['id']; ?>, -1)"><i class="fas fa-minus small"></i></button>
-                                                <input type="text" class="form-control border-0 text-center bg-white px-0 fw-bold" value="<?php echo $item['quantity']; ?>" readonly data-item-id="<?php echo $item['id']; ?>" data-max-stock="<?php echo $availableStock; ?>">
-                                                <button class="btn btn-light border-0 px-2" type="button" onclick="updateQuantity(<?php echo $item['id']; ?>, 1)"><i class="fas fa-plus small"></i></button>
+                                                <button class="btn btn-light border-0 px-2" type="button" onclick="updateQuantity(<?php echo $item['id']; ?>, -1)" aria-label="Decrease quantity"><i class="fas fa-minus small" aria-hidden="true"></i></button>
+                                                <input type="text" class="form-control border-0 text-center bg-white px-0 fw-bold" value="<?php echo $item['quantity']; ?>" readonly aria-label="Quantity" data-item-id="<?php echo $item['id']; ?>" data-max-stock="<?php echo $availableStock; ?>">
+                                                <button class="btn btn-light border-0 px-2" type="button" onclick="updateQuantity(<?php echo $item['id']; ?>, 1)" aria-label="Increase quantity"><i class="fas fa-plus small" aria-hidden="true"></i></button>
                                             </div>
                                             <div class="x-small text-muted mt-1"><?php echo $availableStock; ?> in stock</div>
                                         </div>
 
                                         <!-- Total -->
-                                        <div class="col-md-auto text-md-end text-start" style="width: 100px;">
+                                        <div class="col-md-auto text-md-end text-start cart-fixed-column" style="width: 100px;">
                                             <div class="text-muted x-small text-uppercase fw-bold mb-1 d-md-none">Total</div>
                                             <div class="text-dark fw-bold"><?php echo format_price($item['quantity'] * $item['price_at_time']); ?></div>
                                         </div>
 
                                         <!-- Remove -->
-                                        <div class="col-auto ms-auto ms-md-0 d-flex justify-content-center" style="width: 40px;">
-                                            <button class="btn btn-outline-light border-0 text-muted btn-sm rounded-circle " onclick="removeFromCart(<?php echo $item['id']; ?>)" title="<?php echo t('remove_item'); ?>">
+                                        <div class="col-auto ms-auto ms-md-0 d-flex justify-content-center cart-fixed-column" style="width: 40px;">
+                                            <button type="button" class="btn btn-outline-light border-0 text-muted btn-sm rounded-circle" onclick="removeFromCart(<?php echo $item['id']; ?>)" aria-label="<?php echo t('remove_item'); ?>">
                                                 <i class="fas fa-trash-alt"></i>
                                             </button>
                                         </div>
@@ -281,8 +282,6 @@ $total = $subtotal + $shippingCost;
         </div>
     <?php endif; ?>
 </div>
-
-<?php require_once 'includes/footer.php'; ?>
 
 <script>
 function updateQuantity(itemId, change) {
@@ -406,3 +405,4 @@ async function bulkRemoveFromCart() {
     }
 }
 </script>
+<?php require_once 'includes/footer.php'; ?>

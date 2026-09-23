@@ -152,7 +152,7 @@ include 'header.php';
                             </div>
                         </div>
                         <div class="mt-4 text-end">
-                            <button type="submit" name="save_global_settings" class="btn btn-danger btn-sm rounded-pill px-4 fw-bold shadow-sm">
+                            <button type="submit" name="save_global_settings" class="btn btn-primary btn-sm rounded-pill px-4 fw-bold shadow-sm">
                                 <i class="fas fa-check-circle me-1"></i> Save Global Settings
                             </button>
                         </div>
@@ -171,7 +171,7 @@ include 'header.php';
                     <div class="card-body p-0">
                         <div class="table-responsive">
                             <table class="table table-hover align-middle mb-0">
-                                <thead class="bg-light">
+                                <thead class="table-light">
                                     <tr>
                                         <th class="border-0 px-4 py-3 small fw-bold text-muted text-uppercase" style="width: 80px;">No.</th>
                                         <th class="border-0 py-3 small fw-bold text-muted text-uppercase">Wilaya Name</th>

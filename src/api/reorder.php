@@ -39,42 +39,24 @@ $items = $orderModel->getItems($orderId);
 $addedCount = 0;
 $errors = [];
 
-if (empty($_SESSION['cart'])) {
-    $_SESSION['cart'] = [];
-}
-
+require_once '../models/Cart.php';
+$cart = new Cart();
 foreach ($items as $item) {
-    // Check if product still exists and has stock (simplified check)
-    // Ideally use Product model to check current stock
-    // $product = $productModel->getById($item['product_id']);
-    // if (!$product || $product['stock_quantity'] < 1) { ... }
-    
-    // Add to cart session
-    $productId = $item['product_id'];
-    $variantId = $item['variant_id'] ?? null; // Handle if null properly
-    $quantity = 1; // Or $item['quantity'] if we want to add full quantity
-
-    $key = $variantId ? "{$productId}_{$variantId}" : $productId;
-    
-    if (isset($_SESSION['cart'][$key])) {
-        $_SESSION['cart'][$key]['quantity'] += $quantity;
-    } else {
-        $_SESSION['cart'][$key] = [
-            'id' => $productId,
-            'variant_id' => $variantId,
-            'quantity' => $quantity
-        ];
+    if (!$item['variant_id'] && !empty($item['variant_name'])) {
+        $errors[]='An old variant is no longer available. Choose its options again.';
+        continue;
     }
-    $addedCount++;
+    $result=$cart->add($item['product_id'],$item['quantity'],$item['variant_id']);
+    if ($result['success']) $addedCount++; else $errors[]=$result['message'];
 }
 
 if ($addedCount > 0) {
     echo json_encode([
         'success' => true, 
         'message' => "$addedCount items added to cart", 
-        'cart_count' => count($_SESSION['cart'])
+        'cart_count' => $cart->getCount(), 'warnings' => $errors
     ]);
 } else {
-    echo json_encode(['success' => false, 'message' => 'No items could be added']);
+    echo json_encode(['success' => false, 'message' => implode(' ', array_unique($errors)) ?: 'No items could be added']);
 }
 ?>

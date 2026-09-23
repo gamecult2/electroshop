@@ -55,6 +55,7 @@ $featured = $productModel->getAll(6, 0, ['is_featured' => 1]);
 
 <!-- JD.com Style Homepage -->
 <div class="pb-5 text-body">
+    <h1 class="visually-hidden"><?php echo htmlspecialchars(get_setting('site_title', 'QwenShop')); ?> electronics store</h1>
     <!-- Hero Banner Section -->
     <div class="pb-2 bg-light mb-0">
         <div class="container-xxl">
@@ -66,7 +67,8 @@ $featured = $productModel->getAll(6, 0, ['is_featured' => 1]);
                             <h3 class="h6 fw-bold mb-0 text-uppercase"><i class="fas fa-bars me-2"></i> <?php echo t('all_categories') ?? 'Categories'; ?></h3>
                         </div>
                         <style>
-                            .category-item:hover .subcategory-popup {
+                            .category-item:hover .subcategory-popup,
+                            .category-item:focus-within .subcategory-popup {
                                 display: block !important;
                             }
                             .list-group-flush > .list-group-item:last-child {
@@ -178,7 +180,7 @@ $featured = $productModel->getAll(6, 0, ['is_featured' => 1]);
                             top: 50% !important;
                             transform: translateY(-50%) !important;
                             opacity: 1 !important;
-                            z-index: 2000 !important;
+                            z-index: 3 !important;
                             display: flex !important;
                             align-items: center !important;
                             justify-content: center !important;
@@ -229,7 +231,7 @@ $featured = $productModel->getAll(6, 0, ['is_featured' => 1]);
                          style="height: <?php echo $carouselConfig['height']; ?> !important; width: <?php echo $carouselConfig['width']; ?> !important; border-radius: var(--bs-border-radius-lg, .5rem) !important; position: relative;">
                         
                         <?php if (($carouselConfig['show_indicators'] ?? true) && !empty($carouselSlides)): ?>
-                        <div class="carousel-indicators" style="z-index: 1000;">
+                        <div class="carousel-indicators" style="z-index: 2;">
                             <?php foreach ($carouselSlides as $i => $slide): ?>
                                 <button type="button" data-bs-target="#mainBannerCarousel" data-bs-slide-to="<?php echo $i; ?>" class="<?php echo $i === 0 ? 'active' : ''; ?>" aria-current="<?php echo $i === 0 ? 'true' : 'false'; ?>"></button>
                             <?php endforeach; ?>
@@ -288,7 +290,7 @@ $featured = $productModel->getAll(6, 0, ['is_featured' => 1]);
                 <div class="col-lg-3 col-md-4 d-none d-md-block" style="height: <?php echo $carouselConfig['height']; ?> !important;">
                     <div class="d-flex flex-column gap-2 h-100">
                         <div class="flex-grow-1" style="min-height: 0;">
-                            <div class="card border-0 shadow-sm rounded-3 transition-all h-100 overflow-hidden" style="background: linear-gradient(135deg, #FF6B6B 0%, #FF8E53 100%);">
+                            <div class="card quick-access-card quick-access-card--sale border-0 shadow-sm rounded-3 transition-all h-100 overflow-hidden">
                                 <a href="products.php?sort=discount" class="stretched-link z-1 text-decoration-none">
                                     <div class="card-body p-3 d-flex flex-column justify-content-between text-white h-100">
                                         <div>
@@ -304,7 +306,7 @@ $featured = $productModel->getAll(6, 0, ['is_featured' => 1]);
                             </div>
                         </div>
                         <div class="flex-grow-1" style="min-height: 0;">
-                            <div class="card border-0 shadow-sm rounded-3 transition-all h-100 overflow-hidden" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);">
+                            <div class="card quick-access-card quick-access-card--new border-0 shadow-sm rounded-3 transition-all h-100 overflow-hidden">
                                 <a href="products.php?sort=newest" class="stretched-link z-1 text-decoration-none">
                                     <div class="card-body p-3 d-flex flex-column justify-content-between text-white h-100">
                                         <div>
@@ -320,7 +322,7 @@ $featured = $productModel->getAll(6, 0, ['is_featured' => 1]);
                             </div>
                         </div>
                         <div class="flex-grow-1" style="min-height: 0;">
-                            <div class="card border-0 shadow-sm rounded-3 transition-all h-100 overflow-hidden" style="background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);">
+                            <div class="card quick-access-card quick-access-card--popular border-0 shadow-sm rounded-3 transition-all h-100 overflow-hidden">
                                 <a href="products.php?sort=best_seller" class="stretched-link z-1 text-decoration-none">
                                     <div class="card-body p-3 d-flex flex-column justify-content-between text-white h-100">
                                         <div>
@@ -417,7 +419,7 @@ $featured = $productModel->getAll(6, 0, ['is_featured' => 1]);
                         <ul class="nav nav-pills gap-2" id="bestSellersTabs" role="tablist">
                             <?php foreach (array_slice($hierarchicalCategories, 0, 5) as $index => $cat): ?>
                                 <li class="nav-item" role="presentation">
-                                    <button class="nav-link rounded-pill border-0 fw-bold small text-uppercase <?php echo $index === 0 ? 'active' : 'text-muted bg-light'; ?>" 
+                                    <button type="button" class="nav-link rounded-pill border-0 fw-bold small text-uppercase <?php echo $index === 0 ? 'active' : 'text-muted bg-light'; ?>"
                                             id="cat-tab-<?php echo $cat['id']; ?>" 
                                             data-bs-toggle="pill" 
                                             type="button" 

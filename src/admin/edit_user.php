@@ -146,7 +146,7 @@ require_once 'header.php';
                         </div>
 
                         <div class="d-flex align-items-center gap-3 mt-2">
-                            <button type="submit" class="btn btn-danger px-5 py-2 fw-bold rounded-pill shadow-sm">
+                            <button type="submit" class="btn btn-primary px-5 py-2 fw-bold rounded-pill shadow-sm">
                                 <i class="fas fa-save me-1"></i> Update Staff Member
                             </button>
                             <a href="users.php" class="btn btn-light px-4 py-2 fw-bold rounded-pill text-muted border shadow-xs">Cancel</a>

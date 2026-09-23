@@ -48,7 +48,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     if (isset($_POST['update_stock'])) {
         $productId = (int)$_POST['product_id'];
-        $quantity = (int)$_POST['quantity'];
+        $quantity = $_POST['quantity'];
 
         if ($productModel->updateStock($productId, $quantity)) {
             $message = 'Stock updated successfully.';
@@ -88,6 +88,7 @@ if ($category_filter) {
 $total_products = $productModel->getProductsCount($filters);
 $total_pages = ceil($total_products / $limit);
 $products = $productModel->getAll($limit, $offset, $filters);
+$variantProductIds = array_flip($pdo->query('SELECT DISTINCT product_id FROM product_variants')->fetchAll(PDO::FETCH_COLUMN));
 $categories = $categoryModel->getAllFlat();
 
 // Set page title and heading variables for the template
@@ -214,8 +215,8 @@ include 'header.php';
                 </div>
                 <div class="card-body p-0">
                     <div class="table-responsive">
-                        <table class="table table-hover align-middle mb-0">
-                            <thead class="bg-light">
+                        <table class="table admin-mobile-table table-hover align-middle mb-0">
+                            <thead class="table-light">
                                 <tr>
                                     <th class="border-0 px-4 py-3 small fw-bold text-muted text-uppercase" style="width: 80px;">ID</th>
                                     <th class="border-0 py-3 small fw-bold text-muted text-uppercase">Product</th>
@@ -258,6 +259,9 @@ include 'header.php';
                                                 </span>
                                             </td>
                                             <td class="px-4 text-end">
+                                                <?php if (isset($variantProductIds[$product['id']])): ?>
+                                                    <a class="btn btn-outline-primary btn-sm" href="edit_product.php?id=<?php echo (int)$product['id']; ?>">Manage variant stock</a>
+                                                <?php else: ?>
                                                 <form method="POST" action="inventory.php?page=<?php echo $page; ?>&search=<?php echo urlencode($search); ?>&stock_filter=<?php echo urlencode($stock_filter); ?>&category_id=<?php echo urlencode($category_filter); ?>" class="d-flex justify-content-end align-items-center">
                                                     <input type="hidden" name="product_id" value="<?php echo $product['id']; ?>">
                                                     <div class="input-group input-group-sm rounded-pill overflow-hidden border border-light-subtle shadow-xs" style="max-width: 140px;">
@@ -267,6 +271,7 @@ include 'header.php';
                                                         </button>
                                                     </div>
                                                 </form>
+                                                <?php endif; ?>
                                             </td>
                                         </tr>
                                     <?php endforeach; ?>

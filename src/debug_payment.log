@@ -977,3 +977,20 @@ Order ID GET: 85
 2026-01-11 09:08:07 - Customer Created: 01kep507bk5fq7a9dqfe6hhkw9
 2026-01-11 09:08:08 - Checkout URL: http://pay.chargily.dz/test/checkouts/01kep509jfahwzyycwszt1vh15/pay
 2026-01-11 09:08:08 - Save Checkout ID for Order #85: SUCCESS (ID: 01kep509jfahwzyycwszt1vh15)
+2026-09-23 10:40:46 - Accessing checkout_chargily.php
+Session ID: 6f79bd7fed050a4511a88c48f929e9f9
+Session Data: Array
+(
+    [initialized] => 1
+    [customer_id] => 1
+    [user_email] => djerradabderrahim@gmail.com
+    [user_first_name] => Abderrahim
+    [user_last_name] => DJERRAD
+    [csrf_token] => 1a69b080a11be996b0c70365e823c391187bf126a61cf6e4ca437fd71843916b
+)
+
+Order ID GET: 47
+2026-09-23 10:40:48 - Starting Payment for Order #47
+2026-09-23 10:40:48 - Creating Customer: {"name":"Abderrahim DJERRAD","email":"djerradabderrahim@gmail.com","phone":"13091435037","address":{"country":"dz","state":"Alger","address":"Yangpu District Siping Road 2065 Building 6 apartment 405"}}
+2026-09-23 10:40:53 - Customer Created: 01m36xn6ym0pvwxpz1hbspj7b8
+2026-09-23 10:40:54 - Checkout URL: http://pay.chargily.dz/test/checkouts/01m36xna87p6pjq1ztqa5cxwgc/pay

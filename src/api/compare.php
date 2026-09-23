@@ -4,24 +4,23 @@
 header('Content-Type: application/json');
 require_once '../includes/init.php';
 
-// Rate limiting
-$ip = $_SERVER['REMOTE_ADDR'] ?? 'unknown';
-$endpoint = 'compare';
-
-if (is_rate_limited($ip, $endpoint)) {
-    http_response_code(429);
-    echo json_encode(['error' => 'Rate limit exceeded']);
-    exit;
-}
-
-record_api_request($ip, $endpoint);
-
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    // Only state-changing requests consume the API rate limit. Reading the
+    // comparison list must remain safe for navigation and accessibility tools.
+    $ip = $_SERVER['REMOTE_ADDR'] ?? 'unknown';
+    $endpoint = 'compare';
+    if (is_rate_limited($ip, $endpoint)) {
+        http_response_code(429);
+        echo json_encode(['success' => false, 'message' => 'Rate limit exceeded']);
+        exit;
+    }
+    record_api_request($ip, $endpoint);
+
     $input = json_decode(file_get_contents('php://input'), true);
     $action = $input['action'] ?? 'add';
     $productId = $input['product_id'] ?? null;
     
-    if (!$productId) {
+    if (in_array($action, ['add', 'remove'], true) && !$productId) {
         http_response_code(400);
         echo json_encode(['success' => false, 'message' => 'Product ID is required']);
         exit;

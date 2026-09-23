@@ -154,7 +154,7 @@ include 'header.php';
                                         <h6 class="text-muted fw-bold small text-uppercase mb-1">Total Orders</h6>
                                         <h3 class="mb-0 fw-bold"><?php echo number_format($summary['total_orders']); ?></h3>
                                     </div>
-                                    <div class="bg-primary-subtle text-primary p-3 rounded-circle">
+                                    <div class="bg-primary-subtle text-primary-emphasis p-3 rounded-circle">
                                         <i class="fas fa-shopping-basket fa-lg"></i>
                                     </div>
                                 </div>
@@ -167,9 +167,9 @@ include 'header.php';
                                 <div class="d-flex justify-content-between align-items-center">
                                     <div>
                                         <h6 class="text-muted fw-bold small text-uppercase mb-1">Total Revenue</h6>
-                                        <h3 class="mb-0 fw-bold"><?php echo format_price($summary['total_revenue']); ?></h3>
+                                        <h3 class="mb-0 fw-bold"><?php echo format_price($summary['total_revenue'] ?? 0); ?></h3>
                                     </div>
-                                    <div class="bg-success-subtle text-success p-3 rounded-circle">
+                                    <div class="bg-success-subtle text-success-emphasis p-3 rounded-circle">
                                         <i class="fas fa-dollar-sign fa-lg"></i>
                                     </div>
                                 </div>
@@ -182,9 +182,9 @@ include 'header.php';
                                 <div class="d-flex justify-content-between align-items-center">
                                     <div>
                                         <h6 class="text-muted fw-bold small text-uppercase mb-1">Avg. Order</h6>
-                                        <h3 class="mb-0 fw-bold"><?php echo format_price($summary['avg_order_value']); ?></h3>
+                                        <h3 class="mb-0 fw-bold"><?php echo format_price($summary['avg_order_value'] ?? 0); ?></h3>
                                     </div>
-                                    <div class="bg-info-subtle text-info p-3 rounded-circle">
+                                    <div class="bg-info-subtle text-info-emphasis p-3 rounded-circle">
                                         <i class="fas fa-calculator fa-lg"></i>
                                     </div>
                                 </div>
@@ -199,7 +199,7 @@ include 'header.php';
                                         <h6 class="text-muted fw-bold small text-uppercase mb-1">Customers</h6>
                                         <h3 class="mb-0 fw-bold"><?php echo number_format($summary['unique_customers']); ?></h3>
                                     </div>
-                                    <div class="bg-warning-subtle text-warning p-3 rounded-circle">
+                                    <div class="bg-warning-subtle text-warning-emphasis p-3 rounded-circle">
                                         <i class="fas fa-user-friends fa-lg"></i>
                                     </div>
                                 </div>
@@ -217,7 +217,7 @@ include 'header.php';
                                 <span class="badge bg-light text-primary border border-light-subtle rounded-pill fw-bold x-small">DAILY SALES DATA</span>
                             </div>
                             <div class="card-body p-4">
-                                <canvas id="salesChart" height="280"></canvas>
+                                <div class="admin-chart-area"><canvas id="salesChart" aria-label="Daily revenue trend" role="img"></canvas></div>
                             </div>
                         </div>
                     </div>
@@ -231,7 +231,7 @@ include 'header.php';
                             <div class="card-body p-0">
                                 <div class="table-responsive">
                                     <table class="table table-hover align-middle mb-0">
-                                        <thead class="bg-light">
+                                        <thead class="table-light">
                                             <tr>
                                                 <th class="border-0 px-3 py-2 small fw-bold text-muted text-uppercase">Date</th>
                                                 <th class="border-0 py-2 small fw-bold text-muted text-uppercase text-center">Qty</th>
@@ -259,10 +259,11 @@ include 'header.php';
                     </div>
                 </div>
 
+                <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
                 <script>
                 document.addEventListener('DOMContentLoaded', function() {
                     const ctx = document.getElementById('salesChart').getContext('2d');
-                    const salesChart = new Chart(ctx, {
+                    if (AdminUI.chartHasData(ctx.canvas, <?php echo json_encode(array_column($dailySales, 'total_sales')); ?>)) new Chart(ctx, {
                         type: 'line',
                         data: {
                             labels: [
@@ -277,13 +278,13 @@ include 'header.php';
                                         <?php echo $day['total_sales']; ?>,
                                     <?php endforeach; ?>
                                 ],
-                                borderColor: '#0d6efd',
-                                backgroundColor: 'rgba(13, 110, 253, 0.05)',
+                                borderColor: AdminUI.palette().brand,
+                                backgroundColor: AdminUI.palette().brand + '18',
                                 borderWidth: 3,
                                 fill: true,
                                 tension: 0.4,
-                                pointBackgroundColor: '#fff',
-                                pointBorderColor: '#0d6efd',
+                                pointBackgroundColor: AdminUI.palette().surface,
+                                pointBorderColor: AdminUI.palette().brand,
                                 pointBorderWidth: 2,
                                 pointRadius: 4,
                                 pointHoverRadius: 6
@@ -298,8 +299,8 @@ include 'header.php';
                             scales: {
                                 y: {
                                     beginAtZero: true,
-                                    grid: { borderDash: [5, 5], color: '#f0f0f0' },
-                                    ticks: { font: { size: 11 }, callback: function(value) { return '$' + value; } }
+                                    grid: { borderDash: [5, 5], color: AdminUI.palette().border },
+                                    ticks: { font: { size: 12 }, callback: function(value) { return value + ' ' + <?php echo json_encode(get_setting('currency_symbol', 'DA')); ?>; } }
                                 },
                                 x: {
                                     grid: { display: false },
@@ -319,7 +320,7 @@ include 'header.php';
                     <div class="card-body p-0">
                         <div class="table-responsive">
                             <table class="table table-hover align-middle mb-0">
-                                <thead class="bg-light">
+                                <thead class="table-light">
                                     <tr>
                                         <th class="border-0 px-4 py-3 small fw-bold text-muted text-uppercase">Product Title</th>
                                         <th class="border-0 py-3 small fw-bold text-muted text-uppercase text-center">Units Sold</th>
@@ -334,7 +335,7 @@ include 'header.php';
                                                 <div class="fw-bold text-dark"><?php echo htmlspecialchars($product['name_en']); ?></div>
                                             </td>
                                             <td class="text-center">
-                                                <span class="badge bg-primary-subtle text-primary rounded-pill px-3 py-1 fw-bold x-small"><?php echo number_format($product['total_sold']); ?> sold</span>
+                                                <span class="badge bg-primary-subtle text-primary-emphasis rounded-pill px-3 py-1 fw-bold x-small"><?php echo number_format($product['total_sold']); ?> sold</span>
                                             </td>
                                             <td class="fw-bold text-success small"><?php echo format_price($product['total_revenue']); ?></td>
                                             <td class="px-4 text-center">
@@ -360,7 +361,7 @@ include 'header.php';
                     <div class="card-body p-0">
                         <div class="table-responsive">
                             <table class="table table-hover align-middle mb-0">
-                                <thead class="bg-light">
+                                <thead class="table-light">
                                     <tr>
                                         <th class="border-0 px-4 py-3 small fw-bold text-muted text-uppercase">Category Name</th>
                                         <th class="border-0 py-3 small fw-bold text-muted text-uppercase text-center">Catalog Items Sold</th>
@@ -372,7 +373,7 @@ include 'header.php';
                                         <tr>
                                             <td class="px-4">
                                                 <div class="d-flex align-items-center">
-                                                    <div class="bg-info-subtle text-info p-2 rounded-3 me-3"><i class="fas fa-tag small"></i></div>
+                                                    <div class="bg-info-subtle text-info-emphasis p-2 rounded-3 me-3"><i class="fas fa-tag small"></i></div>
                                                     <div class="fw-bold text-dark"><?php echo htmlspecialchars($category['name_en']); ?></div>
                                                 </div>
                                             </td>
@@ -403,7 +404,7 @@ include 'header.php';
                     <h5 class="modal-title fw-bold small text-uppercase text-muted"><i class="fas fa-calendar-alt me-2 text-primary"></i> Full Daily Breakdown</h5>
                     <button type="button" class="btn-close shadow-none" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
-                <div class="modal-body p-0" style="max-height: 450px; overflow-y: auto;">
+                <div class="modal-body p-0 table-responsive" style="max-height: 65dvh; overflow: auto;">
                     <table class="table table-hover align-middle mb-0">
                         <thead class="bg-white sticky-top shadow-xs">
                             <tr>
@@ -430,4 +431,3 @@ include 'header.php';
 
     <!-- Include the shared footer template -->
     <?php include 'footer.php'; ?>
-

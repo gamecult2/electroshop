@@ -96,7 +96,7 @@ include 'header.php';
         <div class="card-body p-0">
             <div class="table-responsive">
                 <table class="table table-hover align-middle mb-0">
-                    <thead class="bg-light">
+                    <thead class="table-light">
                         <tr>
                             <th class="border-0 px-4 py-3 small fw-bold text-muted text-uppercase" style="width: 200px;">Product</th>
                             <th class="border-0 py-3 small fw-bold text-muted text-uppercase" style="width: 150px;">Customer</th>
@@ -120,7 +120,7 @@ include 'header.php';
                                                 <?php echo htmlspecialchars($review['product_name']); ?>
                                             </a>
                                         </div>
-                                        <div class="text-muted" style="font-size: 0.65rem;"><?php echo date('M j, Y H:i', strtotime($review['created_at'])); ?></div>
+                                        <div class="text-muted" ><?php echo date('M j, Y H:i', strtotime($review['created_at'])); ?></div>
                                     </td>
                                     <td>
                                         <div class="fw-bold text-dark small">
@@ -135,7 +135,7 @@ include 'header.php';
                                                 <i class="fa<?php echo $i < $review['rating'] ? 's' : 'r'; ?> fa-star"></i>
                                             <?php endfor; ?>
                                         </div>
-                                        <span class="fw-bold text-muted" style="font-size: 0.7rem;"><?php echo $review['rating']; ?>/5</span>
+                                        <span class="fw-bold text-muted" ><?php echo $review['rating']; ?>/5</span>
                                     </td>
                                     <td>
                                         <div class="p-2 rounded bg-light border border-light-subtle mb-2" style="max-height: 120px; overflow-y: auto;">
@@ -147,21 +147,21 @@ include 'header.php';
                                         <?php if ($review['reply_text']): ?>
                                             <div class="ms-3 p-2 border-start border-3 border-primary bg-primary-subtle bg-opacity-10 rounded-end">
                                                 <div class="d-flex align-items-center gap-1 mb-1">
-                                                    <i class="fas fa-reply fa-flip-horizontal" style="font-size: 0.6rem; color: #0d6efd;"></i>
-                                                    <span class="fw-bold text-primary text-uppercase" style="font-size: 0.6rem;">Admin Response</span>
-                                                    <span class="ms-auto text-muted" style="font-size: 0.6rem;"><?php echo date('M j', strtotime($review['replied_at'])); ?></span>
+                                                    <i class="fas fa-reply fa-flip-horizontal text-primary"></i>
+                                                    <span class="fw-bold text-primary text-uppercase" >Admin Response</span>
+                                                    <span class="ms-auto text-muted" ><?php echo date('M j', strtotime($review['replied_at'])); ?></span>
                                                 </div>
-                                                <div class="small text-dark fst-italic" style="font-size: 0.75rem;"><?php echo nl2br(htmlspecialchars($review['reply_text'])); ?></div>
+                                                <div class="small text-dark fst-italic" ><?php echo nl2br(htmlspecialchars($review['reply_text'])); ?></div>
                                             </div>
                                         <?php endif; ?>
                                     </td>
                                     <td class="text-center">
-                                        <span class="badge <?php echo $review['is_approved'] ? 'bg-success-subtle text-success' : 'bg-warning-subtle text-warning'; ?> rounded-pill px-3 py-1 fw-bold text-uppercase" style="font-size: 0.65rem; letter-spacing: 0.5px;">
+                                        <span class="badge <?php echo $review['is_approved'] ? 'bg-success-subtle text-success' : 'bg-warning-subtle text-warning'; ?> rounded-pill px-3 py-1 fw-bold text-uppercase" style=" letter-spacing: 0.5px;">
                                             <?php echo $review['is_approved'] ? 'Approved' : 'Pending'; ?>
                                         </span>
                                     </td>
                                     <td class="px-4 text-end">
-                                        <div class="btn-group shadow-none border rounded-pill overflow-hidden bg-white">
+                                        <div class="admin-row-actions">
                                             <button type="button" onclick='openReplyModal(<?php echo json_encode($review); ?>)' class="btn btn-white btn-sm px-3 border-0 text-primary" title="Reply">
                                                 <i class="fas fa-reply"></i>
                                             </button>
@@ -174,7 +174,7 @@ include 'header.php';
                                                     <i class="fas fa-times"></i>
                                                 </a>
                                             <?php endif; ?>
-                                            <a href="reviews.php?action=delete&id=<?php echo $review['id']; ?>" class="btn btn-white btn-sm px-3 border-0 text-danger" onclick="return confirm('Delete this review?');" title="Delete">
+                                            <a href="reviews.php?action=delete&id=<?php echo $review['id']; ?>" class="btn btn-white btn-sm px-3 border-0 text-danger" data-confirm="Delete this review?" title="Delete">
                                                 <i class="fas fa-trash-alt"></i>
                                             </a>
                                         </div>
@@ -209,10 +209,7 @@ include 'header.php';
                         <textarea class="form-control border-light-subtle shadow-none rounded-3" name="reply_text" id="replyInput" rows="5" placeholder="Thank the customer or address their concerns..." required></textarea>
                     </div>
                 </div>
-                <div class="modal-footer border-0 p-4 pt-0">
-                    <button type="button" class="btn btn-light rounded-pill px-4 fw-bold small border shadow-xs" data-bs-dismiss="modal">Cancel</button>
-                    <button type="submit" name="save_reply" class="btn btn-primary rounded-pill px-4 fw-bold shadow-sm">Save Response</button>
-                </div>
+                <?php admin_modal_footer('Save Response', 'save_reply'); ?>
             </form>
         </div>
     </div>

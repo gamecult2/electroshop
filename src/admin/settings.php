@@ -246,15 +246,15 @@ include 'header.php';
                             </div>
                             <div class="row g-2 mb-3 border-top pt-3 mt-3 text-start">
                                 <div class="col-4">
-                                    <label class="small fw-bold text-muted d-block mb-1 text-uppercase" style="font-size: 0.65rem;">Primary</label>
+                                    <label class="small fw-bold text-muted d-block mb-1 text-uppercase" >Primary</label>
                                     <input type="color" class="form-control form-control-color w-100 border-0 bg-transparent p-0" name="general[logo_primary_color]" value="<?php echo htmlspecialchars($general_settings['logo_primary_color']); ?>" style="height: 30px;">
                                 </div>
                                 <div class="col-4">
-                                    <label class="small fw-bold text-muted d-block mb-1 text-uppercase" style="font-size: 0.65rem;">Secondary</label>
+                                    <label class="small fw-bold text-muted d-block mb-1 text-uppercase" >Secondary</label>
                                     <input type="color" class="form-control form-control-color w-100 border-0 bg-transparent p-0" name="general[logo_secondary_color]" value="<?php echo htmlspecialchars($general_settings['logo_secondary_color']); ?>" style="height: 30px;">
                                 </div>
                                 <div class="col-4">
-                                    <label class="small fw-bold text-muted d-block mb-1 text-uppercase" style="font-size: 0.65rem;">Size (px)</label>
+                                    <label class="small fw-bold text-muted d-block mb-1 text-uppercase" >Size (px)</label>
                                     <input type="number" class="form-control form-control-sm border-light-subtle shadow-none" name="general[site_logo_font_size]" value="<?php echo htmlspecialchars($general_settings['site_logo_font_size']); ?>">
                                 </div>
                             </div>
@@ -320,7 +320,7 @@ include 'header.php';
                                 <div class="bg-white rounded p-2 d-flex align-items-center justify-content-center text-danger border shadow-sm" style="width: 32px; height: 32px;"><i class="fas fa-tools"></i></div>
                                 <div>
                                     <h6 class="fw-bold mb-0">Maintenance Mode</h6>
-                                    <p class="text-muted small mb-0 text-uppercase fw-bold" style="font-size: 0.65rem; letter-spacing: 0.5px;">Strict Access Control</p>
+                                    <p class="text-muted small mb-0 text-uppercase fw-bold" style=" letter-spacing: 0.5px;">Strict Access Control</p>
                                 </div>
                             </div>
                             <div class="form-check form-switch fs-4">
@@ -372,10 +372,10 @@ include 'header.php';
                             $colors = ['primary_color' => 'Primary', 'secondary_color' => 'Secondary', 'accent_color' => 'Accent'];
                             foreach ($colors as $key => $label): ?>
                                 <div class="col-12">
-                                    <label class="form-label small fw-bold text-muted text-uppercase"><?php echo $label; ?> Color</label>
+                                    <label for="<?php echo $key; ?>_text" class="form-label small fw-bold text-muted text-uppercase"><?php echo $label; ?> Color</label>
                                     <div class="input-group">
-                                        <input type="color" class="form-control form-control-color border-0 bg-transparent p-0" value="<?php echo htmlspecialchars($appearance_settings[$key]); ?>" onchange="document.getElementById('<?php echo $key; ?>_text').value=this.value" style="height: 38px;">
-                                        <input type="text" id="<?php echo $key; ?>_text" name="appearance[<?php echo $key; ?>]" class="form-control border-light-subtle shadow-none" value="<?php echo htmlspecialchars($appearance_settings[$key]); ?>">
+                                        <input type="color" id="<?php echo $key; ?>_picker" aria-label="Choose <?php echo $label; ?> color" class="form-control form-control-color border-0 bg-transparent p-0" value="<?php echo htmlspecialchars($appearance_settings[$key]); ?>" onchange="document.getElementById('<?php echo $key; ?>_text').value=this.value" style="height: 38px;">
+                                        <input type="text" id="<?php echo $key; ?>_text" name="appearance[<?php echo $key; ?>]" class="form-control border-light-subtle shadow-none" pattern="#[0-9a-fA-F]{6}" title="Use a six-digit hex color, for example #b42332" onchange="if(this.checkValidity()) document.getElementById('<?php echo $key; ?>_picker').value=this.value" value="<?php echo htmlspecialchars($appearance_settings[$key]); ?>">
                                     </div>
                                 </div>
                             <?php endforeach; ?>
@@ -468,7 +468,7 @@ include 'header.php';
                                         </div>
                                         <?php foreach ($cfg[2] as $fieldKey => $label): ?>
                                             <div class="mb-2">
-                                                <label class="small fw-bold text-muted text-uppercase mb-1" style="font-size: 0.65rem;"><?php echo $label; ?></label>
+                                                <label class="small fw-bold text-muted text-uppercase mb-1" ><?php echo $label; ?></label>
                                                 <?php $inputKey = strtolower($name) . '_' . $fieldKey; ?>
                                                 <?php 
                                                     $placeholder = '';
@@ -520,8 +520,8 @@ include 'header.php';
                             </div>
                         </div>
                         <div class="row g-3 mb-3">
-                            <div class="col-md-6"><label class="form-label small fw-bold text-muted text-uppercase">User</label><input type="text" class="form-control border-light-subtle shadow-none" name="email[smtp_username]" value="<?php echo htmlspecialchars($email_settings['smtp_username']); ?>"></div>
-                            <div class="col-md-6"><label class="form-label small fw-bold text-muted text-uppercase">Pass</label><input type="password" class="form-control border-light-subtle shadow-none" name="email[smtp_password]" value="<?php echo htmlspecialchars($email_settings['smtp_password']); ?>"></div>
+                            <div class="col-md-6"><label for="smtp-username" class="form-label small fw-bold text-muted text-uppercase">User</label><input id="smtp-username" type="text" class="form-control border-light-subtle" name="email[smtp_username]" value="<?php echo htmlspecialchars($email_settings['smtp_username']); ?>"></div>
+                            <div class="col-md-6"><label for="smtp-password" class="form-label small fw-bold text-muted text-uppercase">Pass</label><input id="smtp-password" type="password" class="form-control border-light-subtle" name="email[smtp_password]" value="<?php echo htmlspecialchars($email_settings['smtp_password']); ?>"></div>
                         </div>
                         <div class="mb-4">
                             <label class="form-label small fw-bold text-muted text-uppercase">Encryption</label>
@@ -596,11 +596,11 @@ include 'header.php';
                         <div class="row g-4 text-center mb-4">
                             <div class="col-6 border-end">
                                 <div class="h4 fw-bold mb-0 text-dark"><?php echo $security_settings['max_login_attempts']; ?></div>
-                                <small class="text-muted text-uppercase fw-bold" style="font-size: 0.65rem;">Max Tries</small>
+                                <small class="text-muted text-uppercase fw-bold" >Max Tries</small>
                             </div>
                             <div class="col-6">
                                 <div class="h4 fw-bold mb-0 text-dark"><?php echo round($security_settings['lockout_duration']/60); ?>m</div>
-                                <small class="text-muted text-uppercase fw-bold" style="font-size: 0.65rem;">Lockout</small>
+                                <small class="text-muted text-uppercase fw-bold" >Lockout</small>
                             </div>
                         </div>
                         <div class="row g-3">
@@ -650,10 +650,10 @@ include 'header.php';
                             <h6 class="mb-0 fw-bold small text-uppercase">Search Visibility (SEO)</h6>
                         </div>
                         <div class="row g-3">
-                            <div class="col-12"><label class="form-label small fw-bold text-muted text-uppercase">Global Meta Title</label><input type="text" class="form-control border-light-subtle shadow-none rounded-3" name="performance[meta_title]" value="<?php echo htmlspecialchars($performance_settings['meta_title']); ?>"></div>
-                            <div class="col-12"><label class="form-label small fw-bold text-muted text-uppercase">Meta Description</label><textarea class="form-control border-light-subtle shadow-none rounded-3" name="performance[meta_description]" rows="3"><?php echo htmlspecialchars($performance_settings['meta_description']); ?></textarea></div>
-                            <div class="col-md-6"><label class="form-label small fw-bold text-muted text-uppercase">Keywords</label><input type="text" class="form-control border-light-subtle shadow-none rounded-pill px-3" name="performance[meta_keywords]" value="<?php echo htmlspecialchars($performance_settings['meta_keywords']); ?>"></div>
-                            <div class="col-md-6"><label class="form-label small fw-bold text-muted text-uppercase">Analytics ID</label><input type="text" class="form-control border-light-subtle shadow-none rounded-pill px-3" name="performance[google_analytics_id]" value="<?php echo htmlspecialchars($performance_settings['google_analytics_id']); ?>" placeholder="G-XXXX"></div>
+                            <div class="col-12"><label for="meta-title" class="form-label small fw-bold text-muted text-uppercase">Global Meta Title</label><input id="meta-title" type="text" class="form-control border-light-subtle rounded-3" name="performance[meta_title]" value="<?php echo htmlspecialchars($performance_settings['meta_title']); ?>"></div>
+                            <div class="col-12"><label for="meta-description" class="form-label small fw-bold text-muted text-uppercase">Meta Description</label><textarea id="meta-description" class="form-control border-light-subtle rounded-3" name="performance[meta_description]" rows="3"><?php echo htmlspecialchars($performance_settings['meta_description']); ?></textarea></div>
+                            <div class="col-md-6"><label for="meta-keywords" class="form-label small fw-bold text-muted text-uppercase">Keywords</label><input id="meta-keywords" type="text" class="form-control border-light-subtle rounded-pill px-3" name="performance[meta_keywords]" value="<?php echo htmlspecialchars($performance_settings['meta_keywords']); ?>"></div>
+                            <div class="col-md-6"><label for="analytics-id" class="form-label small fw-bold text-muted text-uppercase">Analytics ID</label><input id="analytics-id" type="text" class="form-control border-light-subtle rounded-pill px-3" name="performance[google_analytics_id]" value="<?php echo htmlspecialchars($performance_settings['google_analytics_id']); ?>" placeholder="G-XXXX"></div>
                         </div>
                     </div>
                 </div>
@@ -679,15 +679,21 @@ include 'header.php';
             button.addEventListener('shown.bs.tab', (e) => {
                 const targetId = e.target.getAttribute('data-bs-target').replace('#', '');
                 document.getElementById('settings_group_input').value = targetId;
-                localStorage.setItem('activeSettingsTab', targetId);
+                AdminUI.storage.set('activeSettingsTab', targetId);
             });
         });
 
-        const activeTab = localStorage.getItem('activeSettingsTab') || 'general';
+        const requestedTab = window.location.hash.slice(1);
+        const activeTab = requestedTab === 'chargily' ? 'ecommerce' : requestedTab || AdminUI.storage.get('activeSettingsTab') || 'general';
         const trigger = document.getElementById(activeTab + '-tab');
         if (trigger) {
             const tab = bootstrap.Tab.getOrCreateInstance(trigger);
             tab.show();
+        }
+        if (requestedTab === 'chargily') {
+            const gateway = document.querySelector('[name="ecommerce[chargily_enabled]"]');
+            gateway?.closest('.col-md-6')?.scrollIntoView({block: 'center'});
+            gateway?.focus({preventScroll: true});
         }
 
         document.getElementById('site_logo')?.addEventListener('change', function(e) {
@@ -696,7 +702,7 @@ include 'header.php';
                 const reader = new FileReader();
                 reader.onload = (event) => {
                     const preview = document.getElementById('logo_preview');
-                    preview.innerHTML = `<div class="p-2 bg-white rounded-3 shadow-sm border"><img src="${event.target.result}" style="max-height: 60px;"></div>`;
+                    preview.innerHTML = `<div class="p-2 bg-white rounded-3 shadow-sm border"><img src="${event.target.result}" style="max-height: 60px;" alt="Logo preview"></div>`;
                 }
                 reader.readAsDataURL(file);
             }

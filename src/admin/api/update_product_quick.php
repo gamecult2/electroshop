@@ -3,6 +3,7 @@
 session_start();
 require_once '../../db_connect.php';
 require_once '../../includes/functions.php';
+require_once '../../models/Product.php';
 
 // Check if admin is logged in
 if (!isset($_SESSION['admin_logged_in']) || !$_SESSION['admin_logged_in']) {
@@ -44,9 +45,11 @@ if ($field === 'price') {
         exit;
     }
 } elseif ($field === 'stock_quantity') {
-    $value = (int)$value;
-    if ($value < 0) {
-        echo json_encode(['success' => false, 'message' => 'Stock cannot be negative']);
+    try {
+        $value = CatalogRules::quantity($value, true);
+    } catch (InvalidArgumentException $e) {
+        http_response_code(422);
+        echo json_encode(['success' => false, 'message' => $e->getMessage()]);
         exit;
     }
 } else {
@@ -55,6 +58,15 @@ if ($field === 'price') {
 }
 
 try {
+    if ($field === 'stock_quantity') {
+        if (!(new Product())->updateStock($id, $value)) {
+            http_response_code(409);
+            echo json_encode(['success' => false, 'message' => 'Edit stock on individual variants for this product.']);
+        } else {
+            echo json_encode(['success' => true]);
+        }
+        exit;
+    }
     $sql = "UPDATE products SET {$field} = ?, updated_at = NOW() WHERE id = ?";
     $stmt = $pdo->prepare($sql);
     $result = $stmt->execute([$value, $id]);

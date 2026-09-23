@@ -10,8 +10,8 @@ $productModel = new Product();
 $productIds = [];
 if (isset($_GET['ids'])) {
     $productIds = array_slice(explode(',', $_GET['ids']), 0, 4); // Max 4 products
-} elseif (isset($_SESSION['compare_list'])) {
-    $productIds = $_SESSION['compare_list'];
+} elseif (isset($_SESSION['product_comparison'])) {
+    $productIds = $_SESSION['product_comparison'];
 }
 
 // Limit to 4 products for comparison
@@ -39,11 +39,17 @@ if (!empty($productIds)) {
     ?>
     
     <div class="mb-5 mt-2">
-        <h1 class="fw-bold text-dark mb-2"><?php echo t('product_comparison'); ?></h1>
+        <h1 class="app-page-title fw-bold text-dark mb-2"><?php echo t('product_comparison'); ?></h1>
         <p class="text-muted fs-5"><?php echo t('compare_up_to_4_products'); ?></p>
     </div>
     
-    <?php if (count($products) > 1): ?>
+    <?php if (count($products) > 0): ?>
+        <?php if (count($products) === 1): ?>
+            <div class="alert alert-info border-0 rounded-3 d-flex align-items-center gap-2" role="status">
+                <i class="fas fa-info-circle" aria-hidden="true"></i>
+                <span><?php echo t('add_another_product_to_compare'); ?></span>
+            </div>
+        <?php endif; ?>
         <!-- Comparison table -->
         <div class="card border-0 shadow-sm rounded-4 overflow-hidden mb-4">
             <div class="table-responsive">
@@ -54,18 +60,18 @@ if (!empty($productIds)) {
                             <?php foreach ($products as $product): ?>
                                 <th class="py-3 px-4 text-center">
                                     <div class="position-relative">
-                                        <button class="btn btn-outline-danger btn-sm rounded-circle position-absolute top-0 end-0 m-n2 shadow-sm z-3" onclick="removeFromCompare(<?php echo $product['id']; ?>)" title="<?php echo t('remove'); ?>">
+                                        <button type="button" class="btn btn-outline-danger btn-sm rounded-circle position-absolute top-0 end-0 m-n2 shadow-sm z-3" onclick="removeFromCompare(<?php echo $product['id']; ?>)" aria-label="<?php echo t('remove'); ?> <?php echo htmlspecialchars(localized_field($product, 'name')); ?>">
                                             <i class="fas fa-times"></i>
                                         </button>
                                         <a href="product.php?id=<?php echo $product['id']; ?>" class="d-block mb-3">
                                             <?php 
                                             $imageUrl = !empty($product['images']) ? $product['images'][0]['image_url'] : 'img/product-placeholder.jpg';
                                             ?>
-                                            <img src="<?php echo htmlspecialchars($imageUrl); ?>" alt="<?php echo htmlspecialchars($product['name_en']); ?>" class="object-fit-contain rounded" style="height: 120px; width: 100%;">
+                                            <img src="<?php echo htmlspecialchars($imageUrl); ?>" alt="<?php echo htmlspecialchars(localized_field($product, 'name')); ?>" class="object-fit-contain rounded" style="height: 120px; width: 100%;">
                                         </a>
                                         <h3 class="h6 mb-2">
                                             <a href="product.php?id=<?php echo $product['id']; ?>" class="link-dark text-decoration-none fw-bold" style="display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;">
-                                                <?php echo htmlspecialchars($product['name_en']); ?>
+                                                <?php echo htmlspecialchars(localized_field($product, 'name')); ?>
                                             </a>
                                         </h3>
                                         <div class="current-price fw-bold text-danger fs-5">
@@ -200,7 +206,7 @@ if (!empty($productIds)) {
             <a href="products.php" class="btn btn-outline-dark rounded-pill px-4 fw-bold shadow-sm">
                 <i class="fas fa-arrow-left me-2"></i> <?php echo t('continue_shopping'); ?>
             </a>
-            <button class="btn btn-danger rounded-pill px-4 fw-bold shadow-sm" onclick="clearComparison()">
+            <button type="button" class="btn btn-danger rounded-pill px-4 fw-bold shadow-sm" onclick="clearComparison()">
                 <i class="fas fa-broom me-2"></i> <?php echo t('clear_comparison'); ?>
             </button>
         </div>
@@ -219,10 +225,6 @@ if (!empty($productIds)) {
         </div>
     <?php endif; ?>
 </div>
-
-<?php
-require_once 'includes/footer.php';
-?>
 
 <script>
 function removeFromCompare(productId) {
@@ -302,3 +304,4 @@ function addToComparison(productId) {
     });
 }
 </script>
+<?php require_once 'includes/footer.php'; ?>

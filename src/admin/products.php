@@ -81,6 +81,14 @@ $offset = ($page - 1) * $limit;
 
 // 3. Fetch Data
 $products = $productModel->getAll($limit, $offset, $filters);
+$variantProductIds = [];
+if ($products) {
+    $ids = array_map(static fn($product) => (int)$product['id'], $products);
+    $placeholders = implode(',', array_fill(0, count($ids), '?'));
+    $variantLookup = $pdo->prepare("SELECT DISTINCT product_id FROM product_variants WHERE product_id IN ($placeholders)");
+    $variantLookup->execute($ids);
+    $variantProductIds = array_fill_keys($variantLookup->fetchAll(PDO::FETCH_COLUMN), true);
+}
 $totalProducts = $productModel->getProductsCount($filters);
 $totalPages = ceil($totalProducts / $limit);
 
@@ -128,7 +136,7 @@ $categories = $categoryModel->getWithSubcategories();
                     </div>
                     
                     <div class="col-auto">
-                        <button type="submit" class="btn btn-danger btn-sm px-4 rounded-pill fw-bold">Filter</button>
+                        <button type="submit" class="btn btn-primary btn-sm px-4 rounded-pill fw-bold">Filter</button>
                         <?php if ($search || $categoryId): ?>
                             <a href="products.php" class="btn btn-outline-secondary btn-sm rounded-pill px-4 fw-bold">Clear</a>
                         <?php endif; ?>
@@ -139,11 +147,11 @@ $categories = $categoryModel->getWithSubcategories();
             <div class="card border-0 shadow-sm mb-4 overflow-hidden">
                 <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center border-0">
                     <h2 class="h5 fw-bold mb-0 text-dark"><i class="fas fa-box me-2 text-danger"></i> Product Listings <span class="badge bg-light text-muted border ms-2 small fw-normal"><?php echo $totalProducts; ?> Total</span></h2>
-                    <a href="add_product.php" class="btn btn-success btn-sm rounded-pill px-3 fw-bold shadow-sm d-inline-flex align-items-center gap-2"><i class="fas fa-plus"></i> Add New Product</a>
+                    <a href="add_product.php" class="btn btn-primary btn-sm rounded-pill px-3 fw-bold shadow-sm d-inline-flex align-items-center gap-2"><i class="fas fa-plus"></i> Add New Product</a>
                 </div>
 
                 <div class="table-responsive">
-                    <table class="table table-hover align-middle mb-0">
+                    <table class="table admin-mobile-table table-hover align-middle mb-0">
                         <thead class="table-light">
                             <tr>
                                 <th class="px-3 border-0">ID</th>
@@ -195,51 +203,59 @@ $categories = $categoryModel->getWithSubcategories();
                                             </div>
                                         </td>
                                         <td>
+                                            <?php if (isset($variantProductIds[$product['id']])): ?>
+                                                <div class="d-inline-flex align-items-center gap-2" title="Total stock from active variants">
+                                                    <span class="fw-bold <?php echo $product['stock_quantity'] <= 5 ? 'text-danger' : 'text-dark'; ?>"><?php echo (int)$product['stock_quantity']; ?></span>
+                                                    <a class="text-secondary" href="edit_product.php?id=<?php echo (int)$product['id']; ?>#product-variants" aria-label="Edit variant stock for <?php echo htmlspecialchars($product['name_en'], ENT_QUOTES); ?>" title="Edit variant stock"><i class="fas fa-layer-group" aria-hidden="true"></i></a>
+                                                </div>
+                                            <?php else: ?>
                                             <div class="input-group input-group-sm" style="width: 80px;">
-                                                <input type="number" value="<?php echo $product['stock_quantity']; ?>" 
+                                                <input type="number" min="0" step="1" value="<?php echo $product['stock_quantity']; ?>" 
                                                     class="form-control border-light-subtle text-center fw-bold shadow-none <?php echo $product['stock_quantity'] <= 5 ? 'bg-danger-subtle text-danger' : 'text-dark'; ?>" 
                                                     data-id="<?php echo $product['id']; ?>"
+                                                    aria-label="Stock quantity for <?php echo htmlspecialchars($product['name_en'], ENT_QUOTES); ?>"
                                                     onchange="updateProduct(this, <?php echo $product['id']; ?>, 'stock_quantity')">
                                             </div>
+                                            <?php endif; ?>
                                         </td>
                                         <td>
                                             <div class="d-flex gap-1 flex-wrap align-items-center">
-                                                <span class="badge rounded-pill px-3 py-2 fw-bold clickable <?php echo $product['is_active'] ? 'bg-success' : 'bg-secondary'; ?>" 
+                                                <button type="button" class="badge border-0 rounded-pill px-3 py-2 fw-bold clickable <?php echo $product['is_active'] ? 'bg-success' : 'bg-secondary'; ?>"
                                                       onclick="toggleStatus(this, <?php echo $product['id']; ?>, 'is_active')"
                                                       data-field="is_active"
                                                       data-current="<?php echo $product['is_active'] ? '1' : '0'; ?>"
-                                                      style="cursor: pointer; min-width: 65px; font-size: 10px;">
+                                                      aria-pressed="<?php echo $product['is_active'] ? 'true' : 'false'; ?>" style="cursor: pointer; min-width: 65px; font-size: 12px;">
                                                     <?php echo $product['is_active'] ? 'ACTIVE' : 'INACTIVE'; ?>
-                                                </span>
+                                                </button>
 
-                                                <span class="badge rounded-pill px-2 py-2 fw-bold clickable <?php echo $product['is_featured'] ? 'bg-warning text-dark' : 'bg-light text-muted border opacity-50'; ?>" 
+                                                <button type="button" class="badge rounded-pill px-2 py-2 fw-bold clickable <?php echo $product['is_featured'] ? 'bg-warning text-dark' : 'bg-light text-muted border opacity-50'; ?>"
                                                       onclick="toggleStatus(this, <?php echo $product['id']; ?>, 'is_featured')"
                                                       data-field="is_featured"
                                                       data-current="<?php echo $product['is_featured'] ? '1' : '0'; ?>"
-                                                      style="cursor: pointer; width: 28px; height: 28px; display: inline-flex; align-items: center; justify-content: center; font-size: 10px;" title="Featured">F</span>
+                                                      aria-pressed="<?php echo $product['is_featured'] ? 'true' : 'false'; ?>" style="cursor: pointer; width: 32px; height: 32px; display: inline-flex; align-items: center; justify-content: center; font-size: 12px;" aria-label="Toggle featured">F</button>
 
-                                                <span class="badge rounded-pill px-2 py-2 fw-bold clickable <?php echo $product['is_new_arrival'] ? 'bg-info text-white' : 'bg-light text-muted border opacity-50'; ?>" 
+                                                <button type="button" class="badge rounded-pill px-2 py-2 fw-bold clickable <?php echo $product['is_new_arrival'] ? 'bg-info text-white' : 'bg-light text-muted border opacity-50'; ?>"
                                                       onclick="toggleStatus(this, <?php echo $product['id']; ?>, 'is_new_arrival')"
                                                       data-field="is_new_arrival"
                                                       data-current="<?php echo $product['is_new_arrival'] ? '1' : '0'; ?>"
-                                                      style="cursor: pointer; width: 28px; height: 28px; display: inline-flex; align-items: center; justify-content: center; font-size: 10px;" title="New Arrival">N</span>
+                                                      aria-pressed="<?php echo $product['is_new_arrival'] ? 'true' : 'false'; ?>" style="cursor: pointer; width: 32px; height: 32px; display: inline-flex; align-items: center; justify-content: center; font-size: 12px;" aria-label="Toggle new arrival">N</button>
 
-                                                <span class="badge rounded-pill px-2 py-2 fw-bold clickable <?php echo $product['is_best_seller'] ? 'bg-danger text-white' : 'bg-light text-muted border opacity-50'; ?>" 
+                                                <button type="button" class="badge rounded-pill px-2 py-2 fw-bold clickable <?php echo $product['is_best_seller'] ? 'bg-danger text-white' : 'bg-light text-muted border opacity-50'; ?>"
                                                       onclick="toggleStatus(this, <?php echo $product['id']; ?>, 'is_best_seller')"
                                                       data-field="is_best_seller"
                                                       data-current="<?php echo $product['is_best_seller'] ? '1' : '0'; ?>"
-                                                      style="cursor: pointer; width: 28px; height: 28px; display: inline-flex; align-items: center; justify-content: center; font-size: 10px;" title="Best Seller">B</span>
+                                                      aria-pressed="<?php echo $product['is_best_seller'] ? 'true' : 'false'; ?>" style="cursor: pointer; width: 32px; height: 32px; display: inline-flex; align-items: center; justify-content: center; font-size: 12px;" aria-label="Toggle best seller">B</button>
                                             </div>
                                         </td>
                                         <td class="text-center">
-                                            <div class="btn-group shadow-sm rounded">
-                                                <a href="product_details.php?id=<?php echo $product['id']; ?>" class="btn btn-white btn-sm border-light-subtle text-info" title="View Product">
+                                            <div class="admin-row-actions">
+                                                <a href="product_details.php?id=<?php echo $product['id']; ?>" class="btn btn-white btn-sm border-light-subtle text-info" aria-label="View product">
                                                     <i class="fas fa-eye"></i>
                                                 </a>
-                                                <a href="edit_product.php?id=<?php echo $product['id']; ?>" class="btn btn-white btn-sm border-light-subtle text-primary" title="Edit">
+                                                <a href="edit_product.php?id=<?php echo $product['id']; ?>" class="btn btn-white btn-sm border-light-subtle text-primary" aria-label="Edit product">
                                                     <i class="fas fa-edit"></i>
                                                 </a>
-                                                <button onclick="deleteProduct(<?php echo $product['id']; ?>)" class="btn btn-white btn-sm border-light-subtle text-danger" title="Delete">
+                                                <button type="button" onclick="deleteProduct(<?php echo $product['id']; ?>)" class="btn btn-white btn-sm border-light-subtle text-danger" aria-label="Delete product">
                                                     <i class="fas fa-trash"></i>
                                                 </button>
                                             </div>
@@ -291,79 +307,8 @@ $categories = $categoryModel->getWithSubcategories();
     </div>
     
     <script>
-        function updateProduct(element, id, field) {
-            let value;
-            if (element.type === 'checkbox') {
-                value = element.checked ? 1 : 0;
-            } else if (element.tagName === 'SPAN') {
-                value = element.dataset.current === '1' ? 0 : 1;
-            } else {
-                value = element.value;
-            }
-
-            // Visual feedback - opacity
-            element.style.opacity = '0.5';
-
-            fetch('api/update_product_quick.php', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/x-www-form-urlencoded',
-                },
-                body: `id=${id}&field=${field}&value=${value}`
-            })
-            .then(response => response.json())
-            .then(data => {
-                element.style.opacity = '1';
-                
-                if (data.success) {
-                    showToast('Updated successfully', 'success');
-                    
-                    // Update badge style
-                    if (element.tagName === 'SPAN') {
-                        const newValue = value;
-                        element.dataset.current = newValue;
-                        
-                        // Base classes
-                        element.className = 'badge rounded-pill px-2 py-2 fw-bold clickable';
-                        
-                        if (field === 'is_active') {
-                            element.className = 'badge rounded-pill px-3 py-2 fw-bold clickable ' + (newValue ? 'bg-success' : 'bg-secondary');
-                            element.textContent = newValue ? 'ACTIVE' : 'INACTIVE';
-                            element.style.minWidth = '65px';
-                            element.style.fontSize = '10px';
-                        } else {
-                            element.style.width = '28px';
-                            element.style.height = '28px';
-                            element.style.display = 'inline-flex';
-                            element.style.alignItems = 'center';
-                            element.style.justifyContent = 'center';
-                            element.style.fontSize = '10px';
-                            
-                            if (!newValue) {
-                                element.classList.add('bg-light', 'text-muted', 'border', 'opacity-50');
-                            } else {
-                                const activeClass = field === 'is_featured' ? 'bg-warning text-dark' : field === 'is_new_arrival' ? 'bg-info text-white' : 'bg-danger text-white';
-                                activeClass.split(' ').forEach(c => element.classList.add(c));
-                            }
-                        }
-                    }
-                } else {
-                    showToast('Update failed: ' + (data.message || 'Unknown error'), 'danger');
-                }
-            })
-            .catch(error => {
-                element.style.opacity = '1';
-                showToast('Error connecting to server', 'error');
-                console.error('Error:', error);
-            });
-        }
-
-        function toggleStatus(element, id, field) {
-            updateProduct(element, id, field);
-        }
-
-        function deleteProduct(id) {
-            if (confirm('Are you sure you want to delete this product?')) {
+        async function deleteProduct(id) {
+            if (await AdminUI.confirm('Are you sure you want to delete this product?')) {
                 const form = document.createElement('form');
                 form.method = 'POST';
                 form.action = 'products.php';
@@ -376,16 +321,7 @@ $categories = $categoryModel->getWithSubcategories();
             }
         }
 
-        function showToast(message, type = 'success') {
-            if (typeof window.showToast === 'function') {
-                window.showToast(message, type);
-            } else {
-                console.log('Toast:', message);
-            }
-        }
     </script>
 
     <!-- Include the shared footer template -->
     <?php include 'footer.php'; ?>
-
-

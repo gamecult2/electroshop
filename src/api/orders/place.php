@@ -89,6 +89,11 @@ if (!$address) {
 // Calculate costs
 $cartItems = $cart->getItems();
 $subtotal = $cart->getSubtotal();
+if (!isset($input['expected_subtotal']) || (int)round((float)$input['expected_subtotal']*100)!==(int)round((float)$subtotal*100)) {
+    http_response_code(409);
+    echo json_encode(['success'=>false,'message'=>'Prices or cart contents changed. Refresh checkout to review your total.']);
+    exit;
+}
 $deliveryOption = $input['delivery_option'] ?? 'standard';
 $shippingCost = 500;
 switch($deliveryOption) {
@@ -165,7 +170,13 @@ $orderData = [
     'items' => $cartItems
 ];
 
-$orderId = $orderModel->create($orderData);
+try {
+    $orderId = $orderModel->create($orderData);
+} catch (DomainException | InvalidArgumentException $e) {
+    http_response_code(409);
+    echo json_encode(['success'=>false,'message'=>$e->getMessage(),'error_type'=>'stock_error']);
+    exit;
+}
 
 if ($orderId && $couponId) {
     // Record coupon usage
@@ -185,6 +196,9 @@ if ($orderId && $couponId) {
 }
 
 if ($orderId) {
+    $savedNumber = $pdo->prepare('SELECT order_number FROM orders WHERE id=?');
+    $savedNumber->execute([$orderId]);
+    $orderNumber = $savedNumber->fetchColumn();
     // Clear cart
     $cart->clear();
     echo json_encode(['success' => true, 'order_id' => $orderId, 'order_number' => $orderNumber]);

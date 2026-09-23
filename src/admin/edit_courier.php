@@ -103,7 +103,7 @@ include 'header.php';
                         </div>
 
                         <div class="d-flex align-items-center gap-3 mt-2">
-                            <button type="submit" class="btn btn-danger px-5 py-2 fw-bold rounded-pill shadow-sm">
+                            <button type="submit" class="btn btn-primary px-5 py-2 fw-bold rounded-pill shadow-sm">
                                 <i class="fas fa-save me-1"></i> Update Courier
                             </button>
                             <a href="couriers.php" class="btn btn-light px-4 py-2 fw-bold rounded-pill text-muted border shadow-xs">Cancel</a>
@@ -117,7 +117,7 @@ include 'header.php';
                     <div>
                         <h5 class="fw-bold mb-1">Courier Not Found</h5>
                         <p class="mb-0 small text-danger-emphasis">The courier you are trying to edit does not exist or has been deleted.</p>
-                        <a href="couriers.php" class="btn btn-danger btn-sm mt-3 rounded-pill px-3 fw-bold shadow-sm">Return to List</a>
+                        <a href="couriers.php" class="btn btn-primary btn-sm mt-3 rounded-pill px-3 fw-bold shadow-sm">Return to List</a>
                     </div>
                 </div>
             <?php endif; ?>

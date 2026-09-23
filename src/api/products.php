@@ -189,35 +189,17 @@ switch ($method) {
             exit;
         }
         
-        $sql = "INSERT INTO products (name_en, description_en, short_description_en, category_id, brand_id, price, discount_percentage, stock_quantity, sku, weight, dimensions, color, size, is_active, is_featured, is_new_arrival, is_best_seller, created_at)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())";
-
-        $stmt = $pdo->prepare($sql);
-        $result = $stmt->execute([
-            $input['name_en'],
-            $input['description_en'] ?? '',
-            $input['short_description_en'] ?? '',
-            $input['category_id'],
-            $input['brand_id'],
-            $input['price'],
-            $input['discount_percentage'] ?? 0,
-            $input['stock_quantity'] ?? 0,
-            $input['sku'] ?? null,
-            $input['weight'] ?? null,
-            $input['dimensions'] ?? null,
-            $input['color'] ?? null,
-            $input['size'] ?? null,
-            $input['is_active'] ?? 1,
-            $input['is_featured'] ?? 0,
-            $input['is_new_arrival'] ?? 0,
-            $input['is_best_seller'] ?? 0
-        ]);
-        
-        if ($result) {
-            echo json_encode(['success' => true, 'product_id' => $pdo->lastInsertId()]);
-        } else {
-            http_response_code(500);
-            echo json_encode(['error' => 'Failed to create product']);
+        require_once '../models/Product.php';
+        try {
+            $productId=(new Product())->create($input);
+            echo json_encode(['success'=>true,'product_id'=>$productId]);
+        } catch (InvalidArgumentException | DomainException $e) {
+            http_response_code(422);
+            echo json_encode(['success'=>false,'error'=>$e->getMessage()]);
+        } catch (Throwable $e) {
+            error_log($e->getMessage());
+            http_response_code(409);
+            echo json_encode(['success'=>false,'error'=>'Unable to save product. Check the SKU and product values.']);
         }
         break;
     

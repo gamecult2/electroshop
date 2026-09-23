@@ -2,10 +2,17 @@
 // admin/footer.php
 // Shared footer for admin pages
 ?>
-            </div> <!-- End of Page Content -->
+            </main> <!-- End of Page Content -->
         </div> <!-- End of Main Content Area -->
     </div> <!-- End of container-fluid -->
 
+    <div class="modal fade" id="adminConfirmModal" tabindex="-1" aria-labelledby="adminConfirmTitle" aria-describedby="adminConfirmMessage" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered"><div class="modal-content">
+            <div class="modal-header"><h2 class="modal-title h5" id="adminConfirmTitle">Confirm action</h2><button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button></div>
+            <div class="modal-body"><p id="adminConfirmMessage" class="mb-0"></p></div>
+            <div class="modal-footer"><button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button><button type="button" class="btn btn-primary" id="adminConfirmAccept">Confirm</button></div>
+        </div></div>
+    </div>
     <!-- Bootstrap 5 Toast Container -->
     <div class="toast-container position-fixed bottom-0 end-0 p-3">
         <div id="statusToast" class="toast align-items-center text-white bg-dark border-0" role="alert" aria-live="assertive" aria-atomic="true">
@@ -22,70 +29,54 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 
     <script>
-        function toggleSidebar() {
-            const body = document.body;
-            const isMobile = window.innerWidth < 992;
-            
-            if (isMobile) {
-                body.classList.toggle('sidebar-show');
-            } else {
-                body.classList.toggle('sidebar-collapsed');
-                // Save preference
-                localStorage.setItem('admin_sidebar_collapsed', body.classList.contains('sidebar-collapsed'));
-            }
-        }
-
-        // Apply saved preference on load
-        document.addEventListener('DOMContentLoaded', function() {
-            if (window.innerWidth >= 992) {
-                const collapsed = localStorage.getItem('admin_sidebar_collapsed') === 'true';
-                if (collapsed) {
-                    document.body.classList.add('sidebar-collapsed');
-                }
-            }
-        });
-
         function updateProduct(element, id, field) {
             let value;
             if (element.type === 'checkbox') {
                 value = element.checked ? 1 : 0;
-            } else if (element.tagName === 'SPAN') {
+            } else if (element.dataset.current !== undefined) {
                 value = element.dataset.current === '1' ? 0 : 1;
             } else {
                 value = element.value;
             }
 
-            // Visual feedback - opacity
-            element.classList.add('opacity-50');
+            if (element.disabled) return;
+            const previous = element.dataset.savedValue ?? element.defaultValue;
+            AdminUI.busy(element, true);
 
             fetch('api/update_product_quick.php', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/x-www-form-urlencoded',
                 },
-                body: `id=${id}&field=${field}&value=${value}`
+                body: new URLSearchParams({id, field, value})
             })
             .then(response => response.json())
             .then(data => {
-                element.classList.remove('opacity-50');
+                AdminUI.busy(element, false);
 
                 if (data.success) {
+                    element.dataset.savedValue = String(value);
                     showToast('Updated successfully', 'success');
 
                     // Update badge style using Bootstrap classes
-                    if (element.tagName === 'SPAN') {
+                    if (element.dataset.current !== undefined) {
                         const newValue = value;
-                        element.dataset.current = newValue;
-                        
-                        // Default badge classes
-                        element.className = 'badge rounded-pill py-2 px-3 fw-bold clickable';
-                        
+                        element.dataset.current = String(newValue);
+                        element.setAttribute('aria-pressed', newValue ? 'true' : 'false');
+                        element.classList.remove('bg-success', 'bg-secondary', 'bg-warning', 'bg-info', 'bg-danger', 'bg-light', 'text-dark', 'text-white', 'text-muted', 'border', 'opacity-50');
                         if (field === 'is_active') {
                             element.classList.add(newValue ? 'bg-success' : 'bg-secondary');
                             element.textContent = newValue ? 'Active' : 'Inactive';
                         } else {
-                            const bgClass = newValue ? 'bg-danger' : 'bg-light text-dark border';
-                            element.classList.add(bgClass);
+                            if (!newValue) {
+                                element.classList.add('bg-light', 'text-muted', 'border', 'opacity-50');
+                            } else if (field === 'is_featured') {
+                                element.classList.add('bg-warning', 'text-dark');
+                            } else if (field === 'is_new_arrival') {
+                                element.classList.add('bg-info', 'text-white');
+                            } else {
+                                element.classList.add('bg-danger', 'text-white');
+                            }
                         }
                     } else if (element.type === 'checkbox') {
                         const badge = element.nextElementSibling;
@@ -103,11 +94,15 @@
                         }
                     }
                 } else {
+                    if (element.type === 'checkbox') element.checked = !element.checked;
+                    else if (element.dataset.current === undefined) element.value = previous;
                     showToast('Update failed: ' + (data.message || 'Unknown error'), 'danger');
                 }
             })
             .catch(error => {
-                element.classList.remove('opacity-50');
+                AdminUI.busy(element, false);
+                if (element.type === 'checkbox') element.checked = !element.checked;
+                else if (element.dataset.current === undefined) element.value = previous;
                 showToast('Error connecting to server', 'danger');
                 console.error('Error:', error);
             });
@@ -117,22 +112,6 @@
             updateProduct(element, id, field);
         }
 
-        function showToast(message, type = 'success') {
-            const toastEl = document.getElementById('statusToast');
-            const toastMsg = document.getElementById('toastMessage');
-            
-            toastMsg.textContent = message;
-            
-            // Remove previous type classes
-            toastEl.classList.remove('bg-success', 'bg-danger', 'bg-dark', 'bg-info', 'bg-warning');
-            
-            // Add current type class
-            const bgClass = type === 'success' ? 'bg-success' : (type === 'danger' || type === 'error' ? 'bg-danger' : 'bg-dark');
-            toastEl.classList.add(bgClass);
-            
-            const toast = new bootstrap.Toast(toastEl);
-            toast.show();
-        }
     </script>
 </body>
 </html>

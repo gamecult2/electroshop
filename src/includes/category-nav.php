@@ -23,7 +23,7 @@ $nameField = 'name_en';
         <div class="d-flex justify-content-between align-items-center">
             <?php foreach ($navCategories as $mainCat): ?>
                 <div class="dropdown flex-grow-1 text-center border-start border-light-subtle position-static">
-                    <a href="category.php?slug=<?php echo $mainCat['slug']; ?>" 
+                    <a href="products.php?category=<?php echo (int)$mainCat['id']; ?>"
                        class="d-block py-3 px-2 text-decoration-none text-dark fw-bold border-bottom border-3 border-transparent hover-danger transition-all fs-6 dropdown-toggle-no-caret"
                        style="border-bottom-color: transparent;"
                        data-bs-toggle="dropdown"
@@ -45,7 +45,7 @@ $nameField = 'name_en';
                                         <div class="row row-cols-md-4 row-cols-lg-5 g-3">
                                             <?php foreach ($mainCat['subcategories'] as $subCat): ?>
                                                 <div class="col">
-                                                    <a href="category.php?slug=<?php echo $subCat['slug']; ?>" 
+                                                    <a href="products.php?category=<?php echo (int)$subCat['id']; ?>"
                                                        class="d-block py-2 px-3 text-decoration-none text-muted transition-all rounded hover-bg-light fs-6">
                                                         <i class="fas fa-angle-right me-2 opacity-50"></i>
                                                         <?php echo htmlspecialchars($subCat[$nameField]); ?>
@@ -76,13 +76,13 @@ $nameField = 'name_en';
                     <button class="accordion-button collapsed py-3 fw-bold text-dark" type="button" data-bs-toggle="collapse" data-bs-target="#collapse-<?php echo $index; ?>" aria-expanded="false" aria-controls="collapse-<?php echo $index; ?>">
                         <?php echo htmlspecialchars($mainCat[$nameField]); ?>
                     </button>
-                    <a href="category.php?slug=<?php echo $mainCat['slug']; ?>" class="position-absolute end-0 top-0 mt-3 me-5 px-3 py-1 bg-light rounded-pill small text-danger fw-bold text-decoration-none z-3" style="font-size: 11px;">View All</a>
+                    <a href="products.php?category=<?php echo (int)$mainCat['id']; ?>" class="position-absolute end-0 top-0 mt-3 me-5 px-3 py-1 bg-light rounded-pill small text-danger fw-bold text-decoration-none z-3" style="font-size: 11px;">View All</a>
                 </h2>
                 <div id="collapse-<?php echo $index; ?>" class="accordion-collapse collapse" aria-labelledby="heading-<?php echo $index; ?>" data-bs-parent="#mobileCategoryAccordion">
                     <div class="accordion-body p-0">
                         <div class="list-group list-group-flush bg-light">
                             <?php foreach ($mainCat['subcategories'] as $subCat): ?>
-                                <a href="category.php?slug=<?php echo $subCat['slug']; ?>" class="list-group-item list-group-item-action bg-transparent py-3 border-0 ps-4">
+                                <a href="products.php?category=<?php echo (int)$subCat['id']; ?>" class="list-group-item list-group-item-action bg-transparent py-3 border-0 ps-4">
                                     <i class="fas fa-angle-right me-2 text-danger"></i>
                                     <?php echo htmlspecialchars($subCat[$nameField]); ?>
                                     <span class="float-end text-muted small">(<?php echo $categoryModel->getProductCount($subCat['id']); ?>)</span>

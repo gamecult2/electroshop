@@ -20,8 +20,8 @@ if (!$input || !isset($input['product_id'])) {
 }
 
 $productId = (int)$input['product_id'];
-$quantity = isset($input['quantity']) ? (int)$input['quantity'] : 1;
-$variantId = isset($input['variant_id']) ? (int)$input['variant_id'] : null;
+$quantity = $input['quantity'] ?? 1;
+$variantId = $input['variant_id'] ?? null;
 $selectedOptions = isset($input['selected_options']) ? $input['selected_options'] : null;
 
 $cart = new Cart();

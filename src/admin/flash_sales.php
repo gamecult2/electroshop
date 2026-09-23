@@ -189,7 +189,7 @@ include 'header.php';
                                 <div class="mb-3">
                                     <div class="row g-2 mb-3">
                                         <div class="col-6">
-                                            <label for="main_category_filter" class="form-label small fw-bold text-muted text-uppercase" style="font-size: 0.7rem;">Filter By Category</label>
+                                            <label for="main_category_filter" class="form-label small fw-bold text-muted text-uppercase" >Filter By Category</label>
                                             <select id="main_category_filter" class="form-select border-light-subtle shadow-none py-1" style="font-size: 0.85rem;" onchange="filterProducts()">
                                                 <option value="">All Categories</option>
                                                 <?php foreach ($mainCategories as $cat): ?>
@@ -198,7 +198,7 @@ include 'header.php';
                                             </select>
                                         </div>
                                         <div class="col-6">
-                                            <label for="sub_category_filter" class="form-label small fw-bold text-muted text-uppercase" style="font-size: 0.7rem;">Subcategory</label>
+                                            <label for="sub_category_filter" class="form-label small fw-bold text-muted text-uppercase" >Subcategory</label>
                                             <select id="sub_category_filter" class="form-select border-light-subtle shadow-none py-1" style="font-size: 0.85rem;" onchange="filterProducts()" disabled>
                                                 <option value="">All Subcategories</option>
                                                 <!-- Populated by JS -->
@@ -348,7 +348,7 @@ include 'header.php';
                         <div class="card-body p-0">
                             <div class="table-responsive">
                                 <table class="table table-hover align-middle mb-0">
-                                    <thead class="bg-light">
+                                    <thead class="table-light">
                                         <tr>
                                             <th class="border-0 px-4 py-3 small fw-bold text-muted text-uppercase">Product</th>
                                             <th class="border-0 py-3 small fw-bold text-muted text-uppercase">Prices</th>
@@ -395,7 +395,7 @@ include 'header.php';
                                                         </div>
                                                     </td>
                                                     <td class="text-center">
-                                                        <span class="badge bg-danger-subtle text-danger rounded-pill px-2 py-1 fw-bold"><?php echo htmlspecialchars($sale['discount_percentage']); ?>%</span>
+                                                        <span class="badge bg-danger-subtle text-danger-emphasis rounded-pill px-2 py-1 fw-bold"><?php echo htmlspecialchars($sale['discount_percentage']); ?>%</span>
                                                     </td>
                                                     <td>
                                                         <div class="small text-muted">
@@ -410,7 +410,7 @@ include 'header.php';
                                                         <a href="flash_sales.php?action=edit&id=<?php echo $sale['id']; ?>" class="btn btn-light btn-sm rounded-circle shadow-xs text-primary me-1" title="Edit">
                                                             <i class="fas fa-edit"></i>
                                                         </a>
-                                                        <a href="flash_sales.php?action=delete&id=<?php echo $sale['id']; ?>" class="btn btn-light btn-sm rounded-circle shadow-xs text-danger" onclick="return confirm('Are you sure you want to delete this flash sale?');" title="Delete">
+                                                        <a href="flash_sales.php?action=delete&id=<?php echo $sale['id']; ?>" class="btn btn-light btn-sm rounded-circle shadow-xs text-danger" data-confirm="Are you sure you want to delete this flash sale?" title="Delete">
                                                             <i class="fas fa-trash-alt"></i>
                                                         </a>
                                                     </td>

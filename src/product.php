@@ -26,25 +26,24 @@ $ratingStats = $reviewModel->getAverageRating($productId);
 $avgRating = round((float)($ratingStats['average_rating'] ?? 0), 1);
 $totalReviews = (int)($ratingStats['total_reviews'] ?? 0);
 
-require_once 'includes/header.php';
-
 // ==========================================
 // DATA NORMALIZATION & REAL DB FIELDS
 // ==========================================
 
-// Determine Language (Default to 'en')
-$lang = 'en';
-$suffix = '_en';
+// Select localized product fields with a safe English fallback.
+$lang = get_language();
+$lang = in_array($lang, ['en', 'fr'], true) ? $lang : 'en';
+$suffix = '_' . $lang;
 
 // 1. Basic Fields (Localized)
-$product['name'] = $product['name_en'] ?? $product['name'];
+$product['name'] = $product['name' . $suffix] ?? $product['name_en'] ?? $product['name'];
 
 // Safe HTML rendering for descriptions (allow common formatting tags)
 $allowedTags = '<p><br><strong><b><em><i><u><ul><ol><li><h1><h2><h3><h4><h5><h6><a><img><table><thead><tbody><tr><th><td><blockquote><code><pre><hr><div><span>';
-$rawDescription = $product['description_en'] ?? '';
+$rawDescription = $product['description' . $suffix] ?? $product['description_en'] ?? '';
 $product['description'] = strip_tags($rawDescription, $allowedTags);
 
-$product['subtitle'] = $product['short_description_en'] ?? '';
+$product['subtitle'] = $product['short_description' . $suffix] ?? $product['short_description_en'] ?? '';
 
 if (empty($product['subtitle'])) {
     // Fallback subtitle if empty
@@ -61,7 +60,7 @@ if ($product['price'] > 0) {
 }
 
 // 3. Technical Specs (JSON)
-$specsJson = $product['technical_specs_en'] ?? '[]';
+$specsJson = $product['technical_specs' . $suffix] ?? $product['technical_specs_en'] ?? '[]';
 $product['technical_specs'] = json_decode($specsJson, true) ?? [];
 if (!is_array($product['technical_specs'])) $product['technical_specs'] = [];
 
@@ -97,6 +96,8 @@ foreach ($optionsRaw as $opt) {
 // Fetch all actual SKUs and their attributes for matching
 $dbVariants = $productModel->getProductVariants($productId);
 $product['variants'] = !empty($dbVariants) ? $dbVariants : [];
+foreach ($product['variants'] as &$variant) $variant['final_price'] = CatalogRules::price($variant['price'], $product['discount_percentage']);
+unset($variant);
 
 // 6. Other Fields
 $product['brand'] = $product['brand_name'] ?? 'Generic';
@@ -141,6 +142,18 @@ if (is_logged_in()) {
     $wStmt->execute([get_current_user_id(), $productId]);
     $isWishlisted = $wStmt->fetch() !== false;
 }
+
+$salesCount = 0;
+try {
+    $salesStmt = $pdo->prepare("SELECT COALESCE(SUM(oi.quantity), 0) FROM order_items oi JOIN orders o ON o.id = oi.order_id WHERE oi.product_id = ? AND o.status <> 'cancelled'");
+    $salesStmt->execute([$productId]);
+    $salesCount = (int)$salesStmt->fetchColumn();
+} catch (PDOException $e) {
+    $salesCount = 0;
+}
+
+$page_title = $product['name'];
+require_once 'includes/header.php';
 ?>
 
 <div class="container-xxl pb-4">
@@ -150,11 +163,12 @@ if (is_logged_in()) {
         ['label' => t('products'), 'url' => 'products.php']
     ];
     foreach ($breadcrumb as $bc) {
-        $breadcrumb_items[] = ['label' => $bc['name_en'] ?? '', 'url' => "products.php?category=" . $bc['id']];
+        $breadcrumb_items[] = ['label' => localized_field($bc, 'name'), 'url' => "products.php?category=" . $bc['id']];
     }
     $breadcrumb_items[] = ['label' => $product['name'] ?? ''];
     include 'includes/breadcrumb.php';
     ?>
+    <h1 class="visually-hidden"><?php echo htmlspecialchars($product['name'] ?? ''); ?></h1>
     
     <div class="row g-3">
         <!-- Main Content Area (Media + Tabs) -->
@@ -169,19 +183,19 @@ if (is_logged_in()) {
                                 <div class="col-2 col-md-2 order-2 order-md-1">
                                     <div class="d-flex flex-column gap-2 overflow-auto product-thumbnails" style="max-height: 500px; scrollbar-width: none;">
                                         <?php if (!empty($product['video_url'])): ?>
-                                            <div class="thumbnail border rounded overflow-hidden d-flex align-items-center justify-content-center bg-light video-thumb" 
+                                            <button type="button" class="thumbnail w-100 p-0 border rounded overflow-hidden d-flex align-items-center justify-content-center bg-light video-thumb"
                                                  onclick="toggleVideo(true)" 
-                                                 style="aspect-ratio: 1; min-height: 50px; cursor: pointer;">
-                                                <i class="fas fa-play-circle text-danger fs-4"></i>
-                                            </div>
+                                                 style="aspect-ratio: 1; min-height: 50px;" aria-label="Play product video">
+                                                <i class="fas fa-play-circle text-danger fs-4" aria-hidden="true"></i>
+                                            </button>
                                         <?php endif; ?>
 
                                         <?php foreach ($product['images'] as $index => $image): ?>
-                                            <div class="thumbnail border rounded overflow-hidden <?php echo $index === 0 && empty($product['video_url']) ? 'border-danger border-2' : ''; ?>" 
+                                            <button type="button" class="thumbnail w-100 p-0 bg-white border rounded overflow-hidden <?php echo $index === 0 && empty($product['video_url']) ? 'border-danger border-2' : ''; ?>"
                                                  onclick="toggleVideo(false); changeMainImage('<?php echo htmlspecialchars($image); ?>', this)"
-                                                 style="aspect-ratio: 1; min-height: 50px; cursor: pointer;">
-                                                <img src="<?php echo htmlspecialchars($image); ?>" class="img-fluid object-fit-contain w-100 h-100" alt="Thumbnail">
-                                            </div>
+                                                 style="aspect-ratio: 1; min-height: 50px;" aria-label="Show product image <?php echo $index + 1; ?>">
+                                                <img src="<?php echo htmlspecialchars($image); ?>" class="img-fluid object-fit-contain w-100 h-100" alt="">
+                                            </button>
                                         <?php endforeach; ?>
                                     </div>
                                 </div>
@@ -199,7 +213,7 @@ if (is_logged_in()) {
 
                                         <div class="w-100 h-100 d-flex align-items-center justify-content-center" id="main-product-image-wrapper">
                                             <img src="<?php echo htmlspecialchars($product['images'][0] ?? ''); ?>" 
-                                                 alt="<?php echo htmlspecialchars($product['name'] ?? ''); ?>" 
+                                                 alt="<?php echo htmlspecialchars($product['name'] ?? 'Product'); ?>"
                                                  id="main-product-image"
                                                  class="img-fluid object-fit-cover w-100 h-100">
                                         </div>
@@ -215,18 +229,18 @@ if (is_logged_in()) {
                 <div class="col-12 d-lg-none">
                      <div class="card border-0 shadow-sm mb-4">
                         <div class="card-body p-4">
-                            <h1 class="h3 fw-bold mb-2 text-dark"><?php echo htmlspecialchars($product['name'] ?? ''); ?></h1>
-                            <p class="text-muted small mb-4"><?php echo htmlspecialchars($product['subtitle'] ?? ''); ?></p>
+                            <h2 class="app-page-title fw-bold mb-2 text-dark"><?php echo htmlspecialchars($product['name'] ?? ''); ?></h2>
+                            <p class="text-muted small mb-4 product-sku" aria-live="polite"><?php echo htmlspecialchars($product['subtitle'] ?? ''); ?></p>
         
                             <div class="d-flex align-items-center gap-4 mb-4 pb-3 border-bottom overflow-auto">
                                 <div class="text-center border-end pe-4">
                                     <div class="text-warning small mb-1"><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i></div>
-                                    <div class="fw-bold h5 mb-0">4.5</div>
-                                    <div class="text-muted small"><?php echo number_format($product['rating_count'] ?? 0); ?> Reviews</div>
+                                    <div class="fw-bold h5 mb-0"><?php echo number_format($avgRating, 1); ?></div>
+                                    <div class="text-muted small"><?php echo number_format($totalReviews); ?> Reviews</div>
                                 </div>
                                 <div class="text-center">
                                     <div class="text-muted small mb-1">Sales</div>
-                                    <div class="fw-bold h5 mb-0">1.2k+</div>
+                                    <div class="fw-bold h5 mb-0"><?php echo number_format($salesCount); ?></div>
                                     <div class="text-muted small">Orders</div>
                                 </div>
                             </div>
@@ -256,7 +270,7 @@ if (is_logged_in()) {
                                                 <?php foreach ($values as $val): ?>
                                                     <button type="button"
                                                             class="btn btn-sm btn-outline-secondary px-3 rounded-pill option-item shadow-none"
-                                                            onclick="selectOption(this, '<?php echo htmlspecialchars($optionName); ?>', '<?php echo htmlspecialchars($val); ?>')">
+                                                            aria-pressed="false" onclick="selectOption(this, this.closest('.option-row').dataset.optionName, this.textContent)">
                                                         <?php echo htmlspecialchars($val); ?>
                                                     </button>
                                                 <?php endforeach; ?>
@@ -269,9 +283,9 @@ if (is_logged_in()) {
                             <div class="row align-items-center g-3 mb-4">
                                 <div class="col-auto">
                                     <div class="input-group overflow-hidden rounded-3 shadow-none border" style="width: 130px;">
-                                        <button class="btn btn-white border-0 px-3" onclick="changeQuantity(-1, 'quantity-mobile')"><i class="fas fa-minus small"></i></button>
-                                        <input type="number" class="form-control border-0 text-center fw-bold shadow-none p-0" value="1" min="1" id="quantity-mobile">
-                                        <button class="btn btn-white border-0 px-3" onclick="changeQuantity(1, 'quantity-mobile')"><i class="fas fa-plus small"></i></button>
+                                        <button type="button" class="btn btn-white border-0 px-3" onclick="changeQuantity(-1, 'quantity-mobile')" aria-label="Decrease quantity"><i class="fas fa-minus small" aria-hidden="true"></i></button>
+                                        <input type="number" class="form-control border-0 text-center fw-bold p-0" value="1" min="1" id="quantity-mobile" aria-label="Quantity">
+                                        <button type="button" class="btn btn-white border-0 px-3" onclick="changeQuantity(1, 'quantity-mobile')" aria-label="Increase quantity"><i class="fas fa-plus small" aria-hidden="true"></i></button>
                                     </div>
                                 </div>
                                 <div class="col">
@@ -283,10 +297,10 @@ if (is_logged_in()) {
                             </div>
         
                             <div class="d-grid gap-3 mb-4">
-                                <button class="btn btn-danger btn-lg py-3 rounded-3 shadow-sm btn-add-cart-mobile d-flex align-items-center justify-content-center gap-2" onclick="addToCart(<?php echo $productId; ?>)">
+                                <button type="button" class="btn btn-danger btn-lg py-3 rounded-3 shadow-sm btn-add-cart-mobile d-flex align-items-center justify-content-center gap-2" onclick="addToCart(<?php echo $productId; ?>)">
                                     <i class="fas fa-shopping-cart"></i> <span><?php echo t('add_to_cart'); ?></span>
                                 </button>
-                                <button class="btn btn-outline-danger btn-lg py-3 rounded-3 btn-buy-now d-flex align-items-center justify-content-center gap-2" onclick="buyNow(<?php echo $productId; ?>)">
+                                <button type="button" class="btn btn-outline-danger btn-lg py-3 rounded-3 btn-buy-now d-flex align-items-center justify-content-center gap-2" onclick="buyNow(<?php echo $productId; ?>)">
                                     <i class="fas fa-bolt"></i> <span><?php echo t('buy_now'); ?></span>
                                 </button>
                             </div>
@@ -310,13 +324,13 @@ if (is_logged_in()) {
                             </div>
         
                             <div class="d-flex justify-content-between align-items-center pt-3 border-top flex-wrap gap-2">
-                                <button class="btn btn-link text-decoration-none text-muted p-0 small add-to-wishlist-btn" data-product-id="<?php echo $productId; ?>">
+                                <button type="button" class="btn btn-link text-decoration-none text-muted p-0 small add-to-wishlist-btn" data-product-id="<?php echo $productId; ?>">
                                     <i class="<?php echo $isWishlisted ? 'fas text-danger' : 'far'; ?> fa-heart me-1"></i> <?php echo t('wishlist'); ?>
                                 </button>
-                                <button class="btn btn-link text-decoration-none text-muted p-0 small" onclick="openProductChat(<?php echo $productId; ?>, '<?php echo htmlspecialchars($product['name'], ENT_QUOTES); ?>', '<?php echo htmlspecialchars($product['images'][0] ?? ''); ?>', '<?php echo htmlspecialchars($product['sku'] ?? ''); ?>')">
+                                <button type="button" class="btn btn-link text-decoration-none text-muted p-0 small" onclick="openProductChat(<?php echo $productId; ?>, '<?php echo htmlspecialchars($product['name'], ENT_QUOTES); ?>', '<?php echo htmlspecialchars($product['images'][0] ?? ''); ?>', '<?php echo htmlspecialchars($product['sku'] ?? ''); ?>')">
                                     <i class="fas fa-comment-dots me-1"></i> Ask about this product
                                 </button>
-                                <button class="btn btn-link text-decoration-none text-muted p-0 small"><i class="fas fa-share-alt me-1"></i> Share</button>
+                                <button type="button" class="btn btn-link text-decoration-none text-muted p-0 small" onclick="shareProduct(this)"><i class="fas fa-share-alt me-1" aria-hidden="true"></i> Share</button>
                             </div>
                         </div>
                     </div>
@@ -490,6 +504,7 @@ if (is_logged_in()) {
                                 echo '</div>';
                             endforeach; 
                             $product = $mainProductData; 
+                            $productId = (int)$mainProductData['id'];
                             ?>
                         <?php else: ?>
                             <div class="col-12 text-muted fst-italic">No related products found.</div>
@@ -501,20 +516,20 @@ if (is_logged_in()) {
 
         <!-- Price Card Column (Desktop Sidebar) -->
         <div class="col-lg-4 d-none d-lg-block">
-            <div class="card border-0 shadow-sm sticky-top" style="top: 20px;">
+            <div class="card border-0 shadow-sm sticky-top sticky-below-header">
                 <div class="card-body p-4">
-                    <h1 class="h3 fw-bold mb-2 text-dark"><?php echo htmlspecialchars($product['name'] ?? ''); ?></h1>
-                    <p class="text-muted small mb-4"><?php echo htmlspecialchars($product['subtitle'] ?? ''); ?></p>
+                    <h2 class="app-page-title fw-bold mb-2 text-dark"><?php echo htmlspecialchars($product['name'] ?? ''); ?></h2>
+                    <p class="text-muted small mb-4 product-sku" aria-live="polite"><?php echo htmlspecialchars($product['subtitle'] ?? ''); ?></p>
 
                     <div class="d-flex align-items-center gap-4 mb-4 pb-3 border-bottom overflow-auto">
                         <div class="text-center border-end pe-4">
                             <div class="text-warning small mb-1"><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i></div>
-                            <div class="fw-bold h5 mb-0">4.5</div>
-                            <div class="text-muted small"><?php echo number_format($product['rating_count'] ?? 0); ?> Reviews</div>
+                            <div class="fw-bold h5 mb-0"><?php echo number_format($avgRating, 1); ?></div>
+                            <div class="text-muted small"><?php echo number_format($totalReviews); ?> Reviews</div>
                         </div>
                         <div class="text-center">
                             <div class="text-muted small mb-1">Sales</div>
-                            <div class="fw-bold h5 mb-0">1.2k+</div>
+                            <div class="fw-bold h5 mb-0"><?php echo number_format($salesCount); ?></div>
                             <div class="text-muted small">Orders</div>
                         </div>
                     </div>
@@ -544,7 +559,7 @@ if (is_logged_in()) {
                                         <?php foreach ($values as $val): ?>
                                             <button type="button"
                                                     class="btn btn-sm btn-outline-secondary px-3 rounded-pill option-item shadow-none"
-                                                    onclick="selectOption(this, '<?php echo htmlspecialchars($optionName); ?>', '<?php echo htmlspecialchars($val); ?>')">
+                                                    aria-pressed="false" onclick="selectOption(this, this.closest('.option-row').dataset.optionName, this.textContent)">
                                                 <?php echo htmlspecialchars($val); ?>
                                             </button>
                                         <?php endforeach; ?>
@@ -557,9 +572,9 @@ if (is_logged_in()) {
                     <div class="row align-items-center g-3 mb-4">
                         <div class="col-auto">
                             <div class="input-group overflow-hidden rounded-3 shadow-none border" style="width: 130px;">
-                                <button class="btn btn-white border-0 px-3" onclick="changeQuantity(-1, 'quantity')"><i class="fas fa-minus small"></i></button>
-                                <input type="number" class="form-control border-0 text-center fw-bold shadow-none p-0" value="1" min="1" id="quantity">
-                                <button class="btn btn-white border-0 px-3" onclick="changeQuantity(1, 'quantity')"><i class="fas fa-plus small"></i></button>
+                                <button type="button" class="btn btn-white border-0 px-3" onclick="changeQuantity(-1, 'quantity')" aria-label="Decrease quantity"><i class="fas fa-minus small" aria-hidden="true"></i></button>
+                                <input type="number" class="form-control border-0 text-center fw-bold p-0" value="1" min="1" id="quantity" aria-label="Quantity">
+                                <button type="button" class="btn btn-white border-0 px-3" onclick="changeQuantity(1, 'quantity')" aria-label="Increase quantity"><i class="fas fa-plus small" aria-hidden="true"></i></button>
                             </div>
                         </div>
                         <div class="col">
@@ -571,10 +586,10 @@ if (is_logged_in()) {
                     </div>
 
                     <div class="d-grid gap-3 mb-4">
-                        <button class="btn btn-danger btn-lg py-3 rounded-3 shadow-sm btn-add-cart d-flex align-items-center justify-content-center gap-2" onclick="addToCart(<?php echo $productId; ?>)">
+                        <button type="button" class="btn btn-danger btn-lg py-3 rounded-3 shadow-sm btn-add-cart d-flex align-items-center justify-content-center gap-2" onclick="addToCart(<?php echo $productId; ?>)">
                             <i class="fas fa-shopping-cart"></i> <span><?php echo t('add_to_cart'); ?></span>
                         </button>
-                        <button class="btn btn-outline-danger btn-lg py-3 rounded-3 btn-buy-now d-flex align-items-center justify-content-center gap-2" onclick="buyNow(<?php echo $productId; ?>)">
+                        <button type="button" class="btn btn-outline-danger btn-lg py-3 rounded-3 btn-buy-now d-flex align-items-center justify-content-center gap-2" onclick="buyNow(<?php echo $productId; ?>)">
                             <i class="fas fa-bolt"></i> <span><?php echo t('buy_now'); ?></span>
                         </button>
                     </div>
@@ -598,13 +613,13 @@ if (is_logged_in()) {
                     </div>
 
                     <div class="d-flex justify-content-between align-items-center pt-3 border-top flex-wrap gap-2">
-                        <button class="btn btn-link text-decoration-none text-muted p-0 small add-to-wishlist-btn" data-product-id="<?php echo $productId; ?>">
+                        <button type="button" class="btn btn-link text-decoration-none text-muted p-0 small add-to-wishlist-btn" data-product-id="<?php echo $productId; ?>">
                             <i class="<?php echo $isWishlisted ? 'fas text-danger' : 'far'; ?> fa-heart me-1"></i> <?php echo t('wishlist'); ?>
                         </button>
-                        <button class="btn btn-link text-decoration-none text-muted p-0 small" onclick="openProductChat(<?php echo $productId; ?>, '<?php echo htmlspecialchars($product['name'], ENT_QUOTES); ?>', '<?php echo htmlspecialchars($product['images'][0] ?? ''); ?>', '<?php echo htmlspecialchars($product['sku'] ?? ''); ?>')">
+                        <button type="button" class="btn btn-link text-decoration-none text-muted p-0 small" onclick="openProductChat(<?php echo $productId; ?>, '<?php echo htmlspecialchars($product['name'], ENT_QUOTES); ?>', '<?php echo htmlspecialchars($product['images'][0] ?? ''); ?>', '<?php echo htmlspecialchars($product['sku'] ?? ''); ?>')">
                             <i class="fas fa-comment-dots me-1"></i> Ask about this product
                         </button>
-                        <button class="btn btn-link text-decoration-none text-muted p-0 small"><i class="fas fa-share-alt me-1"></i> Share</button>
+                        <button type="button" class="btn btn-link text-decoration-none text-muted p-0 small" onclick="shareProduct(this)"><i class="fas fa-share-alt me-1" aria-hidden="true"></i> Share</button>
                     </div>
                 </div>
             </div>
@@ -617,6 +632,24 @@ if (is_logged_in()) {
 
 
 <script>
+async function shareProduct() {
+    const shareData = {
+        title: <?php echo json_encode($product['name']); ?>,
+        text: <?php echo json_encode($product['subtitle']); ?>,
+        url: window.location.href
+    };
+    try {
+        if (navigator.share) {
+            await navigator.share(shareData);
+            return;
+        }
+        await navigator.clipboard.writeText(shareData.url);
+        showNotification('Product link copied to your clipboard.', 'success');
+    } catch (error) {
+        if (error.name !== 'AbortError') showNotification('Unable to share this product right now.', 'error');
+    }
+}
+
 // Product logic state
 // Track available stock based on the most restrictive selected variant
 let availableStock = <?php echo $product['stock_quantity']; ?>;
@@ -685,138 +718,52 @@ function resetZoom(e) {
 }
 
 // New Variant Selection Logic
-const allVariants = <?php echo json_encode($product['variants']); ?>;
+const allVariants = <?php echo json_encode($product['variants'], JSON_HEX_TAG|JSON_HEX_APOS|JSON_HEX_QUOT|JSON_HEX_AMP); ?>;
 let currentSelection = {}; // Stores { 'Color': 'Red', 'Size': 'XL' }
 let selectedVariant = null; // The matched SKU object
+document.addEventListener('DOMContentLoaded',()=>{ findMatchingVariant(); updateOptionAvailability(); });
 
 function selectOption(btn, name, value) {
-    const isSelected = btn.classList.contains('selected');
-    const row = btn.closest('.option-row');
-    
-    // UI Update
-    if (row) {
-        row.querySelectorAll('.option-item').forEach(b => {
-            b.classList.remove('selected', 'bg-danger', 'text-white', 'border-danger');
+    name=name.trim(); value=value.trim();
+    if (currentSelection[name]===value) delete currentSelection[name]; else currentSelection[name]=value;
+    document.querySelectorAll('.option-row').forEach(row => {
+        row.querySelectorAll('.option-item').forEach(option => {
+            const selected=currentSelection[row.dataset.optionName]===option.textContent.trim();
+            ['selected','bg-danger','text-white','border-danger'].forEach(cls=>option.classList.toggle(cls,selected));
+            option.setAttribute('aria-pressed',String(selected));
         });
-    }
-
-    if (isSelected) {
-        // Deselecting
-        delete currentSelection[name.trim()];
-    } else {
-        // Selecting
-        btn.classList.add('selected', 'bg-danger', 'text-white', 'border-danger');
-        currentSelection[name.trim()] = value.trim();
-    }
-
-    // Try to find a matching variant
+    });
     findMatchingVariant();
-    
-    // Update availability of other options based on current selection
     updateOptionAvailability();
 }
 
 function findMatchingVariant() {
-    // Check if we have any selection at all
-    const hasSelection = Object.keys(currentSelection).length > 0;
-    
-    // A variant matches if for every selected option (key), it has the same attribute value
-    const matched = allVariants.find(v => {
-        if (!v.attributes) return false;
-        for (const [key, val] of Object.entries(currentSelection)) {
-            if (v.attributes[key] !== val) return false;
-        }
-        return true;
+    const required=new Set();
+    document.querySelectorAll('.option-row').forEach(row=>required.add(row.dataset.optionName));
+    const complete=required.size>0 && [...required].every(name=>currentSelection[name]!==undefined);
+    const matches=complete ? allVariants.filter(v=>Object.keys(v.attributes||{}).length===required.size && Object.entries(currentSelection).every(([key,value])=>v.attributes[key]===value)) : [];
+    selectedVariant=matches.length===1 ? matches[0] : null;
+    availableStock=selectedVariant ? Number(selectedVariant.stock_quantity) : (allVariants.length ? 0 : <?php echo (int)$product['stock_quantity']; ?>);
+    const price=selectedVariant ? Number(selectedVariant.price) : basePrice;
+    const finalPrice=selectedVariant ? Number(selectedVariant.final_price) : baseFinalPrice;
+    document.querySelectorAll('.product-final-price,.product-final-price-mobile').forEach(el=>el.textContent=formatPrice(finalPrice));
+    document.querySelectorAll('.product-base-price,.product-base-price-mobile').forEach(el=>el.textContent=formatPrice(price));
+    document.querySelectorAll('.product-discount-display,.product-discount-display-mobile').forEach(el=>{
+        el.classList.toggle('d-none',discountPercentage<=0);
+        el.classList.toggle('d-flex',discountPercentage>0);
     });
-
-    // BUG FIX: Update global selectedVariant
-    selectedVariant = matched || null;
-
-    // Define price variables for UI updates
-    let variantPrice = basePrice;
-    let variantFinalPrice = baseFinalPrice;
-
-    if (matched) {
-        variantPrice = parseFloat(matched.price);
-        // Calculate final price with discount
-        variantFinalPrice = variantPrice * (1 - (discountPercentage / 100));
-        
-        // Update stock
-        availableStock = parseInt(matched.stock_quantity);
-    } else {
-        // Reset stock to base if fully deselected, or 0 if invalid combo
-        // For simplicity, if no specific variant matched but we have selection, it's unavailable
-        if (Object.keys(currentSelection).length > 0) {
-            availableStock = 0;
-        } else {
-            availableStock = <?php echo $product['stock_quantity']; ?>;
-        }
-    }
-
-    // Elements to update - Arrays of {desktop_id, mobile_class_or_id}
-    const elementsToUpdate = [
-        { id: 'product-final-price', val: formatPrice(variantFinalPrice) },
-        { id: 'product-base-price', val: formatPrice(variantPrice) },
-        // Mobile elements
-        { class: 'product-final-price-mobile', val: formatPrice(variantFinalPrice) },
-        { class: 'product-base-price-mobile', val: formatPrice(variantPrice) }
-    ];
-
-    elementsToUpdate.forEach(item => {
-        if (item.id) {
-            const el = document.getElementById(item.id);
-            if (el) el.textContent = item.val;
-        }
-        if (item.class) {
-            document.querySelectorAll('.' + item.class).forEach(el => el.textContent = item.val);
-        }
+    document.querySelectorAll('.product-sku').forEach(el=>el.textContent=selectedVariant ? 'SKU: '+selectedVariant.sku : <?php echo json_encode($product['subtitle'], JSON_HEX_TAG|JSON_HEX_APOS|JSON_HEX_QUOT|JSON_HEX_AMP); ?>);
+    const message=allVariants.length && !selectedVariant ? (complete ? 'This combination is unavailable' : 'Choose all options') : (availableStock>0 ? availableStock+' in stock' : 'Out of Stock');
+    document.querySelectorAll('.product-stock-status,.product-stock-status-mobile').forEach(el=>{
+        el.textContent=message;
+        el.classList.toggle('text-success',availableStock>0);
+        el.classList.toggle('text-danger',availableStock<=0);
     });
-
-    const discDisplayClass = discountPercentage > 0 ? 'd-flex align-items-baseline gap-2' : 'd-none';
-    const discountDisplays = [
-        document.getElementById('discount-display'),
-        ...document.querySelectorAll('.product-discount-display-mobile')
-    ];
-    discountDisplays.forEach(el => { if(el) el.className = discDisplayClass; });
-
-    // Update Stock Display
-    const stockHTML = `<i class="fas ${availableStock > 0 ? 'fa-check-circle text-success' : 'fa-times-circle text-danger'} me-1"></i> ${availableStock > 0 ? availableStock + ' in stock' : 'Out of Stock'}`;
-    const stockClass = `small ${availableStock > 0 ? 'text-success' : 'text-danger'} fw-bold`;
-    
-    // Desktop Stock
-    const deskStock = document.querySelector('.product-stock-status');
-    if (deskStock) {
-        deskStock.innerHTML = stockHTML;
-        deskStock.className = stockClass + ' product-stock-status';
-    }
-    // Mobile Stock
-    const mobStock = document.querySelector('.product-stock-status-mobile');
-    if (mobStock) {
-        mobStock.innerHTML = stockHTML;
-        mobStock.className = stockClass + ' product-stock-status-mobile';
-    }
-
-    if (matched) {
-         // Update SKU display if available
-        const subtitleEl = document.querySelector('p.text-muted.small.mb-4');
-        if (subtitleEl && matched.sku) {
-            subtitleEl.textContent = 'SKU: ' + matched.sku;
-            // TODO: Update second subtitle if needed (for mobile duplication if subtitle is duplicated)
-        }
-    } else {
-        // Revert subtitle
-        if (!hasSelection) {
-             const subtitleEl = document.querySelector('p.text-muted.small.mb-4');
-             if (subtitleEl) subtitleEl.textContent = <?php echo json_encode($product['subtitle']); ?>;
-        }
-        
-        if (hasSelection) {
-             const unavailableHTML = `<i class="fas fa-times-circle text-danger me-1"></i> Unavailable`;
-             const unavailableClass = 'small text-danger fw-bold';
-             if (deskStock) { deskStock.innerHTML = unavailableHTML; deskStock.className = unavailableClass + ' product-stock-status'; }
-             if (mobStock) { mobStock.innerHTML = unavailableHTML; mobStock.className = unavailableClass + ' product-stock-status-mobile'; }
-        }
-    }
+    document.querySelectorAll('.btn-add-cart,.btn-add-cart-mobile,.btn-buy-now').forEach(el=>el.disabled=availableStock<=0);
+    document.querySelectorAll('#quantity,#quantity-mobile').forEach(el=>{
+        el.max=Math.max(1,availableStock);
+        if (Number(el.value)>availableStock) el.value=Math.max(1,availableStock);
+    });
 }
 
 
@@ -825,7 +772,7 @@ function changeQuantity(delta, inputId = 'quantity') {
     const input = document.getElementById(inputId);
     if (!input) return;
     
-    let val = parseInt(input.value) + delta;
+    let val = (parseInt(input.value) || 1) + delta;
 
     // Ensure quantity doesn't go below 1
     if (val < 1) val = 1;
@@ -836,7 +783,7 @@ function changeQuantity(delta, inputId = 'quantity') {
         notify(`Maximum quantity available is ${availableStock}`, 'info');
     }
 
-    input.value = val;
+    document.querySelectorAll('#quantity,#quantity-mobile').forEach(el => el.value = val);
 }
 
 /**
@@ -846,7 +793,7 @@ const notify = (msg, type) => {
     if (typeof showNotification === 'function') {
         showNotification(msg, type);
     } else {
-        alert(msg);
+        showNotification(msg, 'info');
     }
 };
 
@@ -994,6 +941,7 @@ function updateOptionAvailability() {
             // Check if any variant matches this subset
             const isAvailable = allVariants.some(v => {
                 if (!v.attributes) return false;
+                if (Number(v.stock_quantity)<=0) return false;
                 
                 // Check if variant matches ALL criteria in testSelection
                 for (const [key, val] of Object.entries(testSelection)) {
@@ -1043,18 +991,12 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 
     // Add event listener to quantity input to validate against stock when manually changed
-    const quantityInput = document.getElementById('quantity');
-    if (quantityInput) {
+    document.querySelectorAll('#quantity,#quantity-mobile').forEach(quantityInput => {
         quantityInput.addEventListener('change', function() {
-            let currentQuantity = parseInt(this.value) || 1;
-            if (currentQuantity > availableStock) {
-                this.value = availableStock;
-                notify(`Quantity cannot exceed available stock (${availableStock})`, 'info');
-            } else if (currentQuantity < 1) {
-                this.value = 1;
-            }
+            const normalized = Math.max(1, Math.min(parseInt(this.value) || 1, Math.max(1, availableStock)));
+            document.querySelectorAll('#quantity,#quantity-mobile').forEach(el => el.value = normalized);
         });
-    }
+    });
 });
 </script>
 

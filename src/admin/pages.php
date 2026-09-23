@@ -442,7 +442,7 @@ include 'header.php';
                         <div class="card-body p-0">
                             <div class="table-responsive">
                                 <table class="table table-hover align-middle mb-0">
-                                    <thead class="bg-light">
+                                    <thead class="table-light">
                                         <tr>
                                             <th class="border-0 px-4 py-3 small fw-bold text-muted text-uppercase" style="width: 80px;">#Pos</th>
                                             <th class="border-0 py-3 small fw-bold text-muted text-uppercase" style="width: 150px;">Preview</th>
@@ -482,7 +482,7 @@ include 'header.php';
                                                             <form method="POST" action="pages.php" class="d-inline">
                                                                 <input type="hidden" name="action" value="delete_slide">
                                                                 <input type="hidden" name="slide_id" value="<?php echo $slide['id']; ?>">
-                                                                <button type="submit" class="btn btn-white btn-xs border border-light-subtle rounded-pill px-3 fw-bold shadow-xs text-danger" onclick="return confirm('Delete this slide?')">
+                                                                <button type="submit" class="btn btn-white btn-xs border border-light-subtle rounded-pill px-3 fw-bold shadow-xs text-danger" data-confirm="Delete this slide?">
                                                                     <i class="fas fa-trash-alt me-1"></i> Delete
                                                                 </button>
                                                             </form>
@@ -601,8 +601,8 @@ include 'header.php';
                                         <div class="list-group-item p-4 border-light-subtle layout-section" data-key="<?php echo $key; ?>">
                                             <div class="d-flex align-items-center gap-4">
                                                 <div class="d-flex flex-column gap-1 order-controls">
-                                                    <button type="button" class="btn btn-light btn-sm border-light-subtle shadow-xs move-up" onclick="moveSection(this, 'up')"><i class="fas fa-chevron-up x-small"></i></button>
-                                                    <button type="button" class="btn btn-light btn-sm border-light-subtle shadow-xs move-down" onclick="moveSection(this, 'down')"><i class="fas fa-chevron-down x-small"></i></button>
+                                                    <button type="button" class="btn btn-light btn-sm border-light-subtle shadow-xs move-up" onclick="moveSection(this, 'up')" aria-label="Move section up"><i class="fas fa-chevron-up x-small" aria-hidden="true"></i></button>
+                                                    <button type="button" class="btn btn-light btn-sm border-light-subtle shadow-xs move-down" onclick="moveSection(this, 'down')" aria-label="Move section down"><i class="fas fa-chevron-down x-small" aria-hidden="true"></i></button>
                                                 </div>
                                                 
                                                 <div class="flex-grow-1">
@@ -667,12 +667,12 @@ include 'header.php';
                 tab.addEventListener('shown.bs.tab', event => {
                     // Update URL hash or handle layout recalculations if necessary
                     const tabId = event.target.id;
-                    localStorage.setItem('activeAdminTab', tabId);
+                    AdminUI.storage.set('activeAdminTab', tabId);
                 });
             });
 
             // Restore active tab
-            const activeTabId = localStorage.getItem('activeAdminTab');
+            const activeTabId = AdminUI.storage.get('activeAdminTab');
             if (activeTabId) {
                 const activeTab = document.getElementById(activeTabId);
                 if (activeTab) {
@@ -736,4 +736,3 @@ include 'header.php';
 
     <!-- Include the shared footer template -->
     <?php include 'footer.php'; ?>
-

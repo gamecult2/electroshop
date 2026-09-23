@@ -107,7 +107,7 @@ $progressStep3Class = $status === 'success' ? 'active completed' : 'active error
         <div class="card border-0 shadow-sm mb-4 border-top border-4 border-success rounded-4 overflow-hidden">
             <div class="card-body p-5 text-center">
                 <div class="display-1 text-success mb-4"><i class="fas fa-check-circle"></i></div>
-                <h1 class="fw-bold text-success mb-3"><?php echo t('order_placed'); ?></h1>
+                <h1 class="app-page-title fw-bold text-success mb-3"><?php echo t('order_placed'); ?></h1>
                 <p class="lead mb-2"><?php echo t('thank_you_order'); ?></p>
                 <p class="text-muted small"><?php echo t('confirmation_email_sent'); ?> <strong><?php echo htmlspecialchars($order['customer_email'] ?? ''); ?></strong></p>
             </div>
@@ -292,7 +292,7 @@ $progressStep3Class = $status === 'success' ? 'active completed' : 'active error
         <div class="card border-0 shadow-sm mb-4 border-top border-4 border-danger rounded-4 overflow-hidden">
             <div class="card-body p-5 text-center">
                 <div class="display-1 text-danger mb-4"><i class="fas fa-exclamation-circle"></i></div>
-                <h1 class="fw-bold text-danger mb-3">Order Placement Failed</h1>
+                <h1 class="app-page-title fw-bold text-danger mb-3">Order Placement Failed</h1>
                 <p class="lead mb-0">We encountered an issue while processing your order</p>
             </div>
         </div>

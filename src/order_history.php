@@ -86,6 +86,7 @@ require_once 'includes/header.php';
 </style>
 
 <div class="container-xxl pb-4">
+    <h1 class="visually-hidden"><?php echo t('order_history'); ?></h1>
     <?php 
     $breadcrumb_items = [
         ['label' => t('home'), 'url' => 'index.php'],
@@ -407,7 +408,7 @@ require_once 'includes/header.php';
                         </a>
                     <?php endif; ?>
                     <?php if (in_array($order['status'], ['pending', 'confirmed', 'processing'])): ?>
-                        <button class="btn btn-outline-danger py-3 rounded-3 fw-bold" data-bs-toggle="modal" data-bs-target="#cancelOrderModal">
+                        <button type="button" class="btn btn-outline-danger py-3 rounded-3 fw-bold" data-bs-toggle="modal" data-bs-target="#cancelOrderModal">
                             <i class="fas fa-times-circle me-2"></i> Cancel Order
                         </button>
                     <?php endif; ?>

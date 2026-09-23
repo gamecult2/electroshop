@@ -5,17 +5,17 @@
             <!-- Chat Header -->
             <div class="modal-header bg-danger text-white border-0 py-2 px-3">
                 <div class="d-flex align-items-center gap-2 w-100">
-                    <div id="chatBackButton" class="rounded-circle bg-white bg-opacity-25 d-flex align-items-center justify-content-center cursor-pointer d-none" onclick="loadConversations()" style="width: 26px; height: 26px; font-size: 0.75rem;" title="Back to list">
-                        <i class="fas fa-chevron-left"></i>
-                    </div>
+                    <button type="button" id="chatBackButton" class="app-icon-button btn btn-sm rounded-circle bg-white bg-opacity-25 text-white d-none" onclick="loadConversations()" aria-label="Back to conversation list">
+                        <i class="fas fa-chevron-left" aria-hidden="true"></i>
+                    </button>
                     <i class="fas fa-comment-dots" id="chatHeaderIcon"></i>
                     <div class="flex-grow-1 ms-1">
                         <h6 class="mb-0 small fw-bold" id="chatModalTitle">Customer Support</h6>
                         <small class="d-block opacity-75" id="chatSubtitle" style="font-size: 0.65rem;">Online</small>
                     </div>
                     <div class="d-flex align-items-center gap-2">
-                        <button type="button" class="btn btn-sm btn-link text-white p-0 shadow-none" onclick="minimizeChat()" title="Minimize">
-                            <i class="fas fa-minus small"></i>
+                        <button type="button" class="app-icon-button btn btn-sm btn-link text-white p-0 shadow-none" onclick="minimizeChat()" aria-label="Minimize chat">
+                            <i class="fas fa-minus small" aria-hidden="true"></i>
                         </button>
                         <button type="button" class="btn-close btn-close-white shadow-none" data-bs-dismiss="modal" aria-label="Close" style="font-size: 0.6rem;"></button>
                     </div>
@@ -52,7 +52,7 @@
                             <div class="fw-bold text-truncate" id="productContextName"></div>
                             <div class="text-muted x-small" id="productContextSku"></div>
                         </div>
-                        <button class="btn btn-sm btn-link text-muted p-0 shadow-none" onclick="clearProductContext()" title="Remove">
+                        <button type="button" class="app-icon-button btn btn-sm btn-link text-muted p-0 shadow-none" onclick="clearProductContext()" aria-label="Remove product context">
                             <i class="fas fa-times small"></i>
                         </button>
                     </div>
@@ -134,8 +134,8 @@
 <!-- Floating Chat Button -->
 <?php if (is_logged_in()): ?>
 <div class="chat-float-button" id="chatFloatButton" style="position: fixed; bottom: 90px; right: 20px; z-index: 1050;">
-    <button class="btn btn-danger rounded-circle shadow-lg position-relative" style="width: 60px; height: 60px;" onclick="toggleChatModal()" title="Open Chat">
-        <i class="fas fa-comment-dots fs-4"></i>
+    <button type="button" class="btn btn-danger rounded-circle shadow-lg position-relative" style="width: 60px; height: 60px;" onclick="toggleChatModal()" aria-label="Open customer support chat">
+        <i class="fas fa-comment-dots fs-4" aria-hidden="true"></i>
         <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-warning text-dark d-none" id="chatUnreadBadge">
             0
         </span>
@@ -171,20 +171,20 @@
 }
 
 .chat-message.sent .message-bubble {
-    background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
-    color: white;
+    background: var(--app-brand);
+    color: var(--app-brand-contrast);
     border-bottom-right-radius: 0.25rem;
 }
 
 .chat-message.received .message-bubble {
-    background: white;
-    border: 1px solid #e0e0e0;
+    background: var(--app-surface);
+    border: 1px solid var(--app-border);
     border-bottom-left-radius: 0.25rem;
 }
 
 .chat-message .message-time {
     font-size: 0.7rem;
-    color: #6c757d;
+    color: var(--app-text-muted);
     margin-top: 0.25rem;
 }
 
@@ -196,13 +196,13 @@
 
 .conversation-item {
     padding: 0.75rem;
-    border-bottom: 1px solid #e0e0e0;
+    border-bottom: 1px solid var(--app-border);
     cursor: pointer;
     transition: background-color 0.2s;
 }
 
 .conversation-item:hover {
-    background-color: #f8f9fa;
+    background-color: var(--app-surface-muted);
 }
 
 .conversation-item.unread {
@@ -210,7 +210,7 @@
 }
 
 .conversation-item.active {
-    background-color: #ffe5e5;
+    background-color: color-mix(in srgb, var(--app-brand) 12%, white);
 }
 
 #chatMessageInput {
@@ -218,8 +218,9 @@
 }
 
 #chatMessageInput:focus {
-    outline: none;
-    box-shadow: none;
+    outline: 3px solid var(--app-primary);
+    outline-offset: 2px;
+    box-shadow: var(--app-focus-ring);
 }
 
 .chat-float-button .btn:hover {
@@ -345,7 +346,7 @@ function displayConversations(conversations) {
     }
     
     container.innerHTML = conversations.map(conv => `
-        <div class="conversation-item ${conv.customer_unread_count > 0 ? 'unread' : ''}" onclick="openConversation(${conv.id})">
+        <button type="button" class="conversation-item w-100 border-0 text-start ${conv.customer_unread_count > 0 ? 'unread' : ''}" onclick="openConversation(${conv.id})">
             <div class="d-flex align-items-center gap-2">
                 <div class="flex-shrink-0" style="width: 45px; height: 45px;">
                     ${conv.product_image ? 
@@ -364,7 +365,7 @@ function displayConversations(conversations) {
                     </div>
                 </div>
             </div>
-        </div>
+        </button>
     `).join('');
 }
 
@@ -549,11 +550,11 @@ async function sendMessage() {
                 loadMessages(data.conversation_id);
             }
         } else {
-            alert(data.message || 'Failed to send message');
+            showNotification(data.message || 'Failed to send message', 'error');
         }
     } catch (error) {
         console.error('Error sending message:', error);
-        alert('Failed to send message');
+        showNotification('Failed to send message', 'error');
     } finally {
         btn.disabled = false;
         btn.innerHTML = '<i class="fas fa-paper-plane"></i>';

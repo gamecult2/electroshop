@@ -186,7 +186,7 @@ if ($searchTerm || $filterParent) {
                     <?php endforeach; ?>
                 </select>
                 
-                <button type="submit" class="btn btn-danger btn-sm px-4 rounded-pill fw-bold shadow-sm">Filter</button>
+                <button type="submit" class="btn btn-primary btn-sm px-4 rounded-pill fw-bold shadow-sm">Filter</button>
                 <?php if ($searchTerm || $filterParent): ?>
                     <a href="categories.php" class="btn btn-light btn-sm rounded-pill px-4 fw-bold border text-muted">Clear</a>
                 <?php endif; ?>
@@ -198,7 +198,7 @@ if ($searchTerm || $filterParent) {
                         <h5 class="fw-bold mb-0 text-dark"><i class="fas fa-sitemap me-2 text-danger"></i> Category Hierarchy</h5>
                         <p class="text-muted x-small mb-0 mt-1">Manage your storefront hierarchy and organization.</p>
                     </div>
-                    <button onclick="openCategoryModal('create')" class="btn btn-danger btn-sm rounded-pill px-3 fw-bold shadow-sm d-inline-flex align-items-center gap-2">
+                    <button onclick="openCategoryModal('create')" class="btn btn-primary btn-sm rounded-pill px-3 fw-bold shadow-sm d-inline-flex align-items-center gap-2">
                         <i class="fas fa-plus"></i> Add Main Category
                     </button>
                 </div>
@@ -211,24 +211,24 @@ if ($searchTerm || $filterParent) {
                             </div>
                         <?php else: ?>
                             <?php foreach ($categories as $mainCat): ?>
-                                <div class="list-group-item bg-light border-light-subtle py-3 px-3 d-flex justify-content-between align-items-center main-category border-start border-4 border-danger" onclick="toggleSubcategories(this, event)" style="cursor: pointer;">
-                                    <div class="d-flex align-items-center gap-3 flex-grow-1">
+                                <div class="list-group-item bg-light border-light-subtle py-3 px-3 d-flex justify-content-between align-items-center main-category border-start border-4 border-danger" >
+                                    <button type="button" class="category-toggle d-flex align-items-center gap-3 flex-grow-1" aria-expanded="false" aria-controls="category-children-<?php echo $mainCat['id']; ?>" onclick="toggleSubcategories(this.closest('.main-category'), event)">
                                         <span class="chevron text-muted" style="transition: transform 0.2s; width: 20px; display: inline-block;">
                                             <?php if (!empty($mainCat['subcategories'])): ?>
                                                 <i class="fas fa-chevron-right"></i>
                                             <?php endif; ?>
                                         </span>
-                                        <div class="rounded-circle bg-white shadow-xs d-flex align-items-center justify-content-center border" style="width: 36px; height: 36px; color: #dc3545;">
+                                        <span class="rounded-circle bg-white shadow-xs d-flex align-items-center justify-content-center border" style="width: 36px; height: 36px; color: var(--admin-link);">
                                             <i class="<?php echo $mainCat['icon_class'] ?: 'fas fa-folder'; ?>"></i>
-                                        </div>
-                                        <div>
-                                            <div class="fw-bold text-dark small"><?php echo htmlspecialchars($mainCat['name_en']); ?></div>
-                                            <div class="text-muted x-small">/<?php echo $mainCat['slug']; ?></div>
-                                        </div>
-                                        <span class="badge bg-danger-subtle text-danger-emphasis rounded-pill px-2 py-1 small fw-bold ms-2" style="font-size: 10px;">
+                                        </span>
+                                        <span>
+                                            <span class="fw-bold text-dark small"><?php echo htmlspecialchars($mainCat['name_en']); ?></span>
+                                            <span class="text-muted x-small">/<?php echo $mainCat['slug']; ?></span>
+                                        </span>
+                                        <span class="badge bg-danger-subtle text-danger-emphasis rounded-pill px-2 py-1 small fw-bold ms-2" >
                                             <?php echo $mainCat['product_count']; ?> Products
                                         </span>
-                                    </div>
+                                    </button>
                                     <div class="d-flex gap-2">
                                         <button onclick='event.stopPropagation(); openCategoryModal("edit", <?php echo json_encode($mainCat); ?>)' 
                                                 class="btn btn-white btn-sm rounded border-light-subtle shadow-xs text-primary bg-white" title="Edit">
@@ -246,20 +246,20 @@ if ($searchTerm || $filterParent) {
                                 </div>
                                 
                                 <?php if (!empty($mainCat['subcategories'])): ?>
-                                    <div class="subcategory-group d-none bg-white">
+                                    <div id="category-children-<?php echo $mainCat['id']; ?>" class="subcategory-group d-none bg-white">
                                         <?php foreach ($mainCat['subcategories'] as $subCat): ?>
-                                            <div class="list-group-item py-2 px-4 d-flex justify-content-between align-items-center border-light-subtle" style="margin-left: 30px; border-left: 2px dashed #dee2e6;">
+                                            <div class="list-group-item py-2 px-4 d-flex justify-content-between align-items-center border-light-subtle" style="margin-left: 30px; border-left: 2px dashed var(--admin-border);">
                                                 <div class="d-flex align-items-center gap-3 flex-grow-1">
                                                     <i class="<?php echo $subCat['icon_class'] ?: 'fas fa-arrow-right text-muted opacity-50'; ?> x-small"></i>
                                                     <div>
                                                         <div class="fw-medium text-dark small"><?php echo htmlspecialchars($subCat['name_en']); ?></div>
                                                         <div class="text-muted x-small">/<?php echo $mainCat['slug']; ?>/<?php echo $subCat['slug']; ?></div>
                                                     </div>
-                                                    <span class="badge bg-light text-muted border rounded-pill px-2 py-1 small fw-bold ms-2" style="font-size: 9px;">
+                                                    <span class="badge bg-light text-muted border rounded-pill px-2 py-1 small fw-bold ms-2" >
                                                         <?php echo $categoryModel->getProductCount($subCat['id']); ?> Products
                                                     </span>
                                                 </div>
-                                                <div class="btn-group shadow-xs rounded bg-white">
+                                                <div class="admin-row-actions">
                                                     <button onclick='openCategoryModal("edit", <?php echo json_encode($subCat); ?>)' 
                                                             class="btn btn-white btn-sm border-light-subtle text-primary py-1 px-2" title="Edit">
                                                         <i class="fas fa-edit small"></i>
@@ -353,7 +353,7 @@ if ($searchTerm || $filterParent) {
                     </div>
                     <div class="modal-footer border-0 p-4 pt-0">
                         <button type="button" class="btn btn-light rounded-pill px-4 fw-bold text-muted border shadow-xs" data-bs-dismiss="modal">Cancel</button>
-                        <button type="submit" class="btn btn-danger rounded-pill px-4 fw-bold shadow-sm">Save Category</button>
+                        <button type="submit" class="btn btn-primary rounded-pill px-4 fw-bold shadow-sm">Save Category</button>
                     </div>
                 </form>
             </div>
@@ -376,6 +376,7 @@ if ($searchTerm || $filterParent) {
             const group = element.nextElementSibling;
             if (group && group.classList.contains('subcategory-group')) {
                 group.classList.toggle('d-none');
+                element.querySelector('.category-toggle').setAttribute('aria-expanded', String(!group.classList.contains('d-none')));
             }
         }
 
@@ -409,8 +410,8 @@ if ($searchTerm || $filterParent) {
             catModal.show();
         }
         
-        function deleteCategory(id) {
-            if (confirm('Are you sure you want to delete this category? This will fail if it has subcategories or products.')) {
+        async function deleteCategory(id) {
+            if (await AdminUI.confirm('Are you sure you want to delete this category? This will fail if it has subcategories or products.')) {
                 const form = document.createElement('form');
                 form.method = 'POST';
                 form.innerHTML = `
@@ -436,5 +437,4 @@ if ($searchTerm || $filterParent) {
 
     <!-- Include the shared footer template -->
     <?php include 'footer.php'; ?>
-
 

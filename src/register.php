@@ -59,7 +59,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
                 <div class="card-body p-4 p-md-5">
                     <div class="text-center mb-5">
-                        <h1 class="h3 fw-bold text-dark mb-1"><?php echo t('create_account'); ?></h1>
+                        <h1 class="app-page-title fw-bold text-dark mb-1"><?php echo t('create_account'); ?></h1>
                         <p class="text-muted small">Join us to experience the best electronics shopping!</p>
                     </div>
                     

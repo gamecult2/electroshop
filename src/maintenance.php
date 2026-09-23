@@ -42,7 +42,9 @@ if (strpos($site_title, ' ') !== false) {
     <title>Maintenance Mode - <?php echo htmlspecialchars($site_title); ?></title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="assets/css/app.css">
     <style>
+        :root { --app-primary: <?php echo htmlspecialchars(get_setting('primary_color', '#6f42c1')); ?>; --app-brand: <?php echo htmlspecialchars($secondaryColor); ?>; }
         body {
             background-color: #f8f9fa;
             height: 100vh;
@@ -62,8 +64,8 @@ if (strpos($site_title, ' ') !== false) {
         .icon-box {
             width: 80px;
             height: 80px;
-            background: #fff5f5;
-            color: #dc3545;
+            background: color-mix(in srgb, var(--app-brand) 10%, white);
+            color: var(--app-brand);
             border-radius: 50%;
             display: flex;
             align-items: center;
@@ -85,7 +87,7 @@ if (strpos($site_title, ' ') !== false) {
             <!-- Site Branding -->
             <div class="mb-4">
                 <?php if ($site_logo): ?>
-                    <img src="<?php echo htmlspecialchars($site_logo); ?>" alt="<?php echo htmlspecialchars($site_title); ?>" style="max-height: <?php echo $logo_height; ?>px;">
+                    <img src="<?php echo htmlspecialchars($site_logo); ?>" alt="<?php echo htmlspecialchars($site_title); ?>" style="max-height: <?php echo min((int)$logo_height, 80); ?>px; width: auto;">
                 <?php else: ?>
                     <div class="site-brand" style="font-size: <?php echo $logoFontSize; ?>px;">
                         <span style="color: <?php echo $primaryColor; ?>;"><?php echo htmlspecialchars($part1); ?></span><span style="color: <?php echo $secondaryColor; ?>;"><?php echo htmlspecialchars($part2); ?></span>
@@ -96,7 +98,7 @@ if (strpos($site_title, ' ') !== false) {
             <div class="icon-box">
                 <i class="fas fa-tools"></i>
             </div>
-            <h1 class="h3 fw-bold mb-3">Under Maintenance</h1>
+            <h1 class="app-page-title fw-bold mb-3">Under Maintenance</h1>
             <p class="text-muted mb-4">We're currently performing some scheduled maintenance. We'll be back online shortly!</p>
             <hr class="my-4 opacity-50">
             <p class="small text-muted mb-0">Thank you for your patience.</p>

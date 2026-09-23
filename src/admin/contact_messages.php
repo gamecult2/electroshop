@@ -1,5 +1,5 @@
 <?php
-// admin/messages.php
+// Contact inbox. Resolution is explicit; opening a message does not change its state.
 session_start();
 require_once '../includes/functions.php';
 require_once '../db_connect.php';
@@ -19,28 +19,32 @@ $messageType = '';
 //     email VARCHAR(255) NOT NULL,
 //     subject VARCHAR(255) NOT NULL,
 //     message TEXT NOT NULL,
-//     is_read TINYINT(1) DEFAULT 0,
+//     is_resolved TINYINT(1) DEFAULT 0,
 //     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 // );
 
-if (isset($_GET['action']) && isset($_GET['id'])) {
-    $messageId = (int)$_GET['id'];
-    $action = $_GET['action'];
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'], $_POST['id'])) {
+    $messageId = (int)$_POST['id'];
+    $action = $_POST['action'];
 
-    if ($action === 'mark_read') {
-        $stmt = $pdo->prepare("UPDATE contact_messages SET is_read = 1 WHERE id = ?");
+    if ($action === 'resolve') {
+        $stmt = $pdo->prepare("UPDATE contact_messages SET is_resolved = 1 WHERE id = ?");
         $stmt->execute([$messageId]);
-    } elseif ($action === 'mark_unread') {
-        $stmt = $pdo->prepare("UPDATE contact_messages SET is_read = 0 WHERE id = ?");
+    } elseif ($action === 'reopen') {
+        $stmt = $pdo->prepare("UPDATE contact_messages SET is_resolved = 0 WHERE id = ?");
         $stmt->execute([$messageId]);
     } elseif ($action === 'delete') {
         $stmt = $pdo->prepare("DELETE FROM contact_messages WHERE id = ?");
         $stmt->execute([$messageId]);
         $_SESSION['message'] = 'Message deleted.';
         $_SESSION['message_type'] = 'success';
-        header('Location: messages.php');
+        header('Location: contact_messages.php');
         exit;
     }
+    $_SESSION['message'] = $action === 'resolve' ? 'Message resolved.' : 'Message reopened.';
+    $_SESSION['message_type'] = 'success';
+    header('Location: contact_messages.php');
+    exit;
 }
 
 $stmt = $pdo->query("SELECT * FROM contact_messages ORDER BY created_at DESC");
@@ -82,13 +86,13 @@ include 'header.php';
                             </div>
                         <?php else: ?>
                             <?php foreach ($contact_messages as $msg): ?>
-                                <div class="list-group-item list-group-item-action py-3 px-4 border-light-subtle position-relative <?php echo !$msg['is_read'] ? 'bg-light-subtle' : ''; ?>" id="msg-row-<?php echo $msg['id']; ?>">
+                                <div class="list-group-item list-group-item-action py-3 px-4 border-light-subtle position-relative <?php echo !$msg['is_resolved'] ? 'bg-light-subtle' : ''; ?>" id="msg-row-<?php echo $msg['id']; ?>">
                                     <div class="d-flex justify-content-between align-items-center mb-1">
                                         <div class="d-flex align-items-center gap-2">
-                                            <?php if (!$msg['is_read']): ?>
-                                                <span class="badge bg-primary rounded-circle p-1" style="width: 8px; height: 8px;" title="Unread"></span>
+                                            <?php if (!$msg['is_resolved']): ?>
+                                                <span class="badge bg-primary">Open</span>
                                             <?php endif; ?>
-                                            <h6 class="mb-0 fw-bold <?php echo !$msg['is_read'] ? 'text-dark' : 'text-muted'; ?> small">
+                                            <h6 class="mb-0 fw-bold <?php echo !$msg['is_resolved'] ? 'text-dark' : 'text-muted'; ?> small">
                                                 <?php echo htmlspecialchars($msg['name']); ?>
                                             </h6>
                                             <span class="text-muted x-small">&lt;<?php echo htmlspecialchars($msg['email']); ?>&gt;</span>
@@ -96,19 +100,24 @@ include 'header.php';
                                         <span class="text-muted x-small fw-medium"><i class="far fa-clock me-1"></i><?php echo date('M d, H:i', strtotime($msg['created_at'])); ?></span>
                                     </div>
                                     <div class="d-flex justify-content-between align-items-start">
-                                        <div class="flex-grow-1 clickable pe-4" onclick="toggleMessage(<?php echo $msg['id']; ?>)" style="cursor: pointer;">
-                                            <div class="fw-bold <?php echo !$msg['is_read'] ? 'text-primary' : 'text-secondary'; ?> small mb-1"><?php echo htmlspecialchars($msg['subject']); ?></div>
+                                        <div class="flex-grow-1 clickable pe-4" role="button" tabindex="0" aria-expanded="false" aria-controls="collapse-<?php echo $msg['id']; ?>" onkeydown="if(event.key === 'Enter' || event.key === ' '){event.preventDefault(); this.click();}" onclick="toggleMessage(<?php echo $msg['id']; ?>)" style="cursor: pointer;">
+                                            <div class="fw-bold <?php echo !$msg['is_resolved'] ? 'text-primary' : 'text-secondary'; ?> small mb-1"><?php echo htmlspecialchars($msg['subject']); ?></div>
                                             <div class="text-muted x-small text-truncate" style="max-width: 90%;" id="preview-<?php echo $msg['id']; ?>">
                                                 <?php echo htmlspecialchars(substr($msg['message'], 0, 100)); ?>...
                                             </div>
                                         </div>
-                                        <div class="d-flex gap-2">
+                                        <div class="d-flex flex-wrap gap-2">
                                             <button class="btn btn-white btn-xs border border-light-subtle rounded-pill px-3 fw-bold shadow-xs text-primary" onclick="toggleMessage(<?php echo $msg['id']; ?>)">
                                                 <i class="fas fa-eye me-1"></i> View
                                             </button>
-                                            <a href="messages.php?action=delete&id=<?php echo $msg['id']; ?>" class="btn btn-white btn-xs border border-light-subtle rounded-pill px-3 fw-bold shadow-xs text-danger" onclick="return confirm('Delete this message?');">
-                                                <i class="fas fa-trash-alt me-1"></i> Delete
-                                            </a>
+                                            <form method="POST" class="d-inline">
+                                                <input type="hidden" name="id" value="<?= (int)$msg['id'] ?>">
+                                                <button type="submit" class="btn btn-outline-secondary btn-sm" name="action" value="<?= $msg['is_resolved'] ? 'reopen' : 'resolve' ?>"><?= $msg['is_resolved'] ? 'Reopen' : 'Resolve' ?></button>
+                                            </form>
+                                            <form method="POST" class="d-inline" data-confirm="Permanently delete this message?">
+                                                <input type="hidden" name="id" value="<?= (int)$msg['id'] ?>">
+                                                <button type="submit" class="btn btn-outline-danger btn-sm" name="action" value="delete">Delete</button>
+                                            </form>
                                         </div>
                                     </div>
                                     
@@ -135,26 +144,13 @@ include 'header.php';
 function toggleMessage(id) {
     const collapseEl = document.getElementById('collapse-' + id);
     const row = document.getElementById('msg-row-' + id);
-    const badge = row.querySelector('.badge.bg-primary.rounded-circle');
-    const header = row.querySelector('h6');
-    const preview = document.getElementById('preview-' + id);
     
-    const bsCollapse = bootstrap.Collapse.getOrCreateInstance(collapseEl);
+    const bsCollapse = bootstrap.Collapse.getOrCreateInstance(collapseEl, {toggle: false});
     bsCollapse.toggle();
+    row.querySelector('[role="button"]').setAttribute('aria-expanded', String(!collapseEl.classList.contains('show')));
 
-    if (row.classList.contains('bg-light-subtle')) {
-        // Mark as read via AJAX
-        fetch('messages.php?action=mark_read&id=' + id)
-            .then(() => {
-                row.classList.remove('bg-light-subtle');
-                if (badge) badge.remove();
-                if (header) header.classList.replace('text-dark', 'text-muted');
-            });
-    }
 }
 </script>
 
     <!-- Include the shared footer template -->
     <?php include 'footer.php'; ?>
-
-

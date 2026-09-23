@@ -111,7 +111,7 @@ include 'header.php';
                                         <label class="form-check-label fw-bold small text-dark" for="is_active_add">Active Courier</label>
                                     </div>
                                 </div>
-                                <button type="submit" name="add_courier" class="btn btn-danger w-100 py-2 fw-bold rounded-pill shadow-sm">
+                                <button type="submit" name="add_courier" class="btn btn-primary w-100 py-2 fw-bold rounded-pill shadow-sm">
                                     <i class="fas fa-plus-circle me-1"></i> Add Courier
                                 </button>
                             </form>
@@ -121,9 +121,7 @@ include 'header.php';
 
                 <div class="col-lg-8">
                     <div class="card border-0 shadow-sm overflow-hidden mb-4">
-                        <div class="card-header bg-white py-3 border-0">
-                            <h2 class="h5 fw-bold mb-0 text-dark"><i class="fas fa-shipping-fast me-2 text-danger"></i> Courier List <span class="badge bg-light text-muted border ms-2 small fw-normal"><?php echo count($couriers); ?> Total</span></h2>
-                        </div>
+                        <?php admin_card_header('Couriers', 'fas fa-truck', count($couriers)); ?>
                         <div class="table-responsive">
                             <table class="table table-hover align-middle mb-0 text-center">
                                 <thead class="table-light">
@@ -136,23 +134,21 @@ include 'header.php';
                                 </thead>
                                 <tbody>
                                     <?php if (empty($couriers)): ?>
-                                        <tr><td colspan="4" class="text-center py-5 text-muted"><i class="fas fa-truck fa-3x opacity-25 mb-3"></i><br>No couriers found.</td></tr>
+                                        <?php admin_empty_row(4, 'No couriers found.', 'fas fa-truck'); ?>
                                     <?php else: ?>
                                         <?php foreach ($couriers as $courier): ?>
                                             <tr>
                                                 <td class="px-3 fw-bold text-dark"><?php echo htmlspecialchars($courier['name']); ?></td>
                                                 <td><code class="x-small text-muted"><?php echo htmlspecialchars($courier['tracking_url'] ?: 'N/A'); ?></code></td>
                                                 <td>
-                                                    <span class="badge rounded-pill px-3 py-2 fw-bold <?php echo $courier['is_active'] ? 'bg-success-subtle text-success-emphasis' : 'bg-secondary-subtle text-secondary-emphasis'; ?>" style="font-size: 10px;">
-                                                        <?php echo $courier['is_active'] ? 'ACTIVE' : 'INACTIVE'; ?>
-                                                    </span>
+                                                    <?php admin_status_badge((bool)$courier['is_active']); ?>
                                                 </td>
                                                 <td>
-                                                    <div class="btn-group shadow-sm rounded">
+                                                    <div class="admin-row-actions">
                                                         <button onclick='openCourierEditModal(<?php echo json_encode($courier); ?>)' class="btn btn-white btn-sm border-light-subtle text-primary bg-white" title="Edit">
                                                             <i class="fas fa-edit"></i>
                                                         </button>
-                                                        <a href="couriers.php?action=delete&id=<?php echo $courier['id']; ?>" class="btn btn-white btn-sm border-light-subtle text-danger bg-white" title="Delete" onclick="return confirm('Are you sure you want to delete this courier?');">
+                                                        <a href="couriers.php?action=delete&id=<?php echo $courier['id']; ?>" class="btn btn-white btn-sm border-light-subtle text-danger bg-white" title="Delete" data-confirm="Are you sure you want to delete this courier?">
                                                             <i class="fas fa-trash"></i>
                                                         </a>
                                                     </div>
@@ -199,10 +195,7 @@ include 'header.php';
                             </div>
                         </div>
                     </div>
-                    <div class="modal-footer border-0 p-4 pt-0">
-                        <button type="button" class="btn btn-light rounded-pill px-4 fw-bold text-muted border shadow-xs" data-bs-dismiss="modal">Cancel</button>
-                        <button type="submit" class="btn btn-danger rounded-pill px-4 fw-bold shadow-sm">Save Changes</button>
-                    </div>
+                    <?php admin_modal_footer('Save Changes'); ?>
                 </form>
             </div>
         </div>

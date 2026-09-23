@@ -1,4 +1,8 @@
 <?php
+// CLI-only maintenance utility; never execute through the admin web interface.
+if (PHP_SAPI !== 'cli') { http_response_code(404); exit; }
+chdir(__DIR__);
+
 require_once '../db_connect.php';
 
 $tables = ['users', 'admin_users', 'user_addresses', 'shopping_cart', 'orders', 'reviews', 'wishlists', 'search_history', 'user_notifications', 'order_status_history'];

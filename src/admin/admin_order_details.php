@@ -144,16 +144,7 @@ function format_address_detailed($json) {
 }
 ?>
 
-<style>
-    .ls-1 { letter-spacing: 0.5px; }
-    .x-small { font-size: 0.75rem; }
-    .timeline { position: relative; padding-left: 1.5rem; }
-    .timeline::before { content: ''; position: absolute; left: 0.25rem; top: 0; bottom: 0; width: 2px; background: #f1f3f5; }
-    .timeline-item { position: relative; margin-bottom: 1.5rem; }
-    .timeline-marker { position: absolute; left: -1.5rem; width: 12px; height: 12px; border-radius: 50%; background: #adb5bd; border: 2px solid #fff; z-index: 1; }
-    .timeline-marker.active { background: #dc3545; box-shadow: 0 0 0 3px rgba(220, 53, 69, 0.2); }
-    .card-title-icon { width: 32px; height: 32px; display: inline-flex; align-items: center; justify-content: center; border-radius: 8px; margin-right: 10px; flex-shrink: 0; }
-</style>
+
 
 <div class="d-flex align-items-center justify-content-between mb-4">
     <div>
@@ -177,7 +168,7 @@ function format_address_detailed($json) {
                 <li><a class="dropdown-item py-2" href="#"><i class="fas fa-box me-2 text-muted"></i> Packing Slip</a></li>
             </ul>
         </div>
-        <button class="btn btn-danger btn-sm rounded-pill px-3 fw-bold shadow-sm" onclick="openCustomerChat(<?php echo $order['customer_id']; ?>, '<?php echo addslashes(($order['user_first_name'] ?? '') . ' ' . ($order['user_last_name'] ?? '')); ?>')">
+        <button type="button" class="btn btn-primary btn-sm" <?php if (empty($order['customer_id'])) echo 'disabled'; ?> onclick='openCustomerChat(<?= (int)($order["customer_id"] ?? 0) ?>, <?= admin_escape(json_encode(($order["user_first_name"] ?? "") . " " . ($order["user_last_name"] ?? ""))) ?>)'>
             <i class="fas fa-comments me-1"></i> Message Customer
         </button>
         <a href="orders.php" class="btn btn-light btn-sm text-secondary rounded-pill px-3 fw-bold border shadow-xs">
@@ -290,7 +281,7 @@ function format_address_detailed($json) {
             <div class="card-body p-0">
                 <div class="table-responsive">
                     <table class="table table-hover align-middle mb-0">
-                        <thead class="bg-light">
+                        <thead class="table-light">
                             <tr>
                                 <th class="border-0 small fw-bold px-4 py-3 text-uppercase ls-1">Product</th>
                                 <th class="border-0 small fw-bold text-center py-3 text-uppercase ls-1">Qty</th>
@@ -484,7 +475,7 @@ function format_address_detailed($json) {
                                     <option value="<?php echo $s; ?>" <?php echo $order['status'] === $s ? 'selected' : ''; ?>><?php echo strtoupper($s); ?></option>
                                 <?php endforeach; ?>
                             </select>
-                            <button type="submit" class="btn btn-danger px-3"><i class="fas fa-save"></i></button>
+                            <button type="submit" class="btn btn-primary px-3" aria-label="Save tracking information"><i class="fas fa-save" aria-hidden="true"></i></button>
                         </div>
                     </div>
                     <div class="mb-0">
@@ -532,7 +523,7 @@ function format_address_detailed($json) {
                                 <option value="<?php echo $ps; ?>" <?php echo $order['payment_status'] === $ps ? 'selected' : ''; ?>><?php echo strtoupper($ps); ?></option>
                             <?php endforeach; ?>
                         </select>
-                        <button type="submit" class="btn btn-primary px-3"><i class="fas fa-check"></i></button>
+                        <button type="submit" class="btn btn-primary px-3" aria-label="Confirm update"><i class="fas fa-check" aria-hidden="true"></i></button>
                     </div>
                 </form>
                 
@@ -584,18 +575,22 @@ function format_address_detailed($json) {
                 <h6 class="mb-0 fw-bold text-dark">Customer Insight</h6>
             </div>
             <div class="card-body p-4 text-center">
-                <div class="bg-danger text-white rounded-circle d-flex align-items-center justify-content-center fw-bold fs-3 mx-auto mb-3 shadow-sm flex-shrink-0" style="width: 60px; height: 60px; border: 4px solid #fff; box-shadow: 0 0 0 1px #eee;">
+                <div class="bg-danger text-white rounded-circle d-flex align-items-center justify-content-center fw-bold fs-3 mx-auto mb-3 shadow-sm flex-shrink-0" style="width: 60px; height: 60px; border: 4px solid var(--admin-surface); box-shadow: 0 0 0 1px var(--admin-border);">
                     <?php echo strtoupper(substr(($order['user_first_name'] ?? 'G'), 0, 1)); ?>
                 </div>
                 <div class="fw-bold text-dark fs-5 mb-1"><?php echo htmlspecialchars(($order['user_first_name'] ?? '') . ' ' . ($order['user_last_name'] ?? '')); ?></div>
                 <div class="text-muted small mb-4"><?php echo htmlspecialchars($order['user_email'] ?? ''); ?></div>
                 <div class="row g-2">
-                    <div class="col-6"><a href="edit_customer.php?id=<?php echo $order['customer_id']; ?>" class="btn btn-light btn-sm border w-100 fw-bold rounded-pill shadow-xs" <?php if(empty($order['customer_id'])) echo 'onclick="return false;" style="pointer-events: none; opacity: 0.5;"'; ?>>Profile</a></div>
-                    <div class="col-6"><a href="orders.php?customer_id=<?php echo $order['customer_id']; ?>" class="btn btn-light btn-sm border w-100 fw-bold rounded-pill shadow-xs" <?php if(empty($order['customer_id'])) echo 'onclick="return false;" style="pointer-events: none; opacity: 0.5;"'; ?>>Orders</a></div>
+                    <?php if (!empty($order['customer_id'])): ?>
+                    <div class="col-6"><a href="customer_details.php?id=<?php echo (int)$order['customer_id']; ?>" class="btn btn-outline-secondary w-100">Profile</a></div>
+                    <div class="col-6"><a href="orders.php?customer_id=<?php echo (int)$order['customer_id']; ?>" class="btn btn-outline-secondary w-100">Orders</a></div>
+                    <?php else: ?>
+                    <p class="text-muted admin-meta mb-0">Guest checkout — no customer account is linked.</p>
+                    <?php endif; ?>
                 </div>
                 <div class="mt-3">
                     <button class="btn btn-outline-primary btn-sm w-100 rounded-pill shadow-xs"
-                            onclick="openCustomerChat(<?php echo $order['customer_id']; ?>, '<?php echo addslashes(($order['user_first_name'] ?? '') . ' ' . ($order['user_last_name'] ?? '')); ?>')"
+                            onclick='openCustomerChat(<?= (int)($order["customer_id"] ?? 0) ?>, <?= admin_escape(json_encode(($order["user_first_name"] ?? "") . " " . ($order["user_last_name"] ?? ""))) ?>)'
                             <?php if(empty($order['customer_id'])) echo 'disabled'; ?>>
                         <i class="fas fa-comments me-1"></i> Message Customer
                     </button>
@@ -622,7 +617,7 @@ function format_address_detailed($json) {
                                 <div class="timeline-marker <?php echo $index === 0 ? 'active' : ''; ?>"></div>
                                 <div class="d-flex justify-content-between align-items-start mb-1">
                                     <div class="fw-bold text-dark text-uppercase x-small ls-1"><?php echo htmlspecialchars($h['status']); ?></div>
-                                    <div class="text-muted" style="font-size: 10px;"><?php echo date('M d, H:i', strtotime($h['created_at'])); ?></div>
+                                    <div class="text-muted" ><?php echo date('M d, H:i', strtotime($h['created_at'])); ?></div>
                                 </div>
                                 <div class="text-muted x-small mb-2">By: <strong><?php echo htmlspecialchars(($h['first_name'] ?? 'System') . ' ' . ($h['last_name'] ?? '')); ?></strong></div>
                                 <?php if ($h['note']): ?>
@@ -694,7 +689,7 @@ The Customer Service Team</textarea>
                 </div>
                 <div class="modal-footer border-0 pt-0 px-4 pb-4">
                     <button type="button" class="btn btn-light rounded-pill px-4 fw-bold" data-bs-dismiss="modal">Cancel</button>
-                    <button type="submit" class="btn btn-danger rounded-pill px-4 fw-bold shadow-sm">Send Email</button>
+                    <button type="submit" class="btn btn-primary rounded-pill px-4 fw-bold shadow-sm">Send Email</button>
                 </div>
             </form>
         </div>

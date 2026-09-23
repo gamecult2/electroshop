@@ -5,13 +5,64 @@ global $lang;
 require_once __DIR__ . '/../models/Cart.php';
 $headerCart = new Cart();
 $cartCount = $headerCart->getItemCount();
+$compareCount = count($_SESSION['product_comparison'] ?? []);
+
+if (!function_exists('app_safe_color')) {
+    function app_safe_color($value, $fallback) {
+        return preg_match('/^#[0-9a-f]{6}$/i', (string)$value) ? $value : $fallback;
+    }
+}
+$appPrimary = app_safe_color(get_setting('primary_color', '#6f42c1'), '#6f42c1');
+$appSecondary = app_safe_color(get_setting('secondary_color', '#007bff'), '#007bff');
+$appAccent = app_safe_color(get_setting('accent_color', '#28a745'), '#28a745');
+$appBrand = app_safe_color(get_setting('logo_secondary_color', '#dc3545'), '#dc3545');
+
+if (!function_exists('app_contrast_color')) {
+    function app_contrast_color($hex) {
+        $hex = ltrim((string)$hex, '#');
+        if (!preg_match('/^[0-9a-f]{6}$/i', $hex)) return '#ffffff';
+        $channels = [hexdec(substr($hex, 0, 2)), hexdec(substr($hex, 2, 2)), hexdec(substr($hex, 4, 2))];
+        $luminance = 0;
+        foreach ($channels as $index => $channel) {
+            $value = $channel / 255;
+            $value = $value <= .04045 ? $value / 12.92 : (($value + .055) / 1.055) ** 2.4;
+            $luminance += $value * [0.2126, 0.7152, 0.0722][$index];
+        }
+        return $luminance > .179 ? '#111111' : '#ffffff';
+    }
+}
+if (!function_exists('app_label')) {
+    function app_label($key, $fallback) {
+        $value = t($key);
+        return $value === $key ? $fallback : $value;
+    }
+}
+
+$pageTitles = [
+    'index.php' => get_setting('site_tagline', 'Home'),
+    'products.php' => t('products'), 'search.php' => app_label('search', 'Search'), 'product.php' => app_label('product', 'Product'),
+    'cart.php' => t('cart'), 'checkout.php' => t('checkout'), 'wishlist.php' => t('wishlist'),
+    'compare.php' => app_label('product_comparison', 'Product comparison'), 'account.php' => t('my_account'),
+    'order_history.php' => t('order_history'), 'order_tracking.php' => t('track_order'),
+    'login.php' => t('sign_in'), 'register.php' => t('create_account'),
+    'forgot_password.php' => t('forgot_password'), 'reset_password.php' => app_label('reset_password', 'Reset password'),
+    'contact.php' => t('contact_us'), 'about.php' => t('about_us'),
+    'faq.php' => app_label('frequently_asked_questions', 'Frequently asked questions'), 'page.php' => app_label('information', 'Information'),
+    'order_status.php' => app_label('order_status', 'Order status'), 'privacy.php' => app_label('privacy_policy', 'Privacy policy'),
+    'returns.php' => app_label('returns', 'Returns'), 'shipping.php' => app_label('shipping', 'Shipping'),
+    'support.php' => app_label('support', 'Support'), 'terms.php' => app_label('terms_and_conditions', 'Terms and conditions'),
+    '404.php' => app_label('page_not_found', 'Page not found'),
+];
+$currentPage = basename($_SERVER['PHP_SELF'] ?? 'index.php');
+$documentTitle = trim(($page_title ?? ($pageTitles[$currentPage] ?? '')) . ' | ' . get_setting('site_title', SITE_TITLE), ' |');
 ?>
 <!DOCTYPE html>
 <html lang="<?php echo $lang; ?>">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title><?php echo get_setting('site_title', SITE_TITLE); ?></title>
+    <title><?php echo htmlspecialchars($documentTitle); ?></title>
+    <meta name="description" content="<?php echo htmlspecialchars(get_setting('meta_description', 'Shop electronics, components, and accessories with secure checkout and reliable delivery.')); ?>">
     <!-- Bootstrap 5 -->
     <?php 
     $bsTheme = get_setting('bootstrap_theme', 'online');
@@ -22,9 +73,16 @@ $cartCount = $headerCart->getItemCount();
     <?php endif; ?>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css">
+    <link rel="stylesheet" href="assets/css/app.css">
     <style>
         :root {
             --header-height: 100px;
+            --app-primary: <?php echo htmlspecialchars($appPrimary); ?>;
+            --app-secondary: <?php echo htmlspecialchars($appSecondary); ?>;
+            --app-accent: <?php echo htmlspecialchars($appAccent); ?>;
+            --app-brand: <?php echo htmlspecialchars($appBrand); ?>;
+            --app-primary-contrast: <?php echo app_contrast_color($appPrimary); ?>;
+            --app-brand-contrast: <?php echo app_contrast_color($appBrand); ?>;
         }
         @media (min-width: 768px) {
             :root {
@@ -38,6 +96,7 @@ $cartCount = $headerCart->getItemCount();
     </script>
 </head>
 <body class="bg-light">
+<a class="skip-link" href="#main-content">Skip to main content</a>
 <header class="bg-white shadow-sm sticky-top" style="z-index: 1030;">
     <!-- Top Bar -->
     <div class="bg-dark text-white py-1 d-none d-md-block" style="font-size: 0.7rem;">
@@ -59,7 +118,7 @@ $cartCount = $headerCart->getItemCount();
             <div class="row align-items-center g-2 justify-content-between">
                 <!-- Mobile Menu Toggle -->
                 <div class="col-auto d-lg-none">
-                    <button class="btn btn-outline-dark border-0" type="button" data-bs-toggle="offcanvas" data-bs-target="#mobileMenu">
+                    <button class="btn btn-outline-dark border-0" type="button" data-bs-toggle="offcanvas" data-bs-target="#mobileMenu" aria-controls="mobileMenu" aria-label="Open navigation menu">
                         <i class="fas fa-bars fs-4"></i>
                     </button>
                 </div>
@@ -67,7 +126,7 @@ $cartCount = $headerCart->getItemCount();
                 <!-- Desktop Categories Dropdown -->
                 <div class="col-auto d-none d-lg-block">
                     <div class="dropdown">
-                        <button class="btn btn-outline-dark border-0 py-1 px-2 d-flex align-items-center justify-content-center" type="button" id="categoryDropdown" data-bs-toggle="dropdown" aria-expanded="false" title="<?php echo t('categories'); ?>">
+                        <button class="btn btn-outline-dark border-0 py-1 px-2 d-flex align-items-center justify-content-center" type="button" id="categoryDropdown" data-bs-toggle="dropdown" aria-expanded="false" aria-label="<?php echo t('categories'); ?>">
                             <i class="fas fa-bars"></i>
                         </button>
                         <ul class="dropdown-menu shadow border-0 py-0" aria-labelledby="categoryDropdown" style="min-width: 250px;">
@@ -89,7 +148,7 @@ $cartCount = $headerCart->getItemCount();
                                     <a href="products.php?category=<?php echo $mainCat['id']; ?>" class="dropdown-item py-3 d-flex align-items-center justify-content-between <?php echo !empty($mainCat['subcategories']) ? 'dropdown-toggle' : ''; ?>" <?php echo !empty($mainCat['subcategories']) ? 'data-bs-toggle="dropdown" data-bs-auto-close="outside"' : ''; ?>>
                                         <div class="d-flex align-items-center gap-3">
                                             <i class="<?php echo $iconClass; ?> text-secondary opacity-75" style="width: 20px;"></i>
-                                            <span><?php echo htmlspecialchars($mainCat['name_en']); ?></span>
+                                            <span><?php echo htmlspecialchars(localized_field($mainCat, 'name')); ?></span>
                                         </div>
                                     </a>
                                     
@@ -98,7 +157,7 @@ $cartCount = $headerCart->getItemCount();
                                         <div class="container-fluid">
                                             <div class="row">
                                                 <div class="col-12 mb-3 border-bottom pb-2">
-                                                    <h5 class="fw-bold mb-0 text-danger"><?php echo htmlspecialchars($mainCat['name_en']); ?></h5>
+                                                    <h5 class="fw-bold mb-0 text-danger"><?php echo htmlspecialchars(localized_field($mainCat, 'name')); ?></h5>
                                                     <small class="text-muted"><?php echo $mainCat['product_count']; ?> products</small>
                                                 </div>
                                                 <div class="row">
@@ -107,7 +166,7 @@ $cartCount = $headerCart->getItemCount();
                                                         <?php foreach ($chunk as $subcat): ?>
                                                             <a href="products.php?category=<?php echo $subcat['id']; ?>" class="dropdown-item rounded py-2 d-flex align-items-center gap-2">
                                                                 <i class="<?php echo $subcat['icon_class'] ?: 'fas fa-angle-right'; ?> small opacity-50"></i>
-                                                                <span><?php echo htmlspecialchars($subcat['name_en']); ?></span>
+                                                                <span><?php echo htmlspecialchars(localized_field($subcat, 'name')); ?></span>
                                                                 <?php if (isset($subcat['product_count'])): ?>
                                                                     <span class="badge bg-light text-dark ms-auto border small fw-normal"><?php echo $subcat['product_count']; ?></span>
                                                                 <?php endif; ?>
@@ -134,7 +193,7 @@ $cartCount = $headerCart->getItemCount();
                         $logoHeight = get_setting('site_logo_height', '40');
                         $siteTitle = get_setting('site_title', 'GameCult');
                         if ($siteLogo): ?>
-                            <img src="<?php echo htmlspecialchars($siteLogo); ?>" alt="<?php echo htmlspecialchars($siteTitle); ?>" style="max-height: <?php echo $logoHeight; ?>px;">
+                            <img src="<?php echo htmlspecialchars($siteLogo); ?>" alt="<?php echo htmlspecialchars($siteTitle); ?>" style="max-height: <?php echo min((int)$logoHeight, 64); ?>px; width: auto;">
                         <?php else: 
                             $primaryColor = get_setting('logo_primary_color', '#6c757d');
                             $secondaryColor = get_setting('logo_secondary_color', '#dc3545');
@@ -168,10 +227,11 @@ $cartCount = $headerCart->getItemCount();
                 </div>
 
                 <!-- Search Bar -->
-                <div class="col-12 col-lg-5 order-last order-lg-0 mt-2 mt-lg-0">
-                    <form action="search.php" method="GET" class="input-group">
-                        <input type="text" name="q" class="form-control border-danger border-2 py-1 px-3" placeholder="<?php echo t('search_products'); ?>" value="<?php echo isset($_GET['q']) ? htmlspecialchars($_GET['q']) : ''; ?>">
-                        <button class="btn btn-danger py-1 px-4" type="submit">
+                <div class="col-12 col-lg-5 order-last order-lg-0 mt-2 mt-lg-0 search-bar">
+                    <form action="search.php" method="GET" class="input-group" role="search">
+                        <label class="visually-hidden" for="site-search"><?php echo t('search_products'); ?></label>
+                        <input type="search" id="site-search" name="q" class="form-control border-danger border-2 py-1 px-3" placeholder="<?php echo t('search_products'); ?>" value="<?php echo isset($_GET['q']) ? htmlspecialchars($_GET['q']) : ''; ?>" autocomplete="off" role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="site-search-results">
+                        <button class="btn btn-danger py-1 px-4" type="submit" aria-label="Search">
                             <i class="fas fa-search"></i>
                         </button>
                     </form>
@@ -181,15 +241,23 @@ $cartCount = $headerCart->getItemCount();
                 <div class="col-auto">
                     <div class="d-flex align-items-center gap-1 gap-md-3">
 
-                        <a href="wishlist.php" class="action-btn btn btn-light border-0 bg-transparent text-secondary d-flex flex-column align-items-center p-1" style="font-size: 0.7rem;">
+                        <a href="wishlist.php" class="action-btn app-icon-button btn btn-light border-0 bg-transparent text-secondary d-flex flex-column align-items-center p-1" aria-label="<?php echo t('wishlist'); ?>" style="font-size: 0.75rem;">
                             <div class="position-relative">
                                 <i class="fas fa-heart mb-1" style="font-size: 0.9rem;"></i>
                                 <span class="badge rounded-pill bg-danger position-absolute top-0 start-100 translate-middle" style="font-size: 0.6rem; margin-top: -2px; margin-left: -2px; display: none;">0</span>
                             </div>
                             <span class="d-none d-xl-inline"><?php echo t('wishlist'); ?></span>
                         </a>
+
+                        <a href="compare.php" class="action-btn app-icon-button btn btn-light border-0 bg-transparent text-secondary d-none d-sm-flex flex-column align-items-center p-1" aria-label="<?php echo app_label('product_comparison', 'Compare products'); ?>" style="font-size: 0.75rem;">
+                            <div class="position-relative">
+                                <i class="fas fa-balance-scale mb-1" style="font-size: 0.9rem;" aria-hidden="true"></i>
+                                <span class="badge rounded-pill bg-danger position-absolute top-0 start-100 translate-middle" style="<?php echo $compareCount > 0 ? 'display: flex;' : 'display: none;'; ?>"><?php echo $compareCount; ?></span>
+                            </div>
+                            <span class="d-none d-xl-inline"><?php echo app_label('compare', 'Compare'); ?></span>
+                        </a>
                         
-                        <a href="cart.php" class="action-btn btn btn-light border-0 bg-transparent text-secondary d-flex flex-column align-items-center p-1" style="font-size: 0.7rem;">
+                        <a href="cart.php" class="action-btn app-icon-button btn btn-light border-0 bg-transparent text-secondary d-flex flex-column align-items-center p-1" aria-label="<?php echo t('cart'); ?>" style="font-size: 0.75rem;">
                             <div class="position-relative">
                                 <i class="fas fa-shopping-cart mb-1" style="font-size: 0.9rem;"></i>
                                 <span class="badge rounded-pill bg-danger position-absolute top-0 start-100 translate-middle" style="font-size: 0.6rem; margin-top: -2px; margin-left: -2px; <?php echo ($cartCount > 0) ? '' : 'display: none;'; ?>"><?php echo $cartCount ?? 0; ?></span>
@@ -203,7 +271,7 @@ $cartCount = $headerCart->getItemCount();
                             $headerUser = $headerCustomerModel->getById(get_current_user_id());
                         ?>
                             <div class="dropdown ms-2">
-                                <button class="btn btn-light border-0 bg-transparent d-flex flex-column align-items-center p-1" type="button" data-bs-toggle="dropdown" style="font-size: 0.7rem;">
+                                <button class="app-icon-button btn btn-light border-0 bg-transparent d-flex flex-column align-items-center p-1" type="button" data-bs-toggle="dropdown" aria-label="Open account menu" style="font-size: 0.75rem;">
                                     <i class="fas fa-user mb-1" style="font-size: 0.9rem;"></i>
                                     <span class="d-none d-xl-inline dropdown-toggle"><?php echo t('my_account'); ?></span>
                                 </button>
@@ -227,7 +295,7 @@ $cartCount = $headerCart->getItemCount();
                                 </div>
                             </div>
                         <?php else: ?>
-                            <a href="login.php" class="btn btn-light border-0 bg-transparent text-secondary d-flex flex-column align-items-center p-1" title="<?php echo t('sign_in'); ?>" style="font-size: 0.7rem;">
+                            <a href="login.php" class="app-icon-button btn btn-light border-0 bg-transparent text-secondary d-flex flex-column align-items-center p-1" aria-label="<?php echo t('sign_in'); ?>" style="font-size: 0.75rem;">
                                 <i class="fas fa-sign-in-alt mb-1" style="font-size: 0.9rem;"></i>
                                 <span class="d-none d-xl-inline"><?php echo t('sign_in'); ?></span>
                             </a>
@@ -253,16 +321,20 @@ $cartCount = $headerCart->getItemCount();
         <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
     </div>
     <div class="offcanvas-body p-0">
-        <!-- Will be populated if needed, or stick to categories for now -->
         <div class="list-group list-group-flush">
+            <a href="index.php" class="list-group-item list-group-item-action py-3"><i class="fas fa-home text-secondary me-3" aria-hidden="true"></i><?php echo t('home'); ?></a>
+            <a href="products.php" class="list-group-item list-group-item-action py-3"><i class="fas fa-store text-secondary me-3" aria-hidden="true"></i><?php echo t('products'); ?></a>
+            <a href="compare.php" class="list-group-item list-group-item-action py-3"><i class="fas fa-balance-scale text-secondary me-3" aria-hidden="true"></i><?php echo app_label('product_comparison', 'Compare products'); ?><span class="badge rounded-pill bg-danger ms-2" style="<?php echo $compareCount > 0 ? 'display: inline-flex;' : 'display: none;'; ?>"><?php echo $compareCount; ?></span></a>
             <?php foreach ($headerCategories as $mainCat): ?>
                 <a href="products.php?category=<?php echo $mainCat['id']; ?>" class="list-group-item list-group-item-action py-3 d-flex align-items-center gap-3">
                     <i class="<?php echo isset($categoryIcons[$mainCat['id']]) ? $categoryIcons[$mainCat['id']] : 'fas fa-folder'; ?> text-secondary" style="width: 24px;"></i>
-                    <?php echo htmlspecialchars($mainCat['name_en']); ?>
+                    <?php echo htmlspecialchars(localized_field($mainCat, 'name')); ?>
                 </a>
             <?php endforeach; ?>
+            <a href="account.php" class="list-group-item list-group-item-action py-3"><i class="fas fa-user text-secondary me-3" aria-hidden="true"></i><?php echo t('my_account'); ?></a>
+            <a href="contact.php" class="list-group-item list-group-item-action py-3"><i class="fas fa-headset text-secondary me-3" aria-hidden="true"></i><?php echo t('contact_us'); ?></a>
         </div>
     </div>
 </div>
 
-<main class="pt-3 pb-4">
+<main id="main-content" class="pt-3 pb-4">

@@ -20,7 +20,7 @@ if (!$input || !isset($input['item_id']) || !isset($input['quantity'])) {
 }
 
 $itemId = (int)$input['item_id'];
-$quantity = (int)$input['quantity'];
+$quantity = $input['quantity'];
 
 $cart = new Cart();
 

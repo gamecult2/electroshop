@@ -1,6 +1,7 @@
 <?php
 // models/Product.php
 require_once __DIR__ . '/../db_connect.php';
+require_once __DIR__ . '/../helpers/CatalogRules.php';
 
 class Product {
     private $pdo;
@@ -255,18 +256,25 @@ class Product {
         return $stmt->fetchColumn();
     }
     
-    public function create($data) {
+    public function create($data, $attempt = 0) {
+        $originalData=$data;
         try {
             $this->pdo->beginTransaction();
+            $data = $this->validateProduct($data);
+            if (empty($data['sku'])) {
+                $category=$this->pdo->prepare('SELECT parent_id FROM categories WHERE id=?');
+                $category->execute([$data['category_id']]); $parent=$category->fetchColumn();
+                $data['sku']=$this->skuGenerator->generateSKU($parent ?: $data['category_id'], $parent ? $data['category_id'] : null);
+            }
 
             $sql = "INSERT INTO products (
-                        name_en, description_en,
+                        name_en, name_fr, description_en,
                         technical_specs_en, short_description_en,
                         category_id, brand_id, price, discount_percentage,
                         stock_quantity, sku, weight, dimensions,
                         is_active, is_featured, is_new_arrival, is_best_seller, video_url
                     ) VALUES (
-                        ?, ?,
+                        ?, ?, ?,
                         ?, ?,
                         ?, ?, ?, ?,
                         ?, ?, ?, ?,
@@ -276,6 +284,7 @@ class Product {
             $stmt = $this->pdo->prepare($sql);
             $result = $stmt->execute([
                 $data['name_en'],
+                $data['name_fr'] ?? $data['name_en'],
                 $data['description_en'],
                 json_encode($data['technical_specs_en'] ?? []),
                 $data['short_description_en'] ?? '',
@@ -287,6 +296,7 @@ class Product {
             ]);
 
             $productId = $this->pdo->lastInsertId();
+            $this->skuGenerator->claim($data['sku'], 'product', $productId);
 
             // Handle product images if provided
             if (!empty($data['images'])) {
@@ -295,20 +305,33 @@ class Product {
 
             // Handle product variants if provided
             if (!empty($data['variants'])) {
-                $this->addProductVariants($productId, $data['variants']);
+                $this->updateProductVariants($productId, $data['variants']);
             }
 
             $this->pdo->commit();
             return $productId;
         } catch (Exception $e) {
-            $this->pdo->rollback();
+            if ($this->pdo->inTransaction()) $this->pdo->rollback();
+            if (CatalogRules::retryable($e) && $attempt<2) return $this->create($originalData,$attempt+1);
             throw $e;
         }
     }
     
-    public function update($id, $data) {
+    public function update($id, $data, $attempt = 0) {
+        $originalData=$data;
         try {
             $this->pdo->beginTransaction();
+            $lock=$this->pdo->prepare('SELECT * FROM products WHERE id=? FOR UPDATE');
+            $lock->execute([$id]); $existing=$lock->fetch();
+            if (!$existing) throw new InvalidArgumentException('Product not found.');
+            if (!array_key_exists('technical_specs_en',$data)) $existing['technical_specs_en']=json_decode($existing['technical_specs_en'] ?? '{}',true) ?: [];
+            $data=$this->validateProduct(array_replace($existing,$data));
+            if (empty($data['sku'])) {
+                $category=$this->pdo->prepare('SELECT parent_id FROM categories WHERE id=?');
+                $category->execute([$data['category_id']]); $parent=$category->fetchColumn();
+                $data['sku']=$this->skuGenerator->generateSKU($parent ?: $data['category_id'], $parent ? $data['category_id'] : null);
+            }
+            $this->skuGenerator->claim($data['sku'],'product',$id);
 
             $sql = "UPDATE products SET
                         name_en = ?, description_en = ?,
@@ -347,11 +370,13 @@ class Product {
             if (isset($data['variants'])) {
                 $this->updateProductVariants($id, $data['variants']);
             }
+            CatalogRules::syncStock($this->pdo,$id);
 
             $this->pdo->commit();
             return $result;
         } catch (Exception $e) {
-            $this->pdo->rollback();
+            if ($this->pdo->inTransaction()) $this->pdo->rollback();
+            if (CatalogRules::retryable($e) && $attempt<2) return $this->update($id,$originalData,$attempt+1);
             throw $e;
         }
     }
@@ -359,6 +384,9 @@ class Product {
     public function delete($id) {
         try {
             $this->pdo->beginTransaction();
+            $references=$this->pdo->prepare('SELECT (SELECT COUNT(*) FROM product_variants WHERE product_id=?) + (SELECT COUNT(*) FROM order_items WHERE product_id=?)');
+            $references->execute([$id,$id]);
+            if ($references->fetchColumn()>0) throw new DomainException('This product has SKU or order history. Deactivate it instead of deleting it.');
             
             // 1. Get product images to delete files
             $images = $this->getProductImages($id);
@@ -439,65 +467,61 @@ class Product {
         $this->addProductImages($productId, $images);
     }
     
-    private function addProductVariants($productId, $variants) {
-        // Get Parent SKU
-        $stmt = $this->pdo->prepare("SELECT sku FROM products WHERE id = ?");
-        $stmt->execute([$productId]);
-        $parentSku = $stmt->fetchColumn();
 
-        if (!$parentSku) {
-            throw new Exception("Parent product SKU required for variant generation.");
-        }
-
-        $sqlVariant = "INSERT INTO product_variants (product_id, sku, variant_name, price, stock_quantity) VALUES (?, ?, ?, ?, ?)";
-        $stmtVariant = $this->pdo->prepare($sqlVariant);
-
-        $sqlAttribute = "INSERT INTO variant_attributes (product_variant_id, attribute_name, attribute_value) VALUES (?, ?, ?)";
-        $stmtAttribute = $this->pdo->prepare($sqlAttribute);
-        
-        $batchOffset = 0;
-        foreach ($variants as $variant) {
-            // Generate or validate SKU
-            if (!empty($variant['sku'])) {
-                $sku = strtoupper(trim($variant['sku']));
-                if (!$this->skuGenerator->validateSKU($sku)) {
-                    throw new Exception("Invalid variant SKU format: $sku");
-                }
-                if ($this->skuGenerator->skuExists($sku)) {
-                    throw new Exception("Duplicate variant SKU detected: $sku");
-                }
-            } else {
-                $sku = $this->skuGenerator->generateVariantSKU($parentSku, $batchOffset);
-                $batchOffset++;
-            }
-            
-            // Insert into product_variants
-            $stmtVariant->execute([
-                $productId,
-                $sku,
-                $variant['variant_name'] ?? '',
-                $variant['price'] ?? 0,
-                $variant['stock_quantity'] ?? 0
-            ]);
-            $variantId = $this->pdo->lastInsertId();
-
-            // Insert attributes
-            if (!empty($variant['attributes'])) {
-                foreach ($variant['attributes'] as $name => $value) {
-                    $stmtAttribute->execute([$variantId, $name, $value]);
-                }
-            }
-        }
+    private function validateProduct(array $data) {
+        if (trim($data['name_en'] ?? '') === '' || empty($data['category_id'])) throw new InvalidArgumentException('Product name and category are required.');
+        $data['price']=CatalogRules::money($data['price'] ?? 0);
+        $data['stock_quantity']=CatalogRules::quantity($data['stock_quantity'] ?? 0,true);
+        $data['discount_percentage']=$data['discount_percentage'] ?? 0;
+        CatalogRules::price($data['price'],$data['discount_percentage']);
+        $data['sku']=strtoupper(trim($data['sku'] ?? ''));
+        if ($data['sku']!=='' && !$this->skuGenerator->validateSKU($data['sku'])) throw new InvalidArgumentException('Invalid SKU format.');
+        $data['description_en']=$data['description_en'] ?? '';
+        $data['brand_id']=$data['brand_id'] ?? null;
+        return $data;
     }
 
     private function updateProductVariants($productId, $variants) {
-        // Remove existing variants (Cascade will remove attributes)
-        $sql = "DELETE FROM product_variants WHERE product_id = ?";
-        $stmt = $this->pdo->prepare($sql);
-        $stmt->execute([$productId]);
-        
-        // Add new variants
-        $this->addProductVariants($productId, $variants);
+        $stmt=$this->pdo->prepare('SELECT * FROM product_variants WHERE product_id=? FOR UPDATE');
+        $stmt->execute([$productId]); $existing=[];
+        foreach($stmt->fetchAll() as $row) $existing[$row['id']]=$row;
+        $parent=$this->pdo->prepare('SELECT sku FROM products WHERE id=?'); $parent->execute([$productId]); $parentSku=$parent->fetchColumn();
+        $seenIds=[]; $combinations=[]; $optionNames=null;
+        foreach($variants as $variant) {
+            $id=empty($variant['id']) ? null : CatalogRules::quantity($variant['id']);
+            if ($id && (!isset($existing[$id]) || isset($seenIds[$id]))) throw new InvalidArgumentException('Invalid or duplicate variant ID.');
+            $attributes=[];
+            foreach($variant['attributes'] ?? [] as $name=>$value) {
+                $name=mb_strtolower(trim($name)); $value=trim($value);
+                if ($name==='' || $value==='' || mb_strlen($name)>100 || mb_strlen($value)>191 || isset($attributes[$name])) throw new InvalidArgumentException('Invalid or duplicate variant attribute.');
+                $attributes[$name]=$value;
+            }
+            if (!$attributes) throw new InvalidArgumentException('Each variant needs at least one option.');
+            ksort($attributes); $keys=array_keys($attributes);
+            if ($optionNames!==null && $keys!==$optionNames) throw new InvalidArgumentException('All variants must use the same option names.');
+            $optionNames=$keys;
+            $signature=json_encode(array_map('mb_strtolower',$attributes),JSON_UNESCAPED_UNICODE);
+            if (isset($combinations[$signature])) throw new InvalidArgumentException('Duplicate variant combination.');
+            $combinations[$signature]=true;
+            $price=CatalogRules::money($variant['price']); $stock=CatalogRules::quantity($variant['stock_quantity'],true);
+            $name=trim($variant['variant_name'] ?? '') ?: implode(' / ',$attributes);
+            if (mb_strlen($name)>255) throw new InvalidArgumentException('Variant name is too long.');
+            if ($id) {
+                $sku=$existing[$id]['sku']; // Identity survives edits and reordering.
+                $this->pdo->prepare('UPDATE product_variants SET variant_name=?,price=?,stock_quantity=?,is_active=1 WHERE id=?')->execute([$name,$price,$stock,$id]);
+                $this->pdo->prepare('DELETE FROM variant_attributes WHERE product_variant_id=?')->execute([$id]);
+            } else {
+                $sku=trim($variant['sku'] ?? '') ?: $this->skuGenerator->generateVariantSKU($parentSku);
+                $sku=strtoupper($sku);
+                $this->pdo->prepare('INSERT INTO product_variants(product_id,sku,variant_name,price,stock_quantity) VALUES(?,?,?,?,?)')->execute([$productId,$sku,$name,$price,$stock]);
+                $id=(int)$this->pdo->lastInsertId();
+                $this->skuGenerator->claim($sku,'variant',$id);
+            }
+            $seenIds[$id]=true;
+            foreach($attributes as $key=>$value) $this->pdo->prepare('INSERT INTO variant_attributes(product_variant_id,attribute_name,attribute_value) VALUES(?,?,?)')->execute([$id,$key,$value]);
+        }
+        foreach($existing as $id=>$row) if (!isset($seenIds[$id])) $this->pdo->prepare('UPDATE product_variants SET is_active=0 WHERE id=?')->execute([$id]);
+        CatalogRules::syncStock($this->pdo,$productId);
     }
     
     public function getProductVariants($productId) {
@@ -578,9 +602,17 @@ class Product {
     }
 
     public function updateStock($id, $quantity) {
-        $sql = "UPDATE products SET stock_quantity = ?, updated_at = NOW() WHERE id = ?";
-        $stmt = $this->pdo->prepare($sql);
-        return $stmt->execute([$quantity, $id]);
+        try {
+            $quantity=CatalogRules::quantity($quantity,true);
+            $this->pdo->beginTransaction();
+            $lock=$this->pdo->prepare('SELECT id FROM products WHERE id=? FOR UPDATE'); $lock->execute([$id]);
+            if (!$lock->fetchColumn() || CatalogRules::hasVariants($this->pdo,$id)) { $this->pdo->rollBack(); return false; }
+            $stmt=$this->pdo->prepare('UPDATE products SET stock_quantity=?,updated_at=NOW() WHERE id=?');
+            $stmt->execute([$quantity,$id]); $this->pdo->commit(); return true;
+        } catch (Throwable $e) {
+            if ($this->pdo->inTransaction()) $this->pdo->rollBack();
+            return false;
+        }
     }
 
     public function getFlashSales($limit = 12, $offset = 0) {

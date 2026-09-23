@@ -1,5 +1,6 @@
 <?php
 require_once 'includes/init.php';
+require_diagnostic_access();
 require_once 'models/Order.php';
 $orderModel = new Order();
 header('Content-Type: application/json');

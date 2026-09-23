@@ -122,7 +122,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 'brand_id' => !empty($_POST['brand_id']) ? (int)$_POST['brand_id'] : null,
                 'price' => (float)($_POST['price'] ?? 0),
                 'discount_percentage' => (float)($_POST['discount_percentage'] ?? 0),
-                'stock_quantity' => (int)($_POST['stock_quantity'] ?? 0),
+                'stock_quantity' => $_POST['stock_quantity'] ?? 0,
                 'sku' => $sku,
                 'weight' => (float)($_POST['weight'] ?? 0),
                 'dimensions' => sanitize_input($_POST['dimensions'] ?? ''),
@@ -149,37 +149,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $message = 'Please fill all required fields';
                 $messageType = 'error';
             } else {
-                // Variations update
-                $variants = [];
-                if (isset($_POST['variants']) && is_array($_POST['variants'])) {
-                    foreach ($_POST['variants'] as $vData) {
-                        $variantName = $vData['name'] ?? '';
-                        $variantPrice = !empty($vData['price']) ? (float)$vData['price'] : $productData['price'];
-                        $variantStock = (int)($vData['stock'] ?? 0);
-                        
-                        $attributes = [];
-                        if (isset($vData['attributes']['name']) && is_array($vData['attributes']['name'])) {
-                            foreach ($vData['attributes']['name'] as $k => $attrName) {
-                                $attrValue = $vData['attributes']['value'][$k] ?? '';
-                                if (!empty($attrName) && !empty($attrValue)) {
-                                    $attributes[$attrName] = $attrValue;
-                                }
-                            }
-                        }
-
-                        if (!empty($attributes) || !empty($variantName)) {
-                            $variants[] = [
-                                'variant_name' => $variantName,
-                                'price' => $variantPrice,
-                                'stock_quantity' => $variantStock,
-                                'attributes' => $attributes
-                            ];
-                        }
-                    }
-                }
-                $productData['variants'] = $variants;
-
                 try {
+                    $productData['variants'] = CatalogRules::variantsFromForm($_POST['variants'] ?? [], $productData['price']);
+                    if (isset($_POST['auto_generate_sku'])) $productData['sku'] = '';
                     if ($productModel->update($productId, $productData)) {
                         $message = 'Product updated successfully';
                         $messageType = 'success';
@@ -227,7 +199,7 @@ include 'header.php';
                 </div>
             <?php endif; ?>
 
-            <form method="POST" action="edit_product.php?id=<?php echo $productId; ?>" enctype="multipart/form-data">
+            <form method="POST" action="edit_product.php?id=<?php echo $productId; ?>" enctype="multipart/form-data" id="productForm" data-product-id="<?php echo (int)($productId ?? 0); ?>">
                 <input type="hidden" name="form_action" id="form_action" value="update_product">
                 
                 <div class="d-flex align-items-center justify-content-between mb-4">
@@ -242,7 +214,7 @@ include 'header.php';
                         </nav>
                     </div>
                     <div class="d-flex gap-2">
-                        <a href="product_details.php?id=<?php echo $productId; ?>" class="btn btn-outline-info btn-sm rounded-pill px-3 fw-bold shadow-xs">
+                        <a href="product_details.php?id=<?php echo $productId; ?>" class="btn btn-outline-secondary btn-sm rounded-pill px-3 fw-bold shadow-xs">
                             <i class="fas fa-eye me-1"></i> View Product
                         </a>
                         <a href="products.php" class="btn btn-light btn-sm text-secondary rounded-pill px-3 fw-bold border shadow-xs">
@@ -258,7 +230,7 @@ include 'header.php';
                             <div class="card-header bg-white py-3 border-0">
                                 <h5 class="mb-0 fw-bold px-2"><i class="fas fa-info-circle me-2 text-danger"></i> Product Information</h5>
                             </div>
-                            <div class="card-body p-4 pt-0">
+                            <div class="card-body p-4">
                                 <div class="row g-3">
                                     <div class="col-md-6">
                                         <label for="name_en" class="form-label small fw-bold text-muted text-uppercase">Product Name *</label>
@@ -309,7 +281,7 @@ include 'header.php';
 
                                                                 </div>
 
-                                                                <div class="card-body p-4 pt-0">
+                                                                <div class="card-body p-4">
 
                                                                     <?php if (!empty($existingImages) || !empty($product['video_url'])): ?>
 
@@ -321,7 +293,7 @@ include 'header.php';
 
                                                                                                                         <div class="col-6 col-sm-4 col-md-3 col-xl-2 image-item" data-image-id="<?php echo $img['id']; ?>">
 
-                                                                                                                            <div class="card h-100 border-light-subtle shadow-xs overflow-hidden position-relative group">
+                                                                                                                            <div class="card border-light-subtle shadow-xs overflow-hidden position-relative group">
 
                                                                                                                                 <div class="ratio ratio-1x1">
 
@@ -335,11 +307,11 @@ include 'header.php';
 
                                                                                                                                     <?php if ($img['is_primary']): ?>
 
-                                                                                                                                        <span class="badge bg-danger rounded-pill shadow-sm x-small" style="font-size: 0.6rem;">PRIMARY</span>
+                                                                                                                                        <span class="badge bg-danger rounded-pill shadow-sm x-small" >PRIMARY</span>
 
                                                                                                                                     <?php else: ?>
 
-                                                                                                                                        <button type="button" class="btn btn-success btn-xs rounded-pill shadow-sm fw-bold border-0" style="font-size: 0.6rem; padding: 2px 8px;" onclick="setPrimaryImage(<?php echo $img['id']; ?>)">SET</button>
+                                                                                                                                        <button type="button" class="btn btn-primary btn-xs rounded-pill shadow-sm fw-bold border-0" style=" padding: 2px 8px;" onclick="setPrimaryImage(<?php echo $img['id']; ?>)">SET</button>
 
                                                                                                                                     <?php endif; ?>
 
@@ -355,7 +327,7 @@ include 'header.php';
 
                                                                         
 
-                                                                                                                                                                                                                                                            style="width: 28px; height: 28px; background: rgba(255,255,255,0.9); color: #dc3545;" 
+                                                                                                                                                                                                                                                            style="width: 28px; height: 28px; background: var(--admin-surface); color: var(--bs-danger);"
 
                                                                         
 
@@ -379,7 +351,7 @@ include 'header.php';
 
                                                                         
 
-                                                                                                                                                                                                                                                <div class="drag-handle position-absolute top-0 end-0 m-2 cursor-move bg-dark bg-opacity-50 text-white rounded-circle d-flex align-items-center justify-content-center shadow-sm" style="width: 24px; height: 24px; font-size: 0.6rem;">
+                                                                                                                                                                                                                                                <div class="drag-handle position-absolute top-0 end-0 m-2 cursor-move bg-dark bg-opacity-50 text-white rounded-circle d-flex align-items-center justify-content-center shadow-sm" style="width: 24px; height: 24px; ">
 
                                                                         
 
@@ -443,7 +415,7 @@ include 'header.php';
 
                                                                         
 
-                                                                                                                                                                                                                                                    <span class="badge bg-primary rounded-pill shadow-sm x-small" style="font-size: 0.6rem;">VIDEO</span>
+                                                                                                                                                                                                                                                    <span class="badge bg-primary rounded-pill shadow-sm x-small" >VIDEO</span>
 
                                                                         
 
@@ -455,7 +427,7 @@ include 'header.php';
 
                                                                         
 
-                                                                                                                                                                                                                                                    <button type="submit" onclick="if(confirm('Delete video?')) { document.getElementById('form_action').value='delete_video'; } else { event.preventDefault(); }" 
+                                                                                                                                                                                                                                                    <button type="submit" data-confirm="Delete this video? This cannot be undone." onclick="document.getElementById('form_action').value='delete_video'"
 
                                                                         
 
@@ -463,7 +435,7 @@ include 'header.php';
 
                                                                         
 
-                                                                                                                                                                                                                                                            style="width: 28px; height: 28px; background: rgba(255,255,255,0.9); color: #dc3545;" title="Delete Video">
+                                                                                                                                                                                                                                                            style="width: 28px; height: 28px; background: var(--admin-surface); color: var(--bs-danger);" title="Delete Video">
 
                                                                         
 
@@ -491,11 +463,6 @@ include 'header.php';
 
                                                                                                                 </div>
 
-                                                                        <div class="alert alert-light border-light-subtle small text-muted py-2 mb-4">
-
-                                                                            <i class="fas fa-info-circle me-1 text-primary"></i> Drag cards to reorder image gallery.
-
-                                                                        </div>
 
                                                                     <?php endif; ?>
 
@@ -503,33 +470,7 @@ include 'header.php';
 
                                                                     <!-- Media Upload -->
 
-                                                                    <div class="bg-light p-4 rounded-3 border border-dashed text-center">
-
-                                                                        <p class="small fw-bold text-muted text-uppercase mb-3">Add New Media</p>
-
-                                                                        <div class="row g-3 justify-content-center align-items-center">
-
-                                                                            <div class="col-md-9">
-
-                                                                                <input type="file" name="product_media[]" multiple accept="image/*,video/*" class="form-control form-control-sm border-light-subtle shadow-none">
-
-                                                                            </div>
-
-                                                                            <div class="col-md-3">
-
-                                                                                <button type="submit" onclick="document.getElementById('form_action').value='upload_media'" class="btn btn-primary btn-sm w-100 fw-bold">
-
-                                                                                    <i class="fas fa-cloud-upload-alt me-1"></i> Upload
-
-                                                                                </button>
-
-                                                                            </div>
-
-                                                                        </div>
-
-                                                                        <p class="x-small text-muted mt-2 mb-0">Images (JPG, PNG, WEBP) and Videos (MP4) are supported.</p>
-
-                                                                    </div>
+                                                                    <?php include __DIR__ . '/includes/product-media-upload.php'; ?>
 
                                                                 </div>
 
@@ -537,114 +478,7 @@ include 'header.php';
 
                                     
 
-                                                            <!-- Technical Specs Card -->
-                        <div class="card border-0 shadow-sm mb-4">
-                            <div class="card-header bg-white py-3 d-flex align-items-center justify-content-between border-0">
-                                <h5 class="mb-0 fw-bold px-2"><i class="fas fa-list-ul me-2 text-success"></i> Technical Specifications</h5>
-                                <button type="button" class="btn btn-outline-success btn-sm rounded-pill px-3 fw-bold shadow-xs" onclick="addTechSpec()">
-                                    <i class="fas fa-plus me-1"></i> Add Spec
-                                </button>
-                            </div>
-                            <div class="card-body p-4 pt-0">
-                                <div id="techSpecsContainer">
-                                    <?php 
-                                    $specs = $product['technical_specs_en'] ? json_decode($product['technical_specs_en'], true) : [];
-                                    if (!empty($specs)):
-                                        foreach ($specs as $key => $value):
-                                    ?>
-                                        <div class="tech-spec-item mb-3 p-3 bg-light rounded-3 border border-light-subtle">
-                                            <div class="row g-2 align-items-center">
-                                                <div class="col">
-                                                    <input type="text" name="tech_spec_keys[]" class="form-control form-control-sm border-light-subtle shadow-none" value="<?php echo htmlspecialchars($key); ?>" placeholder="e.g., Processor">
-                                                </div>
-                                                <div class="col">
-                                                    <input type="text" name="tech_spec_values[]" class="form-control form-control-sm border-light-subtle shadow-none" value="<?php echo htmlspecialchars($value); ?>" placeholder="e.g., Intel i7">
-                                                </div>
-                                                <div class="col-auto">
-                                                    <button type="button" class="btn btn-danger btn-sm rounded-circle p-2 d-flex align-items-center justify-content-center shadow-xs" style="width: 32px; height: 32px;" onclick="this.closest('.tech-spec-item').remove(); checkTechSpecsEmpty();">
-                                                        <i class="fas fa-trash-alt small"></i>
-                                                    </button>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    <?php 
-                                        endforeach;
-                                    else: ?>
-                                        <div class="text-center py-4 bg-light rounded-3 border border-dashed border-2">
-                                            <p class="text-muted mb-0 small">No technical specifications added yet.</p>
-                                        </div>
-                                    <?php endif; ?>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Variants Card -->
-                        <div class="card border-0 shadow-sm mb-4">
-                            <div class="card-header bg-white py-3 d-flex align-items-center justify-content-between border-0">
-                                <h5 class="mb-0 fw-bold px-2"><i class="fas fa-layer-group me-2 text-info"></i> Product Variants</h5>
-                                <button type="button" class="btn btn-outline-info btn-sm rounded-pill px-3 fw-bold shadow-xs" onclick="addVariant()">
-                                    <i class="fas fa-plus me-1"></i> Add Variant
-                                </button>
-                            </div>
-                            <div class="card-body p-4 pt-0">
-                                <p class="text-muted small mb-4 px-2">Define variants with specific attributes (e.g., Color, Size). Each variant is a unique item.</p>
-                                <div id="variants-container">
-                                    <?php if (!empty($existingVariants)): ?>
-                                        <?php foreach ($existingVariants as $index => $variant): ?>
-                                            <div class="variant-card card border-light-subtle shadow-none mb-4 bg-light-subtle">
-                                                <div class="card-header bg-white py-2 d-flex align-items-center justify-content-between border-bottom-0 rounded-top-3">
-                                                    <h6 class="mb-0 fw-bold text-muted small">Variant #<?php echo $index + 1; ?></h6>
-                                                    <button type="button" class="btn btn-link btn-sm text-danger text-decoration-none p-0 fw-bold shadow-none" onclick="this.closest('.variant-card').remove()">
-                                                        <i class="fas fa-times me-1"></i> Remove
-                                                    </button>
-                                                </div>
-                                                <div class="card-body p-3 pt-0">
-                                                    <div class="row g-3">
-                                                        <div class="col-md-4">
-                                                            <label class="form-label x-small fw-bold text-muted text-uppercase mb-1">Display Name</label>
-                                                            <input type="text" name="variants[<?php echo $index; ?>][name]" class="form-control form-control-sm border-light-subtle shadow-none" value="<?php echo htmlspecialchars($variant['variant_name'] ?? ''); ?>" placeholder="e.g. Red">
-                                                        </div>
-                                                        <div class="col-md-4">
-                                                            <label class="form-label x-small fw-bold text-muted text-uppercase mb-1">Price Override</label>
-                                                            <input type="number" name="variants[<?php echo $index; ?>][price]" class="form-control form-control-sm border-light-subtle shadow-none" value="<?php echo $variant['price']; ?>" step="0.01">
-                                                        </div>
-                                                        <div class="col-md-4">
-                                                            <label class="form-label x-small fw-bold text-muted text-uppercase mb-1">Stock</label>
-                                                            <input type="number" name="variants[<?php echo $index; ?>][stock]" class="form-control form-control-sm border-light-subtle shadow-none" value="<?php echo $variant['stock_quantity']; ?>">
-                                                        </div>
-                                                    </div>
-                                                    <div class="mt-3">
-                                                        <label class="form-label x-small fw-bold text-muted text-uppercase mb-2 d-block">Attributes</label>
-                                                        <div class="attributes-list" id="attributes-container-<?php echo $index; ?>">
-                                                            <?php if (!empty($variant['attributes'])): ?>
-                                                                <?php foreach ($variant['attributes'] as $attrName => $attrValue): ?>
-                                                                    <div class="attribute-row row g-2 mb-2 align-items-center bg-white p-2 rounded border mx-0 border-light-subtle shadow-xs">
-                                                                        <div class="col">
-                                                                            <input type="text" name="variants[<?php echo $index; ?>][attributes][name][]" class="form-control form-control-sm border-0 bg-light" value="<?php echo htmlspecialchars($attrName); ?>" placeholder="e.g. Color">
-                                                                        </div>
-                                                                        <div class="col">
-                                                                            <input type="text" name="variants[<?php echo $index; ?>][attributes][value][]" class="form-control form-control-sm border-0 bg-light" value="<?php echo htmlspecialchars($attrValue); ?>" placeholder="e.g. Red">
-                                                                        </div>
-                                                                        <div class="col-auto">
-                                                                            <button type="button" class="btn btn-link btn-sm text-danger p-0 shadow-none" onclick="this.closest('.attribute-row').remove()">
-                                                                                <i class="fas fa-trash-alt"></i>
-                                                                            </button>
-                                                                        </div>
-                                                                    </div>
-                                                                <?php endforeach; ?>
-                                                            <?php endif; ?>
-                                                        </div>
-                                                        <button type="button" class="btn btn-primary-subtle btn-sm mt-2 fw-bold rounded-pill px-3 shadow-xs border-light-subtle" onclick="addAttribute(<?php echo $index; ?>)">
-                                                            <i class="fas fa-plus me-1 small"></i> Add Attribute
-                                                        </button>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        <?php endforeach; ?>
-                                    <?php endif; ?>
-                                </div>
-                            </div>
-                        </div>
+                                                            <?php include __DIR__ . '/includes/product-options.php'; ?>
                     </div>
 
                     <!-- Right Column: Sidebar -->
@@ -697,8 +531,10 @@ include 'header.php';
                                 </div>
                             </div>
                             <div>
-                                <label for="stock_quantity" class="form-label small fw-bold text-muted">Stock Quantity *</label>
-                                <input type="number" id="stock_quantity" name="stock_quantity" class="form-control border-light-subtle shadow-none py-2 fw-bold" value="<?php echo $product['stock_quantity']; ?>" required>
+                                <?php $stockFromVariants = CatalogRules::hasVariants($pdo, $productId); ?>
+                                <label for="stock_quantity" class="form-label small fw-bold text-muted"><?php echo $stockFromVariants ? 'Total Stock (active variants)' : 'Stock Quantity *'; ?></label>
+                                <input type="number" id="stock_quantity" name="stock_quantity" min="0" class="form-control border-light-subtle shadow-none py-2 fw-bold" value="<?php echo (int)$product['stock_quantity']; ?>" <?php echo $stockFromVariants ? 'readonly aria-describedby="stock-help"' : ''; ?> required>
+                                <p class="small text-muted mt-1" id="stock-help"><?php echo $stockFromVariants ? 'Update the stock for each variant below. This total is calculated automatically.' : 'Set the stock available for this product.'; ?></p>
                             </div>
                         </div>
 
@@ -769,11 +605,10 @@ include 'header.php';
                     </div>
                 </div>
 
-                <!-- Spacer to prevent content hiding behind fixed footer -->
-                <div style="height: 100px;"></div>
 
-                <!-- Fixed Floating Action Bar -->
-                <div class="position-fixed bottom-0 start-0 w-100 bg-white border-top shadow-lg p-3 z-3" style="z-index: 1050;">
+
+                <!-- Shared sticky form actions -->
+                <div class="admin-form-actions">
                     <div class="container-fluid d-flex justify-content-end align-items-center gap-3">
                         <a href="products.php" class="btn btn-light btn-lg rounded-pill px-4 fw-bold text-muted border border-light-subtle">Cancel</a>
                         <button type="submit" class="btn btn-primary btn-lg rounded-pill px-5 fw-bold shadow-sm">
@@ -786,25 +621,11 @@ include 'header.php';
     </div>
 
     <script>
-        function toggleSKUField() {
-            const checkbox = document.getElementById('auto_generate_sku');
-            const skuInput = document.getElementById('sku');
-            
-            if (checkbox.checked) {
-                skuInput.placeholder = 'Will be auto-generated';
-                skuInput.readOnly = true;
-                skuInput.classList.add('bg-light');
-            } else {
-                skuInput.placeholder = 'Enter SKU manually';
-                skuInput.readOnly = false;
-                skuInput.classList.remove('bg-light');
-                skuInput.focus();
-            }
-        }
+
 
         // Media Management Functions
-        function deleteImage(imageId) {
-            if (!confirm('Are you sure you want to delete this image?')) {
+        async function deleteImage(imageId) {
+            if (!await AdminUI.confirm('Are you sure you want to delete this image?')) {
                 return;
             }
             
@@ -822,11 +643,12 @@ include 'header.php';
                     if (imageItem) imageItem.remove();
                     location.reload(); 
                 } else {
-                    alert('Error: ' + data.message);
+                    showToast('Error: ' + data.message, 'error');
                 }
             })
             .catch(error => {
                 console.error('Error:', error);
+                showToast('Media update failed. Please retry.', 'error');
             });
         }
         
@@ -843,11 +665,12 @@ include 'header.php';
                 if (data.success) {
                     location.reload(); 
                 } else {
-                    alert('Error: ' + data.message);
+                    showToast('Error: ' + data.message, 'error');
                 }
             })
             .catch(error => {
                 console.error('Error:', error);
+                showToast('Media update failed. Please retry.', 'error');
             });
         }
         
@@ -878,7 +701,7 @@ include 'header.php';
                     
                     item.addEventListener('drop', function(e) {
                         e.preventDefault();
-                        if (draggedElement !== this) {
+                        if (draggedElement && draggedElement !== this) {
                             const allItems = Array.from(gallery.querySelectorAll('.image-item'));
                             const draggedIndex = allItems.indexOf(draggedElement);
                             const targetIndex = allItems.indexOf(this);
@@ -911,212 +734,18 @@ include 'header.php';
             .then(response => response.json())
             .then(data => {
                 if (data.success) {
-                    console.log('Image order saved');
+                    showToast('Image order saved.');
                 }
             })
             .catch(error => {
                 console.error('Error:', error);
+                showToast('Media update failed. Please retry.', 'error');
             });
         }
 
         // Technical Specs
-        function addTechSpec() {
-            const container = document.getElementById('techSpecsContainer');
-            if (container.querySelector('.text-center')) {
-                container.innerHTML = '';
-            }
-            
-            const item = document.createElement('div');
-            item.className = 'tech-spec-item mb-3 p-3 bg-light rounded-3 border border-light-subtle';
-            item.innerHTML = `
-                <div class="row g-2 align-items-center">
-                    <div class="col">
-                        <input type="text" name="tech_spec_keys[]" class="form-control form-control-sm shadow-none" placeholder="e.g., Processor">
-                    </div>
-                    <div class="col">
-                        <input type="text" name="tech_spec_values[]" class="form-control form-control-sm shadow-none" placeholder="e.g., Intel i7">
-                    </div>
-                    <div class="col-auto">
-                        <button type="button" class="btn btn-danger btn-sm rounded-circle p-2 d-flex align-items-center justify-content-center" style="width: 32px; height: 32px;" onclick="this.closest('.tech-spec-item').remove(); checkTechSpecsEmpty();">
-                            <i class="fas fa-trash-alt small"></i>
-                        </button>
-                    </div>
-                </div>
-            `;
-            container.appendChild(item);
-        }
-
-        function checkTechSpecsEmpty() {
-            const container = document.getElementById('techSpecsContainer');
-            if (container.children.length === 0) {
-                container.innerHTML = `
-                    <div class="text-center py-4 bg-light rounded-3 border border-dashed border-2">
-                        <p class="text-muted mb-0 small">No technical specifications added yet.</p>
-                    </div>
-                `;
-            }
-        }
-        
-        // Variants
-        let variantCount = <?php echo count($existingVariants); ?>;
-
-        function addVariant() {
-            variantCount++;
-            const container = document.getElementById('variants-container');
-            const newVariantCard = document.createElement('div');
-            newVariantCard.className = 'variant-card card border-light-subtle shadow-none mb-4 bg-light-subtle';
-            newVariantCard.innerHTML = `
-                <div class="card-header bg-white py-2 d-flex align-items-center justify-content-between border-bottom-0 rounded-top-3">
-                    <h6 class="mb-0 fw-bold text-muted small">Variant #${variantCount}</h6>
-                    <button type="button" class="btn btn-link btn-sm text-danger text-decoration-none p-0 fw-bold shadow-none" onclick="this.closest('.variant-card').remove()">
-                        <i class="fas fa-times me-1"></i> Remove
-                    </button>
-                </div>
-                <div class="card-body p-3 pt-0">
-                    <div class="row g-3">
-                        <div class="col-md-4">
-                            <label class="form-label x-small fw-bold text-muted text-uppercase mb-1">Display Name</label>
-                            <input type="text" name="variants[${variantCount}][name]" class="form-control form-control-sm shadow-none" placeholder="e.g. Red">
-                        </div>
-                        <div class="col-md-4">
-                            <label class="form-label x-small fw-bold text-muted text-uppercase mb-1">Price Override</label>
-                            <input type="number" name="variants[${variantCount}][price]" class="form-control form-control-sm shadow-none" placeholder="0.00" step="0.01">
-                        </div>
-                        <div class="col-md-4">
-                            <label class="form-label x-small fw-bold text-muted text-uppercase mb-1">Stock</label>
-                            <input type="number" name="variants[${variantCount}][stock]" class="form-control form-control-sm shadow-none" placeholder="0" value="0">
-                        </div>
-                    </div>
-                    <div class="mt-3">
-                        <label class="form-label x-small fw-bold text-muted text-uppercase mb-2 d-block">Attributes</label>
-                        <div class="attributes-list" id="attributes-container-${variantCount}"></div>
-                        <button type="button" class="btn btn-primary-subtle btn-sm mt-2 fw-bold rounded-pill px-3 shadow-xs border-light-subtle" onclick="addAttribute(${variantCount})">
-                            <i class="fas fa-plus me-1 small"></i> Add Attribute
-                        </button>
-                    </div>
-                </div>
-            `;
-            container.appendChild(newVariantCard);
-            addAttribute(variantCount);
-        }
-
-        function addAttribute(vIndex) {
-            const container = document.getElementById(`attributes-container-${vIndex}`);
-            const row = document.createElement('div');
-            row.className = 'attribute-row row g-2 mb-2 align-items-center bg-white p-2 rounded border mx-0 border-light-subtle shadow-xs';
-            row.innerHTML = `
-                <div class="col">
-                    <input type="text" name="variants[${vIndex}][attributes][name][]" class="form-control form-control-sm border-0 bg-light" placeholder="e.g. Color">
-                </div>
-                <div class="col">
-                    <input type="text" name="variants[${vIndex}][attributes][value][]" class="form-control form-control-sm border-0 bg-light" placeholder="e.g. Red">
-                </div>
-                <div class="col-auto">
-                    <button type="button" class="btn btn-link btn-sm text-danger p-0 shadow-none border-0" onclick="this.closest('.attribute-row').remove()">
-                        <i class="fas fa-trash-alt"></i>
-                    </button>
-                </div>
-            `;
-            container.appendChild(row);
-        }
-    </script>
-    <script>
-        // Initialize Summernote editors when the page is loaded
-        $(document).ready(function() {
-            $('.summernote-editor').summernote({
-                placeholder: 'Enter detailed description here...',
-                tabsize: 2,
-                height: 400,
-                toolbar: [
-                    ['style', ['style']],
-                    ['font', ['bold', 'underline', 'clear']],
-                    ['color', ['color']],
-                    ['para', ['ul', 'ol', 'paragraph']],
-                    ['table', ['table']],
-                    ['insert', ['link', 'picture', 'video']],
-                    ['view', ['fullscreen', 'codeview', 'help']]
-                ],
-                callbacks: {
-                    onImageUpload: function(files) {
-                        for(let i=0; i < files.length; i++) {
-                            uploadImage(files[i], this);
-                        }
-                    }
-                }
-            });
-        });
-
-        function uploadImage(file, editor) {
-            let data = new FormData();
-            data.append("file", file);
-            data.append("product_id", <?php echo $productId; ?>);
-            data.append("slug", $('#name_en').val());
-            $.ajax({
-                url: 'ajax/upload_editor_image.php',
-                cache: false,
-                contentType: false,
-                processData: false,
-                data: data,
-                type: "post",
-                success: function(url) {
-                    // url returned is relative to src/ directory e.g., "uploads/images/editor/file.jpg"
-                    // We need to make sure the img src is correct. 
-                    // If we are in admin/edit_product.php, "uploads/..." is not correct relative to current page (which is inside admin/).
-                    // It should be "../uploads/..."
-                    // HOWEVER, if we view it in product.php (in src/), "uploads/..." is correct.
-                    // The best way is to store it as "uploads/..." (relative to src root) and ensure it displays correctly.
-                    
-                    // Summernote inserts the image. If we pass "uploads/...", in the admin editor it might appear broken 
-                    // unless we prepend "../" for the preview, but save the clean path?
-                    // Actually, let's just use the path that works for the public site.
-                    // In the admin panel, the image might appear broken if we just use "uploads/..." because base is "src/admin/"
-                    // BUT, if we use an absolute path or correct relative path it works everywhere.
-                    
-                    // Let's try prepending "../" for the INSERTION, but we might want to store it differently?
-                    // No, wait. If we insert "../uploads/...", it works in admin. 
-                    // On frontend "product.php", it's in "src/", so "../uploads/..." would go to "QwenShop/uploads" which is wrong.
-                    // The "uploads" folder is in "src/uploads".
-                    
-                    // Let's adjust the PHP script to return the path relative to the admin folder for preview,
-                    // OR we can correct it.
-                    
-                    // BETTER APPROACH: Return the path relative to the PROJECT ROOT or utilize the existing "../" convention.
-                    // The upload script returns: "uploads/images/editor/filename"
-                    
-                    // Let's insert it as "../uploads/images/editor/filename" so it shows in Admin.
-                    // Then on frontend, we might need to handle it. 
-                    // OR, since `product.php` is in `src/`, and `uploads` is in `src/uploads`, 
-                    // the path `uploads/images/editor/filename` IS correct for frontend.
-                    
-                    // So:
-                    // Frontend needs: "uploads/images/editor/filename"
-                    // Admin needs: "../uploads/images/editor/filename"
-                    
-                    // If we save it as "../uploads/...", frontend breaks.
-                    // If we save it as "uploads/...", admin preview breaks.
-                    
-                    // Summernote inserts an <img> tag. 
-                    // We can insert with src="../uploads..." for visual feedback.
-                    // BUT we need to ensure when it saves, it's usable.
-                    
-                    // Actually, let's look at how other images are handled.
-                    // Product images are stored as "uploads/images/..." and in admin displayed with `../` prefix.
-                    
-                    // Solution: Insert it as `../uploads/images/editor/filename`. 
-                    // This makes it visible in Admin.
-                    // When displaying on frontend (`product.php`), we might need to strip the `../` or ensure the path resolution works.
-                    // Let's check `product.php` later. For now, let's make it visible in Admin.
-                    
-                    var image = $('<img>').attr('src', '../' + url);
-                    $(editor).summernote("insertNode", image[0]);
-                },
-                error: function(data) {
-                    console.log(data);
-                    alert("Upload failed");
-                }
-            });
-        }
-    </script>
+</script>
+<script src="../assets/js/product-form.js"></script>
 
     <!-- Include the shared footer template -->
     <?php include 'footer.php'; ?>

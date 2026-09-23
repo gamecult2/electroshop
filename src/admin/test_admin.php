@@ -1,4 +1,8 @@
 <?php
+// CLI-only maintenance utility; never execute through the admin web interface.
+if (PHP_SAPI !== 'cli') { http_response_code(404); exit; }
+chdir(__DIR__);
+
 // Simple test page to verify admin header works
 session_start();
 
@@ -26,7 +30,7 @@ include 'header.php';
                 <p>The admin header is now loading correctly.</p>
                 <p>If you see this page, the issue with the missing time_elapsed_string function has been fixed.</p>
                 <a href="login.php" class="btn btn-primary">Go to Login</a>
-                <a href="dashboard.php" class="btn btn-success">Go to Dashboard</a>
+                <a href="dashboard.php" class="btn btn-primary">Go to Dashboard</a>
             </div>
         </div>
     </div>

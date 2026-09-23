@@ -1,6 +1,7 @@
 <?php
 // src/debug_conversations.php
 require_once 'includes/init.php';
+require_diagnostic_access();
 require_once 'models/Conversation.php';
 
 header('Content-Type: text/plain');

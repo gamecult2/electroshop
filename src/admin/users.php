@@ -90,7 +90,7 @@ include 'header.php';
                 <div class="card-body p-0">
                     <div class="table-responsive">
                         <table class="table table-hover align-middle mb-0">
-                            <thead class="bg-light">
+                            <thead class="table-light">
                                 <tr>
                                     <th class="border-0 px-4 py-3 small fw-bold text-muted text-uppercase" style="width: 80px;">ID</th>
                                     <th class="border-0 py-3 small fw-bold text-muted text-uppercase">Full Name</th>
@@ -146,7 +146,7 @@ include 'header.php';
                                                 <?php if ($user['id'] != $_SESSION['admin_id']): ?>
                                                     <a href="users.php?action=delete&id=<?php echo $user['id']; ?>" 
                                                        class="btn btn-white btn-xs border border-light-subtle rounded-pill px-3 fw-bold shadow-xs text-danger" 
-                                                       onclick="return confirm('Are you sure you want to delete this staff member?');">
+                                                       data-confirm="Are you sure you want to delete this staff member?">
                                                         <i class="fas fa-trash-alt"></i>
                                                     </a>
                                                 <?php endif; ?>
@@ -217,10 +217,7 @@ include 'header.php';
                             </div>
                         </div>
                     </div>
-                    <div class="modal-footer border-0 p-4 pt-0">
-                        <button type="button" class="btn btn-light rounded-pill px-4 fw-bold border-light-subtle" data-bs-dismiss="modal">Cancel</button>
-                        <button type="submit" class="btn btn-primary rounded-pill px-4 fw-bold shadow-sm">Update Account</button>
-                    </div>
+                    <?php admin_modal_footer('Update Account'); ?>
                 </form>
             </div>
         </div>

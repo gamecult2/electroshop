@@ -48,7 +48,7 @@ require_once 'header.php';
             </h3>
             <p class="text-muted mb-0">Customer ID: #<?php echo $customerId; ?></p>
         </div>
-        <div class="btn-group">
+        <div class="admin-row-actions">
             <a href="messages.php?customer_id=<?php echo $customerId; ?>" class="btn btn-outline-primary btn-sm rounded-pill shadow-sm me-2">
                 <i class="fas fa-comment-dots me-1"></i> Send Message
             </a>
@@ -122,7 +122,7 @@ require_once 'header.php';
                                     <div class="d-flex justify-content-between align-items-start mb-1">
                                         <span class="badge bg-light text-dark border small"><?php echo htmlspecialchars($addr['wilaya']); ?></span>
                                         <?php if ($addr['is_default']): ?>
-                                            <span class="badge bg-primary-subtle text-primary x-small">Default</span>
+                                            <span class="badge bg-primary-subtle text-primary-emphasis x-small">Default</span>
                                         <?php endif; ?>
                                     </div>
                                     <p class="mb-1 small fw-bold text-dark"><?php echo htmlspecialchars($addr['street_address']); ?></p>

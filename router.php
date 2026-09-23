@@ -84,6 +84,7 @@ class Router {
             '/account' => 'account.php',
             '/orders' => 'orders.php',
             '/order/{id}' => 'order_details.php',
+            '/order-tracking' => 'order_tracking.php',
             '/wishlist' => 'wishlist.php',
             '/compare' => 'compare.php',
             '/login' => 'login.php',
@@ -97,7 +98,7 @@ class Router {
             '/terms' => 'terms.php',
             '/returns' => 'returns.php',
             '/shipping' => 'shipping.php',
-            '/faqs' => 'faqs.php',
+            '/faqs' => 'faq.php',
             '/support' => 'support.php',
             '/maintenance.php' => 'maintenance.php'
         ];

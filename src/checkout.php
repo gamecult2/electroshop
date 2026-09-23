@@ -38,6 +38,7 @@ if ($isLoggedIn && !empty($addresses)) {
 ?>
 
 <div class="container-xxl pb-4">
+    <h1 class="visually-hidden"><?php echo t('checkout'); ?></h1>
     <?php 
     $breadcrumb_items = [
         ['label' => t('home'), 'url' => 'index.php'],
@@ -98,10 +99,10 @@ if ($isLoggedIn && !empty($addresses)) {
     
     <?php if (!$isLoggedIn): ?>
         <div class="alert alert-info border-0 shadow-sm rounded-3 py-3 mb-4 d-flex align-items-center">
-            <i class="fas fa-info-circle me-3 fs-4 text-info"></i> 
+            <i class="fas fa-info-circle me-3 fs-4 text-primary" aria-hidden="true"></i>
             <div>
                 <?php echo t('already_have_account'); ?> 
-                <a href="login.php?redirect=checkout.php" class="fw-bold text-info text-decoration-none"><?php echo t('sign_in'); ?></a> 
+                <a href="login.php?redirect_to=checkout.php" class="fw-bold text-primary"><?php echo t('sign_in'); ?></a>
                 <?php echo t('for_faster_checkout'); ?>
             </div>
         </div>
@@ -118,16 +119,16 @@ if ($isLoggedIn && !empty($addresses)) {
                 <div class="card-body p-4">
                     <div class="row g-3">
                         <div class="col-md-6">
-                            <label class="form-label small fw-bold text-muted text-uppercase"><?php echo t('first_name'); ?> *</label>
-                            <input type="text" id="guest_first_name" class="form-control rounded-pill px-3" placeholder="John" required>
+                            <label for="guest_first_name" class="form-label small fw-bold text-muted text-uppercase"><?php echo t('first_name'); ?> *</label>
+                            <input type="text" id="guest_first_name" class="form-control rounded-3 px-3" placeholder="John" required>
                         </div>
                         <div class="col-md-6">
-                            <label class="form-label small fw-bold text-muted text-uppercase"><?php echo t('last_name'); ?> *</label>
-                            <input type="text" id="guest_last_name" class="form-control rounded-pill px-3" placeholder="Doe" required>
+                            <label for="guest_last_name" class="form-label small fw-bold text-muted text-uppercase"><?php echo t('last_name'); ?> *</label>
+                            <input type="text" id="guest_last_name" class="form-control rounded-3 px-3" placeholder="Doe" required>
                         </div>
                         <div class="col-12">
-                            <label class="form-label small fw-bold text-muted text-uppercase"><?php echo t('email'); ?> *</label>
-                            <input type="email" id="guest_email" class="form-control rounded-pill px-3" placeholder="john.doe@example.com" required>
+                            <label for="guest_email" class="form-label small fw-bold text-muted text-uppercase"><?php echo t('email'); ?> *</label>
+                            <input type="email" id="guest_email" class="form-control rounded-3 px-3" placeholder="john.doe@example.com" required>
                         </div>
                     </div>
                 </div>
@@ -140,12 +141,13 @@ if ($isLoggedIn && !empty($addresses)) {
                     <h2 class="h6 fw-bold mb-0 text-dark"><i class="fas fa-map-marker-alt text-danger me-2"></i> <?php echo t('delivery_address'); ?></h2>
                 </div>
                 <div class="card-body p-4">
-                    <div class="row row-cols-1 row-cols-md-2 g-3" id="address-grid">
+                    <div class="row row-cols-1 row-cols-md-2 g-3" id="address-grid" role="radiogroup" aria-label="Delivery address">
                         <?php if ($isLoggedIn && !empty($addresses)): ?>
                             <?php foreach ($addresses as $address): ?>
                                 <div class="col">
-                                    <div class="card h-100 border p-4 address-card cursor-pointer position-relative <?php echo ($selectedAddressId == $address['id']) ? 'border-danger shadow-sm' : 'border-light-subtle'; ?>" 
+                                    <div class="card h-100 border p-4 address-card cursor-pointer position-relative <?php echo ($selectedAddressId == $address['id']) ? 'border-danger shadow-sm' : 'border-light-subtle'; ?>" role="radio" tabindex="0" aria-checked="<?php echo ($selectedAddressId == $address['id']) ? 'true' : 'false'; ?>"
                                          onclick="selectAddress(this, <?php echo $address['id']; ?>)"
+                                         onkeydown="if(event.key === 'Enter' || event.key === ' '){event.preventDefault(); selectAddress(this, <?php echo $address['id']; ?>)}"
                                          style="transition: all 0.2s ease;"
                                          data-address-id="<?php echo $address['id']; ?>">
                                         
@@ -190,8 +192,9 @@ if ($isLoggedIn && !empty($addresses)) {
                         <div class="col">
                             <div class="card h-100 border border-2 border-light-subtle p-4 d-flex flex-column align-items-center justify-content-center text-center transition-all bg-light-subtle" 
                                  id="add-address-card-btn" 
+                                 role="button" tabindex="0"
                                  style="border-style: dashed !important; cursor: pointer; min-height: 160px;"
-                                 onclick="openAddressModal()">
+                                 onclick="openAddressModal()" onkeydown="if(event.key === 'Enter' || event.key === ' '){event.preventDefault(); openAddressModal()}">
                                 <div class="bg-white rounded-circle d-flex align-items-center justify-content-center mb-2 shadow-sm" style="width: 50px; height: 50px; flex-shrink: 0;">
                                     <i class="fas fa-plus text-muted fs-5"></i>
                                 </div>
@@ -354,6 +357,8 @@ if ($isLoggedIn && !empty($addresses)) {
                                 </div>
                                 <div class="flex-grow-1 min-w-0">
                                     <h4 class="small fw-bold text-dark mb-1 text-truncate"><?php echo htmlspecialchars($item['product_name']); ?></h4>
+                                    <?php if (!empty($item['variant_name'])): ?><p class="small text-muted mb-1"><?php echo htmlspecialchars($item['variant_name'] . ' · ' . $item['product_sku']); ?></p><?php endif; ?>
+                                    <?php if (!empty($item['unavailable_reason'])): ?><p class="small text-danger" role="alert"><?php echo htmlspecialchars($item['unavailable_reason']); ?> <a href="cart.php">Edit cart</a></p><?php endif; ?>
                                     <div class="d-flex justify-content-between">
                                         <span class="small text-muted">Qty: <?php echo $item['quantity']; ?></span>
                                         <span class="small fw-bold text-dark"><?php echo format_price($item['quantity'] * $item['price_at_time']); ?></span>
@@ -399,7 +404,7 @@ if ($isLoggedIn && !empty($addresses)) {
                         </label>
                     </div>
                     
-                    <button class="btn btn-danger btn-lg w-100 rounded-pill fw-bold shadow-sm py-3 mb-4 d-flex align-items-center justify-content-center gap-2" onclick="placeOrder()">
+                    <button type="button" class="btn btn-danger btn-lg w-100 rounded-pill fw-bold shadow-sm py-3 mb-4 d-flex align-items-center justify-content-center gap-2" onclick="placeOrder()">
                         <i class="fas fa-lock"></i> <?php echo t('place_order'); ?>
                     </button>
 
@@ -437,31 +442,31 @@ if ($isLoggedIn && !empty($addresses)) {
                     <div class="row g-3">
                         <div class="col-md-6">
                             <label class="form-label small fw-bold text-muted text-uppercase ls-1"><?php echo t('phone_number'); ?> *</label>
-                            <input type="tel" name="phone_number" id="modal_phone" class="form-control rounded-pill px-3" required>
+                            <input type="tel" name="phone_number" id="modal_phone" class="form-control rounded-3 px-3" required>
                         </div>
                         <div class="col-md-6">
                             <label class="form-label small fw-bold text-muted text-uppercase ls-1"><?php echo t('wilaya'); ?> *</label>
-                            <input type="text" name="wilaya" id="modal_wilaya" class="form-control rounded-pill px-3" required>
+                            <input type="text" name="wilaya" id="modal_wilaya" class="form-control rounded-3 px-3" required>
                         </div>
                         <div class="col-md-6">
                             <label class="form-label small fw-bold text-muted text-uppercase ls-1"><?php echo t('daira'); ?> *</label>
-                            <input type="text" name="daira" id="modal_daira" class="form-control rounded-pill px-3" required>
+                            <input type="text" name="daira" id="modal_daira" class="form-control rounded-3 px-3" required>
                         </div>
                         <div class="col-md-6">
                             <label class="form-label small fw-bold text-muted text-uppercase ls-1"><?php echo t('commune'); ?> *</label>
-                            <input type="text" name="commune" id="modal_commune" class="form-control rounded-pill px-3" required>
+                            <input type="text" name="commune" id="modal_commune" class="form-control rounded-3 px-3" required>
                         </div>
                         <div class="col-12">
                             <label class="form-label small fw-bold text-muted text-uppercase ls-1"><?php echo t('street_address'); ?> *</label>
-                            <input type="text" name="street_address" id="modal_street" class="form-control rounded-pill px-3" required>
+                            <input type="text" name="street_address" id="modal_street" class="form-control rounded-3 px-3" required>
                         </div>
                         <div class="col-md-6">
                             <label class="form-label small fw-bold text-muted text-uppercase ls-1"><?php echo t('apartment_suite'); ?></label>
-                            <input type="text" name="apartment_suite" id="modal_apartment" class="form-control rounded-pill px-3">
+                            <input type="text" name="apartment_suite" id="modal_apartment" class="form-control rounded-3 px-3">
                         </div>
                         <div class="col-md-6">
                             <label class="form-label small fw-bold text-muted text-uppercase ls-1"><?php echo t('postal_code'); ?></label>
-                            <input type="text" name="postal_code" id="modal_postal" class="form-control rounded-pill px-3">
+                            <input type="text" name="postal_code" id="modal_postal" class="form-control rounded-3 px-3">
                         </div>
                         <div class="col-12">
                             <div class="form-check small mt-2">
@@ -547,6 +552,7 @@ function applyPromo() {
 
 function selectAddress(card, id) {
     document.querySelectorAll('.address-card').forEach(c => {
+        c.setAttribute('aria-checked', 'false');
         c.classList.remove('border-danger', 'shadow-sm', 'bg-danger-subtle'); // Remove old logic class if any
         c.classList.remove('border-danger', 'shadow-sm'); // New logic
         c.classList.add('border-light-subtle');
@@ -565,6 +571,7 @@ function selectAddress(card, id) {
     // Select the clicked card
     card.classList.remove('border-light-subtle');
     card.classList.add('border-danger', 'shadow-sm');
+    card.setAttribute('aria-checked', 'true');
     
     // Toggle icons for this card
     const checkIcon = card.querySelector('.check-icon');
@@ -741,6 +748,7 @@ function placeOrder() {
         delivery_option: deliveryOption,
         payment_method: paymentMethod,
         order_notes: document.getElementById('order_notes').value,
+        expected_subtotal: cartSubtotal,
         promo_code: appliedCoupon ? appliedCoupon.code : null
     };
     fetch('api/orders/place.php', {

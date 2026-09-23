@@ -1,5 +1,6 @@
 <?php
 require_once 'includes/init.php';
+require_diagnostic_access();
 require_once 'models/Cart.php';
 
 header('Content-Type: application/json');

@@ -2,6 +2,7 @@
 // models/Order.php - Order management model
 
 require_once __DIR__ . '/../db_connect.php';
+require_once __DIR__ . '/../helpers/CatalogRules.php';
 
 class Order {
     private $pdo;
@@ -95,8 +96,12 @@ class Order {
     }
     
     public function updateStatus($id, $status, $adminId = null, $notes = '') {
+        if ($status === 'cancelled') return $this->cancel($id,$notes);
         try {
             $this->pdo->beginTransaction();
+            $lock=$this->pdo->prepare('SELECT status FROM orders WHERE id=? FOR UPDATE');
+            $lock->execute([$id]);
+            if ($lock->fetchColumn()==='cancelled') throw new DomainException('Cancelled orders cannot be reopened; create a new order.');
             
             // Update order status
             $sql = "UPDATE orders SET status = ?, updated_at = NOW() WHERE id = ?";
@@ -147,9 +152,13 @@ class Order {
     public function cancel($id, $reason = '') {
         try {
             $this->pdo->beginTransaction();
+            $lock=$this->pdo->prepare('SELECT status,inventory_policy,inventory_released FROM orders WHERE id=? FOR UPDATE');
+            $lock->execute([$id]); $order=$lock->fetch();
+            if (!$order) throw new DomainException('Order not found.');
+            if ($order['inventory_released'] || $order['status']==='cancelled') { $this->pdo->commit(); return true; }
 
             // 1. Update order status
-            $sql = "UPDATE orders SET status = 'cancelled', cancelled_at = NOW(), cancelled_reason = ? WHERE id = ?";
+            $sql = "UPDATE orders SET status = 'cancelled', inventory_released=1, cancelled_at = NOW(), cancelled_reason = ? WHERE id = ?";
             $stmt = $this->pdo->prepare($sql);
             $stmt->execute([$reason, $id]);
 
@@ -161,13 +170,17 @@ class Order {
             $restoreStmt = $this->pdo->prepare($restoreSql);
 
             foreach ($items as $item) {
-                $restoreStmt->execute([$item['quantity'], $item['product_id']]);
-                
-                // If there's a variant, we should also restore variant stock if it exists in DB
-                if (!empty($item['variant_id'])) {
+                $productLock=$this->pdo->prepare('SELECT id FROM products WHERE id=? FOR UPDATE');
+                $productLock->execute([$item['product_id']]);
+                // Legacy orders deducted only parent inventory. Never invent a
+                // variant restock for them, especially when its old ID is gone.
+                if ($order['inventory_policy']==='sku' && !empty($item['variant_id'])) {
                     $vRestoreSql = "UPDATE product_variants SET stock_quantity = stock_quantity + ? WHERE id = ?";
                     $vRestoreStmt = $this->pdo->prepare($vRestoreSql);
                     $vRestoreStmt->execute([$item['quantity'], $item['variant_id']]);
+                    CatalogRules::syncStock($this->pdo,$item['product_id']);
+                } elseif (!CatalogRules::hasVariants($this->pdo,$item['product_id'])) {
+                    $restoreStmt->execute([$item['quantity'], $item['product_id']]);
                 }
             }
 
@@ -263,9 +276,31 @@ class Order {
         }, $rows);
     }
 
-    public function create($data) {
+    public function create($data, $attempt = 0) {
         try {
             $this->pdo->beginTransaction();
+            if (empty($data['items'])) throw new DomainException('Cart is empty.');
+            usort($data['items'],fn($a,$b)=>[$a['product_id'],$a['variant_id'] ?? 0,$a['id'] ?? 0] <=> [$b['product_id'],$b['variant_id'] ?? 0,$b['id'] ?? 0]);
+            $checkoutKey=hash('sha256',json_encode([$data['customer_id'],session_id(),array_map(fn($item)=>[$item['id'] ?? null,$item['product_id'],$item['variant_id'] ?? null,$item['quantity'],$item['price_at_time']],$data['items'])]));
+            $prior=$this->pdo->prepare('SELECT id FROM orders WHERE checkout_key=?'); $prior->execute([$checkoutKey]);
+            if ($existingId=$prior->fetchColumn()) { $this->pdo->commit(); return $existingId; }
+            $subtotalCents=0;
+            foreach($data['items'] as &$item) {
+                if (!empty($item['unavailable_reason'])) throw new DomainException($item['unavailable_reason']);
+                $quantity=CatalogRules::quantity($item['quantity']);
+                $fresh=CatalogRules::sellable($this->pdo,$item['product_id'],$item['variant_id'] ?? null,true);
+                if ((int)round((float)$fresh['price_at_time']*100)!==(int)round((float)$item['price_at_time']*100)) throw new DomainException('A price changed. Refresh checkout to review the updated total.');
+                $item=array_replace($item,$fresh,['quantity'=>$quantity]);
+                $table=$item['variant_id'] ? 'product_variants' : 'products';
+                $stockId=$item['variant_id'] ?: $item['product_id'];
+                $deduct=$this->pdo->prepare("UPDATE $table SET stock_quantity=stock_quantity-? WHERE id=? AND stock_quantity>=? AND is_active=1");
+                $deduct->execute([$quantity,$stockId,$quantity]);
+                if ($deduct->rowCount()!==1) throw new DomainException('Insufficient stock for '.$item['product_name'].'. Refresh your cart.');
+                if ($item['variant_id']) CatalogRules::syncStock($this->pdo,$item['product_id']);
+                $subtotalCents+=(int)round((float)$fresh['price_at_time']*100)*$quantity;
+            }
+            unset($item);
+            if ($subtotalCents!==(int)round((float)$data['subtotal']*100)) throw new DomainException('Cart total changed. Please refresh checkout.');
 
             // 1. Create order record
             $sql = "INSERT INTO orders (
@@ -304,6 +339,7 @@ class Order {
             ]);
 
             $orderId = $this->pdo->lastInsertId();
+            $this->pdo->prepare("UPDATE orders SET inventory_policy='sku', checkout_key=? WHERE id=?")->execute([$checkoutKey,$orderId]);
 
             // 2. Add order items
             $itemSql = "INSERT INTO order_items (
@@ -326,16 +362,19 @@ class Order {
                     $item['quantity'] * ($item['price_at_purchase'] ?? $item['price_at_time'])
                 ]);
 
-                // 3. Update product stock
-                $stockSql = "UPDATE products SET stock_quantity = stock_quantity - ? WHERE id = ?";
-                $stockStmt = $this->pdo->prepare($stockSql);
-                $stockStmt->execute([$item['quantity'], $item['product_id']]);
+                // Inventory was atomically validated and deducted above.
             }
 
             $this->pdo->commit();
             return $orderId;
         } catch (Exception $e) {
-            $this->pdo->rollback();
+            if ($this->pdo->inTransaction()) $this->pdo->rollback();
+            if (isset($checkoutKey)) {
+                $prior=$this->pdo->prepare('SELECT id FROM orders WHERE checkout_key=?'); $prior->execute([$checkoutKey]);
+                if ($existingId=$prior->fetchColumn()) return $existingId;
+            }
+            if (CatalogRules::retryable($e) && $attempt < 2) return $this->create($data,$attempt+1);
+            if ($e instanceof DomainException || $e instanceof InvalidArgumentException) throw $e;
             error_log("Order creation error: " . $e->getMessage());
             return false;
         }

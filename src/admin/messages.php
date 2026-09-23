@@ -55,7 +55,7 @@ $page_heading = 'Customer Messages';
 require_once 'header.php';
 ?>
 
-<div class="container-fluid py-4">
+<div class="container-fluid p-0">
     <!-- Header Section -->
     <div class="d-flex justify-content-between align-items-center mb-4">
         <div>
@@ -147,9 +147,9 @@ require_once 'header.php';
                 <div class="card-body p-0">
                     <!-- View Toggle -->
                     <div class="p-2 border-bottom bg-light">
-                        <div class="btn-group w-100 rounded-3 overflow-hidden border">
-                            <a href="messages.php?view=active" class="btn btn-sm <?php echo $view === 'active' ? 'btn-primary' : 'btn-white'; ?> fw-bold" style="font-size: 11px;">Active</a>
-                            <a href="messages.php?view=archived" class="btn btn-sm <?php echo $view === 'archived' ? 'btn-primary' : 'btn-white'; ?> fw-bold" style="font-size: 11px;">Archived</a>
+                        <div class="admin-row-actions">
+                            <a href="messages.php?view=active" class="btn btn-sm <?php echo $view === 'active' ? 'btn-primary' : 'btn-white'; ?> fw-bold" >Active</a>
+                            <a href="messages.php?view=archived" class="btn btn-sm <?php echo $view === 'archived' ? 'btn-primary' : 'btn-white'; ?> fw-bold" >Archived</a>
                         </div>
                     </div>
                     <!-- Filters -->
@@ -172,7 +172,7 @@ require_once 'header.php';
                     </div>
                     
                     <!-- Conversation List -->
-                    <div class="list-group list-group-flush" id="conversationsList" style="max-height: 800px; overflow-y: auto;">
+                    <div class="list-group list-group-flush admin-chat-list" id="conversationsList">
                         <?php if (empty($conversations)): ?>
                             <div class="text-center py-5">
                                 <i class="fas fa-inbox fa-2x text-muted mb-3"></i>
@@ -180,7 +180,7 @@ require_once 'header.php';
                             </div>
                         <?php else: ?>
                             <?php foreach ($conversations as $conv): ?>
-                                <div class="list-group-item list-group-item-action conversation-item d-flex align-items-center p-3 <?php echo $conv['admin_unread_count'] > 0 ? 'bg-light' : ''; ?>"
+                                <div role="button" tabindex="0" aria-pressed="false" onkeydown="if(event.key === 'Enter' || event.key === ' '){event.preventDefault(); this.click();}" class="list-group-item list-group-item-action conversation-item d-flex align-items-center p-3 <?php echo $conv['admin_unread_count'] > 0 ? 'bg-light' : ''; ?>"
                                      onclick="loadConversation(<?php echo $conv['id']; ?>)">
                                     <div class="flex-shrink-0 me-3 position-relative">
                                         <div class="bg-primary rounded-circle d-flex align-items-center justify-content-center text-white" style="width: 40px; height: 40px;">
@@ -215,8 +215,8 @@ require_once 'header.php';
                 <div class="card-header bg-light">
                     <h5 class="h6 mb-0 fw-bold">Message Thread</h5>
                 </div>
-                <div class="card-body" style="height: 850px; display: flex; flex-direction: column;">
-                    <div id="chatContainer" class="flex-grow-1 overflow-auto mb-3" style="min-height: 400px;">
+                <div class="card-body admin-chat-body">
+                    <div id="chatContainer" class="flex-grow-1 overflow-auto mb-3" aria-busy="false">
                         <div class="text-center py-5">
                             <i class="fas fa-comments fa-3x text-muted mb-3"></i>
                             <h5 class="text-muted">Select a conversation</h5>
@@ -250,6 +250,9 @@ require_once 'header.php';
 <script>
 let activeConversationId = null;
 let targetCustomerId = null; // For new conversations
+let conversationRequest = 0;
+let sendingMessage = false;
+let searchTimer;
 
 function filterConversations(select) {
     const params = new URLSearchParams(window.location.search);
@@ -258,6 +261,8 @@ function filterConversations(select) {
 }
 
 function filterConversationsBySearch(searchValue) {
+    clearTimeout(searchTimer);
+    searchTimer = setTimeout(() => {
     // Update URL with search parameter
     const params = new URLSearchParams(window.location.search);
     if (searchValue) {
@@ -266,10 +271,15 @@ function filterConversationsBySearch(searchValue) {
         params.delete('search');
     }
     window.location.href = '?' + params.toString();
+    }, 600);
 }
 
 async function loadConversation(id) {
-    if (!id) return;
+    if (!id || sendingMessage) return;
+    const request = ++conversationRequest;
+    const container = document.getElementById('chatContainer');
+    container.setAttribute('aria-busy', 'true');
+    document.getElementById('messageForm').classList.add('d-none');
 
     activeConversationId = id;
     targetCustomerId = null; // Reset target customer
@@ -277,23 +287,26 @@ async function loadConversation(id) {
     // Mark as active
     document.querySelectorAll('.conversation-item').forEach(item => {
         item.classList.remove('active');
+        item.setAttribute('aria-pressed', 'false');
     });
 
     const activeItem = document.querySelector(`.conversation-item[onclick="loadConversation(${id})"]`);
     if (activeItem) {
         activeItem.classList.add('active');
+        activeItem.setAttribute('aria-pressed', 'true');
     }
 
     try {
         const response = await fetch(`../api/messages/admin/get_conversation.php?id=${id}`);
         const data = await response.json();
-
-        if (data.success) {
-            displayChat(data);
-        }
+        if (request !== conversationRequest) return;
+        if (!response.ok || !data.success) throw new Error(data.message || 'Unable to load conversation.');
+        displayChat(data);
     } catch (error) {
         console.error('Error loading conversation:', error);
-        alert('Error loading conversation. Please try again.');
+        if (request === conversationRequest) showToast('Error loading conversation. Please try again.', 'error');
+    } finally {
+        if (request === conversationRequest) container.setAttribute('aria-busy', 'false');
     }
 }
 
@@ -316,13 +329,13 @@ function displayChat(data) {
                     <div class="d-flex align-items-center justify-content-between mb-1">
                         <div class="d-flex align-items-center gap-2">
                             <h5 class="mb-0 fw-bold">${data.conversation.user_first_name} ${data.conversation.user_last_name}</h5>
-                            <a href="customer_details.php?id=${data.conversation.user_id}" target="_blank" class="btn btn-sm btn-outline-secondary py-0 px-2 shadow-xs" title="View Customer Profile" style="font-size: 0.75rem;">
+                            <a href="customer_details.php?id=${data.conversation.user_id}" target="_blank" class="btn btn-sm btn-outline-secondary py-0 px-2 shadow-xs" title="View Customer Profile" >
                                 <i class="fas fa-user me-1"></i> Profile
                             </a>
                         </div>
                         <div class="d-flex align-items-center gap-2">
                             <select class="form-select form-select-sm rounded-pill px-3 fw-bold text-uppercase shadow-none border-light-subtle" 
-                                    style="font-size: 10px; width: 110px;" 
+                                    style=" width: 110px;"
                                     onchange="updateStatus(this.value)">
                                 <option value="open" ${data.conversation.status === 'open' ? 'selected' : ''}>Open</option>
                                 <option value="pending" ${data.conversation.status === 'pending' ? 'selected' : ''}>Pending</option>
@@ -343,7 +356,7 @@ function displayChat(data) {
                             </a>
                             ${data.conversation.product_id ?
                                 `<a href="../product.php?id=${data.conversation.product_id}" target="_blank">
-                                    <img src="../img/product-placeholder.jpg" class="product-image-thumb rounded" style="width: 40px; height: 40px; object-fit: cover; border: 1px solid #ddd;" onerror="this.src='../img/product-placeholder.jpg';">
+                                    <img src="../img/product-placeholder.jpg" class="product-image-thumb rounded" style="width: 40px; height: 40px; object-fit: cover; border: 1px solid var(--admin-border);" alt="Product" onerror="this.src='../img/product-placeholder.jpg';">
                                 </a>` :
                                 ''
                             }
@@ -353,7 +366,7 @@ function displayChat(data) {
                 </div>
             </div>
         </div>
-        <div id="messagesArea" class="border rounded p-3 mb-3" style="height: 600px; overflow-y: auto; background-color: #f8f9fa;">
+        <div id="messagesArea" class="admin-chat-messages border rounded p-3 mb-3" role="log" aria-label="Conversation messages" aria-live="polite" aria-relevant="additions" tabindex="0">
             ${displayMessages(data.messages)}
         </div>
     `;
@@ -455,7 +468,7 @@ function formatProductMessage(message, productImage, productId) {
 
     // Add product thumbnail if we have a product ID to fetch the actual image
     if (productId) {
-        formattedMessage += `<div class="me-3"><img src="../img/product-placeholder.jpg" class="product-message-thumb rounded border" style="width: 60px; height: 60px; object-fit: cover;" data-product-id="${productId}" onerror="this.src='../img/product-placeholder.jpg';"></div>`;
+        formattedMessage += `<div class="me-3"><img src="../img/product-placeholder.jpg" class="product-message-thumb rounded border" style="width: 60px; height: 60px; object-fit: cover;" data-product-id="${productId}" alt="Product" onerror="this.src='../img/product-placeholder.jpg';"></div>`;
     }
 
     formattedMessage += '<div>';
@@ -480,11 +493,15 @@ function formatProductMessage(message, productImage, productId) {
 
 async function sendMessage(e) {
     e.preventDefault();
+    if (sendingMessage) return;
 
     const message = document.getElementById('messageInput').value.trim();
     if (!message) return;
 
     if (!activeConversationId && !targetCustomerId) return;
+    const sendButton = document.querySelector('#messageForm button[type="submit"]');
+    sendingMessage = true;
+    AdminUI.busy(sendButton, true);
 
     const payload = {
         message: message
@@ -505,13 +522,18 @@ async function sendMessage(e) {
 
         const data = await response.json();
 
-        if (data.success) {
-            document.getElementById('messageInput').value = '';
-            loadConversation(activeConversationId || data.conversation_id);
-        }
+        if (!response.ok || !data.success) throw new Error(data.message || 'Message could not be sent.');
+        document.getElementById('messageInput').value = '';
+        sendingMessage = false;
+        await loadConversation(activeConversationId || data.conversation_id);
+        showToast('Message sent.');
+        document.getElementById('messageInput').focus();
     } catch (error) {
         console.error('Error sending message:', error);
-        alert('Error sending message. Please try again.');
+        showToast('Error sending message. Please try again.', 'error');
+    } finally {
+        sendingMessage = false;
+        AdminUI.busy(sendButton, false);
     }
 }
 
@@ -519,7 +541,7 @@ async function updateStatus(status) {
     if (!activeConversationId) return;
 
     try {
-        await fetch('../api/messages/admin/update_conversation.php', {
+        const response = await fetch('../api/messages/admin/update_conversation.php', {
             method: 'POST',
             headers: {'Content-Type': 'application/json'},
             body: JSON.stringify({
@@ -528,16 +550,19 @@ async function updateStatus(status) {
             })
         });
         
+        const data = await response.json();
+        if (!response.ok || !data.success) throw new Error(data.message || 'Status update failed.');
+        showToast('Conversation status updated.');
         // Reload the conversation to update status display
         loadConversation(activeConversationId);
     } catch (error) {
         console.error('Error updating status:', error);
-        alert('Error updating status. Please try again.');
+        showToast('Error updating status. Please try again.', 'error');
     }
 }
 
-function archiveConversation(id, action) {
-    if (!confirm(`${action.charAt(0).toUpperCase() + action.slice(1)} this conversation?`)) return;
+async function archiveConversation(id, action) {
+    if (!await AdminUI.confirm(`${action.charAt(0).toUpperCase() + action.slice(1)} this conversation?`)) return;
     
     const form = document.getElementById('archiveForm');
     document.getElementById('archive_conv_id').value = id;

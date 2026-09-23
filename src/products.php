@@ -13,8 +13,10 @@ $search = $_GET['search'] ?? null;
 $sort = $_GET['sort'] ?? 'default';
 $minPrice = $_GET['min_price'] ?? null;
 $maxPrice = $_GET['max_price'] ?? null;
-$page = (int)($_GET['page'] ?? 1);
-$limit = isset($_GET['limit']) ? (int)$_GET['limit'] : 12; // Products per page
+$viewMode = ($_GET['view'] ?? 'grid') === 'list' ? 'list' : 'grid';
+$page = max(1, (int)($_GET['page'] ?? 1));
+$limit = isset($_GET['limit']) ? (int)$_GET['limit'] : 12;
+if (!in_array($limit, [12, 24, 48], true)) $limit = 12;
 $offset = ($page - 1) * $limit;
 
 // Get category information if an ID is provided
@@ -65,7 +67,7 @@ $allCategories = $categoryModel->getWithSubcategories();
     if (!empty($breadcrumb)) {
         $breadcrumb_items[] = ['label' => t('products'), 'url' => 'products.php'];
         foreach ($breadcrumb as $index => $bc) {
-            $item = ['label' => $bc['name_en'] ?? ''];
+            $item = ['label' => localized_field($bc, 'name')];
             if ($index < count($breadcrumb) - 1) {
                 $item['url'] = "products.php?category=" . $bc['id'];
             }
@@ -76,39 +78,44 @@ $allCategories = $categoryModel->getWithSubcategories();
     }
     include 'includes/breadcrumb.php';
     ?>
+
+    <button class="btn btn-outline-dark w-100 d-lg-none mb-3" type="button" data-bs-toggle="collapse" data-bs-target="#catalogFilters" aria-expanded="false" aria-controls="catalogFilters">
+        <i class="fas fa-filter me-2" aria-hidden="true"></i><?php echo t('filters'); ?>
+    </button>
     
     <div class="row g-3">
         <!-- Filters sidebar -->
-        <aside class="col-lg-3">
-            <div class="card border-0 shadow-sm sticky-top" style="top: 20px;">
+        <aside id="catalogFilters" class="col-lg-3 collapse d-lg-block">
+            <div class="card border-0 shadow-sm catalog-filter-card">
                 <div class="card-header bg-white py-3">
                     <h5 class="mb-0"><i class="fas fa-filter me-2 text-primary"></i> <?php echo t('filters'); ?></h5>
                 </div>
                 <div class="card-body">
                     <form id="filter-form" method="GET" action="products.php">
+                        <input type="hidden" name="view" value="<?php echo $viewMode; ?>">
                         <!-- Search filter -->
                         <div class="mb-4">
-                            <label class="form-label small fw-bold text-muted text-uppercase"><?php echo t('search'); ?></label>
+                            <label for="catalog-search" class="form-label small fw-bold text-muted text-uppercase"><?php echo t('search'); ?></label>
                             <div class="input-group">
-                                <input type="text" name="search" class="form-control" value="<?php echo htmlspecialchars($search ?? ''); ?>" placeholder="<?php echo t('search_products'); ?>">
-                                <button class="btn btn-outline-secondary" type="submit"><i class="fas fa-search"></i></button>
+                                <input type="search" id="catalog-search" name="search" class="form-control" value="<?php echo htmlspecialchars($search ?? ''); ?>" placeholder="<?php echo t('search_products'); ?>">
+                                <button class="btn btn-outline-secondary" type="submit" aria-label="Search catalog"><i class="fas fa-search" aria-hidden="true"></i></button>
                             </div>
                         </div>
                         
                         <!-- Category filter -->
                         <div class="mb-4">
-                            <label class="form-label small fw-bold text-muted text-uppercase"><?php echo t('category'); ?></label>
-                            <select name="category" class="form-select" onchange="this.form.submit()">
+                            <label for="catalog-category" class="form-label small fw-bold text-muted text-uppercase"><?php echo t('category'); ?></label>
+                            <select id="catalog-category" name="category" class="form-select" onchange="this.form.submit()">
                                 <option value=""><?php echo t('all_categories'); ?></option>
                                 <?php foreach ($allCategories as $cat): ?>
-                                    <optgroup label="<?php echo htmlspecialchars($cat['name_en']); ?>">
+                                    <optgroup label="<?php echo htmlspecialchars(localized_field($cat, 'name')); ?>">
                                         <option value="<?php echo $cat['id']; ?>" <?php echo $categoryId == $cat['id'] ? 'selected' : ''; ?>>
-                                            All <?php echo htmlspecialchars($cat['name_en']); ?>
+                                            <?php echo app_label('all', 'All'); ?> <?php echo htmlspecialchars(localized_field($cat, 'name')); ?>
                                         </option>
                                         <?php if (!empty($cat['subcategories'])): ?>
                                             <?php foreach ($cat['subcategories'] as $subcat): ?>
                                                 <option value="<?php echo $subcat['id']; ?>" <?php echo $categoryId == $subcat['id'] ? 'selected' : ''; ?>>
-                                                    &nbsp;&nbsp;└─ <?php echo htmlspecialchars($subcat['name_en']); ?>
+                                                    &nbsp;&nbsp;└─ <?php echo htmlspecialchars(localized_field($subcat, 'name')); ?>
                                                 </option>
                                             <?php endforeach; ?>
                                         <?php endif; ?>
@@ -119,22 +126,24 @@ $allCategories = $categoryModel->getWithSubcategories();
                         
                         <!-- Price range filter -->
                         <div class="mb-4">
-                            <label class="form-label small fw-bold text-muted text-uppercase"><?php echo t('price_range'); ?></label>
+                            <span class="form-label d-block small fw-bold text-muted text-uppercase"><?php echo t('price_range'); ?></span>
                             <div class="row g-2 align-items-center">
                                 <div class="col">
-                                    <input type="number" name="min_price" class="form-control form-control-sm" value="<?php echo htmlspecialchars($minPrice ?? ''); ?>" placeholder="<?php echo t('min'); ?>">
+                                    <label class="visually-hidden" for="catalog-min-price"><?php echo t('min'); ?></label>
+                                    <input type="number" id="catalog-min-price" name="min_price" class="form-control form-control-sm" value="<?php echo htmlspecialchars($minPrice ?? ''); ?>" placeholder="<?php echo t('min'); ?>">
                                 </div>
                                 <div class="col-auto text-muted small">-</div>
                                 <div class="col">
-                                    <input type="number" name="max_price" class="form-control form-control-sm" value="<?php echo htmlspecialchars($maxPrice ?? ''); ?>" placeholder="<?php echo t('max'); ?>">
+                                    <label class="visually-hidden" for="catalog-max-price"><?php echo t('max'); ?></label>
+                                    <input type="number" id="catalog-max-price" name="max_price" class="form-control form-control-sm" value="<?php echo htmlspecialchars($maxPrice ?? ''); ?>" placeholder="<?php echo t('max'); ?>">
                                 </div>
                             </div>
                         </div>
                         
                         <!-- Sort filter -->
                         <div class="mb-4">
-                            <label class="form-label small fw-bold text-muted text-uppercase"><?php echo t('sort_by'); ?></label>
-                            <select name="sort" class="form-select shadow-none">
+                            <label for="catalog-sort" class="form-label small fw-bold text-muted text-uppercase"><?php echo t('sort_by'); ?></label>
+                            <select id="catalog-sort" name="sort" class="form-select">
                                 <option value="default" <?php echo ($sort == 'default') ? 'selected' : ''; ?>><?php echo t('relevance'); ?></option>
                                 <option value="price_low" <?php echo ($sort == 'price_low') ? 'selected' : ''; ?>><?php echo t('price_low_high'); ?></option>
                                 <option value="price_high" <?php echo ($sort == 'price_high') ? 'selected' : ''; ?>><?php echo t('price_high_low'); ?></option>
@@ -154,22 +163,26 @@ $allCategories = $categoryModel->getWithSubcategories();
         </aside>
 
         <!-- Products content -->
-        <main class="col-lg-9">
+        <section class="col-lg-9" aria-labelledby="catalog-title">
             <div class="card border-0 shadow-sm mb-4 bg-light overflow-hidden">
                 <div class="card-body p-4 d-md-flex align-items-center justify-content-between">
                     <div>
-                        <h1 class="h3 mb-1 fw-bold"><?php echo $currentCategory ? htmlspecialchars($currentCategory['name_en']) : t('all_products'); ?></h1>
+                        <h1 id="catalog-title" class="app-page-title h3 mb-1 fw-bold"><?php echo $currentCategory ? htmlspecialchars(localized_field($currentCategory, 'name')) : t('all_products'); ?></h1>
                         <?php if ($currentCategory && !empty($currentCategory['description_en'])): ?>
                             <p class="text-muted mb-0 small"><?php echo htmlspecialchars($currentCategory['description_en']); ?></p>
                         <?php endif; ?>
                     </div>
-                    <div class="mt-3 mt-md-0 d-flex align-items-center gap-3 bg-white p-2 rounded-3 shadow-sm border">
+                    <div class="mt-3 mt-md-0 d-flex flex-wrap align-items-center gap-3 bg-white p-2 rounded-3 shadow-sm border">
                         <span class="text-muted small">
                             <?php echo t('showing'); ?> <span class="fw-bold text-dark"><?php echo $totalProducts > 0 ? ($offset + 1) : 0; ?>-<?php echo min($offset + $limit, $totalProducts); ?></span> <?php echo t('of'); ?> <span class="fw-bold text-dark"><?php echo $totalProducts; ?></span>
                         </span>
                         <div class="vr"></div>
+                        <div class="btn-group btn-group-sm" role="group" aria-label="Product view">
+                            <a class="btn <?php echo $viewMode === 'grid' ? 'btn-dark' : 'btn-outline-secondary'; ?>" href="?<?php echo htmlspecialchars(http_build_query(array_merge($_GET, ['view' => 'grid', 'page' => 1]))); ?>" aria-label="Grid view"><i class="fas fa-th-large" aria-hidden="true"></i></a>
+                            <a class="btn <?php echo $viewMode === 'list' ? 'btn-dark' : 'btn-outline-secondary'; ?>" href="?<?php echo htmlspecialchars(http_build_query(array_merge($_GET, ['view' => 'list', 'page' => 1]))); ?>" aria-label="List view"><i class="fas fa-list" aria-hidden="true"></i></a>
+                        </div>
                         <div class="d-flex align-items-center gap-2">
-                            <span class="text-muted small"><?php echo t('per_page'); ?>:</span>
+                            <label for="items-per-page" class="text-muted small"><?php echo t('per_page'); ?>:</label>
                             <select id="items-per-page" class="form-select form-select-sm border-0 bg-light ps-3 pe-5" style="width: auto;">
                                 <option value="12" <?php echo $limit == 12 ? 'selected' : ''; ?>>12</option>
                                 <option value="24" <?php echo $limit == 24 ? 'selected' : ''; ?>>24</option>
@@ -180,13 +193,17 @@ $allCategories = $categoryModel->getWithSubcategories();
                 </div>
             </div>
             
-            <div class="row row-cols-2 row-cols-sm-3 row-cols-md-4 row-cols-lg-4 row-cols-xl-5 g-3">
-                <?php foreach ($products as $product): ?>
-                    <div class="col">
-                        <?php include 'includes/product-card-jd.php'; ?>
-                    </div>
-                <?php endforeach; ?>
-            </div>
+            <?php if ($viewMode === 'list'): ?>
+                <div class="d-flex flex-column gap-3">
+                    <?php foreach ($products as $product) include 'includes/product-card-list.php'; ?>
+                </div>
+            <?php else: ?>
+                <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-4 row-cols-xl-5 g-3">
+                    <?php foreach ($products as $product): ?>
+                        <div class="col"><?php include 'includes/product-card-jd.php'; ?></div>
+                    <?php endforeach; ?>
+                </div>
+            <?php endif; ?>
             
             <?php if (count($products) == 0): ?>
                 <div class="text-center py-5">
@@ -201,24 +218,43 @@ $allCategories = $categoryModel->getWithSubcategories();
             <!-- Pagination -->
             <?php if ($totalPages > 1): ?>
                 <nav aria-label="Product pagination" class="mt-5">
-                    <ul class="pagination justify-content-center">
-                        <?php for ($i = 1; $i <= $totalPages; $i++): ?>
-                            <li class="page-item <?php echo $i == $page ? 'active' : ''; ?>">
-                                <a class="page-link shadow-none" href="?page=<?php echo $i; ?><?php echo $categoryId ? '&category=' . $categoryId : ''; ?><?php echo $brandId ? '&brand=' . $brandId : ''; ?><?php echo $search ? '&search=' . urlencode($search) : ''; ?><?php echo $sort ? '&sort=' . $sort : ''; ?><?php echo $minPrice ? '&min_price=' . $minPrice : ''; ?><?php echo $maxPrice ? '&max_price=' . $maxPrice : ''; ?><?php echo '&limit=' . $limit; ?>">
-                                    <?php echo $i; ?>
+                    <?php
+                    $paginationPages = [1, $totalPages];
+                    for ($i = max(1, $page - 2); $i <= min($totalPages, $page + 2); $i++) {
+                        $paginationPages[] = $i;
+                    }
+                    $paginationPages = array_values(array_unique($paginationPages));
+                    sort($paginationPages);
+                    $previousPaginationPage = null;
+                    ?>
+                    <ul class="pagination pagination-sm justify-content-center flex-wrap gap-1">
+                        <li class="page-item <?php echo $page <= 1 ? 'disabled' : ''; ?>">
+                            <a class="page-link rounded" href="?<?php echo htmlspecialchars(http_build_query(array_merge($_GET, ['page' => max(1, $page - 1), 'limit' => $limit, 'view' => $viewMode]))); ?>" aria-label="Previous page" <?php echo $page <= 1 ? 'tabindex="-1" aria-disabled="true"' : ''; ?>>
+                                <i class="fas fa-chevron-left" aria-hidden="true"></i>
+                            </a>
+                        </li>
+                        <?php foreach ($paginationPages as $paginationPage): ?>
+                            <?php if ($previousPaginationPage !== null && $paginationPage > $previousPaginationPage + 1): ?>
+                                <li class="page-item disabled" aria-hidden="true"><span class="page-link border-0 bg-transparent">&hellip;</span></li>
+                            <?php endif; ?>
+                            <li class="page-item <?php echo $paginationPage == $page ? 'active' : ''; ?>">
+                                <a class="page-link rounded" href="?<?php echo htmlspecialchars(http_build_query(array_merge($_GET, ['page' => $paginationPage, 'limit' => $limit, 'view' => $viewMode]))); ?>" <?php echo $paginationPage == $page ? 'aria-current="page"' : ''; ?>>
+                                    <?php echo $paginationPage; ?>
                                 </a>
                             </li>
-                        <?php endfor; ?>
+                            <?php $previousPaginationPage = $paginationPage; ?>
+                        <?php endforeach; ?>
+                        <li class="page-item <?php echo $page >= $totalPages ? 'disabled' : ''; ?>">
+                            <a class="page-link rounded" href="?<?php echo htmlspecialchars(http_build_query(array_merge($_GET, ['page' => min($totalPages, $page + 1), 'limit' => $limit, 'view' => $viewMode]))); ?>" aria-label="Next page" <?php echo $page >= $totalPages ? 'tabindex="-1" aria-disabled="true"' : ''; ?>>
+                                <i class="fas fa-chevron-right" aria-hidden="true"></i>
+                            </a>
+                        </li>
                     </ul>
                 </nav>
             <?php endif; ?>
-        </main>
+        </section>
     </div>
 </div>
-
-<?php
-require_once 'includes/footer.php';
-?>
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
@@ -231,3 +267,4 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 });
 </script>
+<?php require_once 'includes/footer.php'; ?>

@@ -1,6 +1,7 @@
 <?php
 // models/Cart.php
 require_once __DIR__ . '/../db_connect.php';
+require_once __DIR__ . '/../helpers/CatalogRules.php';
 
 class Cart {
     private $pdo;
@@ -14,118 +15,66 @@ class Cart {
     }
     
     public function add($productId, $quantity = 1, $variantId = null, $selectedOptions = null) {
-        // Check if product exists
-        $productSql = "SELECT id, stock_quantity, final_price FROM products WHERE id = ? AND is_active = 1";
-        $productStmt = $this->pdo->prepare($productSql);
-        $productStmt->execute([$productId]);
-        $product = $productStmt->fetch();
-        
-        if (!$product) {
-            return ['success' => false, 'message' => 'Product not found'];
-        }
-
-        $price = $product['final_price'];
-        $stock = $product['stock_quantity'];
-
-        // If variant selected, check variant stock and price
-        if ($variantId) {
-            $variantSql = "SELECT price, stock_quantity FROM product_variants WHERE id = ? AND product_id = ? AND is_active = 1";
-            $variantStmt = $this->pdo->prepare($variantSql);
-            $variantStmt->execute([$variantId, $productId]);
-            $variant = $variantStmt->fetch();
-
-            if (!$variant) {
-                return ['success' => false, 'message' => 'Variant not found'];
+        $ownsTransaction = !$this->pdo->inTransaction();
+        try {
+            $quantity = CatalogRules::quantity($quantity);
+            $productId = CatalogRules::quantity($productId);
+            if ($variantId !== null) $variantId = CatalogRules::quantity($variantId);
+            if ($ownsTransaction) $this->pdo->beginTransaction();
+            $item = CatalogRules::sellable($this->pdo, $productId, $variantId, true);
+            $owner = $this->customerId ? 'customer_id = ?' : 'session_id = ? AND customer_id IS NULL';
+            $stmt=$this->pdo->prepare("SELECT id, quantity FROM shopping_cart WHERE product_id=? AND variant_id <=> ? AND ($owner) FOR UPDATE");
+            $stmt->execute([$productId,$variantId,$this->customerId ?: $this->sessionId]);
+            $existing=$stmt->fetch();
+            $total=$quantity + (int)($existing['quantity'] ?? 0);
+            if ($total > $item['stock_quantity']) throw new DomainException('Insufficient stock for the requested quantity.');
+            if ($existing) {
+                $this->pdo->prepare('UPDATE shopping_cart SET quantity=?,price_at_time=?,updated_at=NOW() WHERE id=?')->execute([$total,$item['price_at_time'],$existing['id']]);
+                $id=$existing['id'];
+            } else {
+                $this->pdo->prepare('INSERT INTO shopping_cart(customer_id,session_id,product_id,variant_id,quantity,price_at_time) VALUES(?,?,?,?,?,?)')->execute([$this->customerId,$this->customerId ? null : $this->sessionId,$productId,$variantId,$quantity,$item['price_at_time']]);
+                $id=$this->pdo->lastInsertId();
             }
-            $price = $variant['price'];
-            $stock = $variant['stock_quantity'];
-        }
-        
-        if ($stock < $quantity) {
-            return ['success' => false, 'message' => 'Insufficient stock'];
-        }
-        
-        // Check if item already exists in cart
-        $checkSql = "SELECT id, quantity FROM shopping_cart WHERE product_id = ? AND " . 
-                   ($variantId ? "variant_id = ?" : "variant_id IS NULL") . " AND " . 
-                   ($this->customerId ? "customer_id = ?" : "session_id = ?");
-        
-        $checkParams = [$productId];
-        if ($variantId) {
-            $checkParams[] = $variantId;
-        }
-        $checkParams[] = $this->customerId ?: $this->sessionId;
-        
-        $checkStmt = $this->pdo->prepare($checkSql);
-        $checkStmt->execute($checkParams);
-        $existingItem = $checkStmt->fetch();
-        
-        if ($existingItem) {
-            // Update quantity
-            $newQuantity = $existingItem['quantity'] + $quantity;
-            
-            if ($stock < $newQuantity) {
-                return ['success' => false, 'message' => 'Insufficient stock for requested quantity'];
-            }
-            
-            $updateSql = "UPDATE shopping_cart SET quantity = ?, updated_at = NOW() WHERE id = ?";
-            $updateStmt = $this->pdo->prepare($updateSql);
-            $result = $updateStmt->execute([$newQuantity, $existingItem['id']]);
-            
-            return $result ? 
-                ['success' => true, 'message' => t('cart_updated'), 'item_id' => $existingItem['id']] : 
-                ['success' => false, 'message' => 'Failed to update cart'];
-        } else {
-            // Insert new item
-            $insertSql = "INSERT INTO shopping_cart (customer_id, session_id, product_id, variant_id, quantity, price_at_time) VALUES (?, ?, ?, ?, ?, ?)";
-            $insertStmt = $this->pdo->prepare($insertSql);
-            $result = $insertStmt->execute([
-                $this->customerId,
-                $this->customerId ? null : $this->sessionId,
-                $productId,
-                $variantId,
-                $quantity,
-                $price
-            ]);
-            
-            return $result ? 
-                ['success' => true, 'message' => t('item_added_to_cart'), 'item_id' => $this->pdo->lastInsertId()] : 
-                ['success' => false, 'message' => 'Failed to add item to cart'];
+            if ($ownsTransaction) $this->pdo->commit();
+            return ['success'=>true,'message'=>t('item_added_to_cart'),'item_id'=>$id];
+        } catch (DomainException | InvalidArgumentException $e) {
+            if ($ownsTransaction && $this->pdo->inTransaction()) $this->pdo->rollBack();
+            return ['success'=>false,'message'=>$e->getMessage(),'choose_options'=>!$variantId && CatalogRules::hasVariants($this->pdo,$productId)];
+        } catch (Throwable $e) {
+            if ($ownsTransaction && $this->pdo->inTransaction()) $this->pdo->rollBack();
+            throw $e;
         }
     }
-    
+
     public function update($itemId, $quantity) {
-        if ($quantity <= 0) {
-            return $this->remove($itemId);
+        try {
+            $quantity=CatalogRules::quantity($quantity,true);
+            if ($quantity===0) return $this->remove($itemId);
+            $owner=$this->customerId ? 'customer_id=?' : 'session_id=? AND customer_id IS NULL';
+            $this->pdo->beginTransaction();
+            // Acquire catalog locks before cart locks, as add and checkout do.
+            $lookup=$this->pdo->prepare("SELECT product_id,variant_id FROM shopping_cart WHERE id=? AND ($owner)");
+            $lookup->execute([$itemId,$this->customerId ?: $this->sessionId]);
+            $identity=$lookup->fetch();
+            if (!$identity) throw new DomainException('Cart item not found.');
+            $item=CatalogRules::sellable($this->pdo,$identity['product_id'],$identity['variant_id'],true);
+            $stmt=$this->pdo->prepare("SELECT * FROM shopping_cart WHERE id=? AND ($owner) FOR UPDATE");
+            $stmt->execute([$itemId,$this->customerId ?: $this->sessionId]);
+            $row=$stmt->fetch();
+            if (!$row) throw new DomainException('Cart item not found.');
+            if (!empty($row['unavailable_reason'])) throw new DomainException($row['unavailable_reason']);
+            if ($row['product_id'] != $identity['product_id'] || $row['variant_id'] != $identity['variant_id']) throw new DomainException('Cart changed. Please refresh and try again.');
+            if ($quantity > $item['stock_quantity']) throw new DomainException('Insufficient stock.');
+            $this->pdo->prepare('UPDATE shopping_cart SET quantity=?,price_at_time=?,updated_at=NOW() WHERE id=?')->execute([$quantity,$item['price_at_time'],$itemId]);
+            $this->pdo->commit();
+            return ['success'=>true,'message'=>t('cart_updated')];
+        } catch (DomainException | InvalidArgumentException $e) {
+            if ($this->pdo->inTransaction()) $this->pdo->rollBack();
+            return ['success'=>false,'message'=>$e->getMessage()];
+        } catch (Throwable $e) {
+            if ($this->pdo->inTransaction()) $this->pdo->rollBack();
+            throw $e;
         }
-        
-        // Get current cart item with product and variant stock
-        $getItemSql = "SELECT sc.*, p.stock_quantity as product_stock, v.stock_quantity as variant_stock 
-                       FROM shopping_cart sc 
-                       JOIN products p ON sc.product_id = p.id 
-                       LEFT JOIN product_variants v ON sc.variant_id = v.id
-                       WHERE sc.id = ?";
-        $getItemStmt = $this->pdo->prepare($getItemSql);
-        $getItemStmt->execute([$itemId]);
-        $item = $getItemStmt->fetch();
-        
-        if (!$item) {
-            return ['success' => false, 'message' => 'Cart item not found'];
-        }
-        
-        $availableStock = $item['variant_id'] ? $item['variant_stock'] : $item['product_stock'];
-        
-        if ($availableStock < $quantity) {
-            return ['success' => false, 'message' => 'Insufficient stock (Available: ' . $availableStock . ')'];
-        }
-        
-        $updateSql = "UPDATE shopping_cart SET quantity = ?, updated_at = NOW() WHERE id = ?";
-        $updateStmt = $this->pdo->prepare($updateSql);
-        $result = $updateStmt->execute([$quantity, $itemId]);
-        
-        return $result ? 
-            ['success' => true, 'message' => t('cart_updated')] : 
-            ['success' => false, 'message' => 'Failed to update cart'];
     }
     
     public function remove($itemId) {
@@ -203,9 +152,10 @@ class Cart {
         
         if (empty($where)) return [];
         
-        $sql = "SELECT sc.*, p.name_en as product_name, p.final_price, p.stock_quantity as product_stock, 
+        $sql = "SELECT sc.*, ROUND(COALESCE(v.price,p.price) * (1 - p.discount_percentage / 100),2) AS price_at_time, p.name_en as product_name, p.final_price, p.stock_quantity as product_stock,
                        pi.image_url as product_image,
                        v.stock_quantity as variant_stock,
+                       COALESCE(sc.unavailable_reason, CASE WHEN p.is_active=0 THEN 'This product is no longer available.' WHEN sc.variant_id IS NOT NULL AND (v.id IS NULL OR v.is_active=0) THEN 'This variant is no longer available.' WHEN sc.variant_id IS NULL AND EXISTS(SELECT 1 FROM product_variants x WHERE x.product_id=p.id) THEN 'Choose product options before checkout.' END) AS unavailable_reason,
                        v.variant_name,
                        COALESCE(v.sku, p.sku) as product_sku,
                        (SELECT JSON_OBJECTAGG(va.attribute_name, va.attribute_value) 
@@ -263,9 +213,10 @@ class Cart {
         
         if (empty($where)) return 0;
 
-        $sql = "SELECT SUM(sc.quantity * sc.price_at_time) as subtotal
+        $sql = "SELECT SUM(sc.quantity * ROUND(COALESCE(v.price,p.price) * (1 - p.discount_percentage / 100),2)) as subtotal
                 FROM shopping_cart sc
                 JOIN products p ON sc.product_id = p.id
+                LEFT JOIN product_variants v ON sc.variant_id=v.id
                 WHERE (" . implode(" OR ", $where) . ")
                 AND p.is_active = 1";
         

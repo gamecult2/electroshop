@@ -6,6 +6,17 @@ require_once 'models/Customer.php';
 $message = '';
 $messageType = '';
 
+function safe_customer_redirect($value, $fallback = 'account.php') {
+    $value = trim((string)$value);
+    if ($value === '' || preg_match('/[\r\n]/', $value)) return $fallback;
+    $parts = parse_url($value);
+    if ($parts === false || isset($parts['scheme']) || isset($parts['host']) || str_contains($value, '..')) return $fallback;
+    $path = ltrim($parts['path'] ?? '', '/');
+    $allowed = ['account.php', 'checkout.php', 'cart.php', 'wishlist.php', 'order_history.php'];
+    if (!in_array($path, $allowed, true)) return $fallback;
+    return $path . (isset($parts['query']) ? '?' . $parts['query'] : '');
+}
+
 // Process login form BEFORE including header to avoid headers already sent error
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $email = sanitize_input($_POST['email'] ?? '');
@@ -28,11 +39,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             // Ensure session data is written before redirect
             session_write_close();
 
-            // Use JavaScript redirect to ensure session persistence
-            $redirectUrl = $_POST['redirect_to'] ?? 'account.php';
-            echo "<script>setTimeout(function(){window.location.href = '" . addslashes($redirectUrl) . "';}, 100);</script>";
-            echo "Login successful! Redirecting to your account...";
-            exit();
+            $redirectUrl = safe_customer_redirect($_POST['redirect_to'] ?? 'account.php');
+            header('Location: ' . $redirectUrl);
+            exit;
         } else {
             $message = $result['message'];
             $messageType = 'error';
@@ -42,7 +51,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
 require_once 'includes/header.php';
 
-$redirectUrl = $_GET['redirect_to'] ?? '';
+$redirectUrl = safe_customer_redirect($_GET['redirect_to'] ?? '', '');
 
 // Check if there are any customers in the system
 $stmt = $GLOBALS['pdo']->query("SELECT COUNT(*) as count FROM customers");
@@ -56,7 +65,7 @@ $noCustomers = $customerCount['count'] == 0;
             <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
                 <div class="card-body p-4 p-md-5">
                     <div class="text-center mb-4">
-                        <h1 class="h3 fw-bold text-dark mb-1"><?php echo t('sign_in'); ?></h1>
+                        <h1 class="app-page-title fw-bold text-dark mb-1"><?php echo t('sign_in'); ?></h1>
                         <p class="text-muted small">Welcome back! Please enter your details.</p>
                     </div>
 

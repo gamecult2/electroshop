@@ -95,7 +95,7 @@ include 'header.php';
             </thead>
             <tbody>
                 <?php if (empty($customers)): ?>
-                    <tr><td colspan="6" class="text-center py-5 text-muted"><i class="fas fa-users-slash fa-3x opacity-25 mb-3"></i><br>No customers found.</td></tr>
+                    <?php admin_empty_row(6, 'No customers found.', 'fas fa-users-slash'); ?>
                 <?php else: ?>
                     <?php foreach ($customers as $customer): ?>
                         <tr>
@@ -110,12 +110,12 @@ include 'header.php';
                                 <div class="x-small text-muted"><?php echo date('H:i', strtotime($customer['created_at'])); ?></div>
                             </td>
                             <td>
-                                <span class="badge rounded-pill px-3 py-2 fw-bold <?php echo $customer['is_active'] ? 'bg-success-subtle text-success-emphasis' : 'bg-danger-subtle text-danger-emphasis'; ?>" style="font-size: 10px;">
+                                <span class="badge rounded-pill px-3 py-2 fw-bold <?php echo $customer['is_active'] ? 'bg-success-subtle text-success-emphasis' : 'bg-danger-subtle text-danger-emphasis'; ?>" >
                                     <?php echo $customer['is_active'] ? 'ACTIVE' : 'BANNED'; ?>
                                 </span>
                             </td>
                             <td class="text-center">
-                                <div class="btn-group shadow-sm rounded">
+                                <div class="admin-row-actions">
                                     <a href="customer_details.php?id=<?php echo $customer['id']; ?>" class="btn btn-white btn-sm border-light-subtle text-info" title="View Details">
                                         <i class="fas fa-eye"></i>
                                     </a>
@@ -123,7 +123,7 @@ include 'header.php';
                                         <i class="fas fa-edit"></i>
                                     </button>
                                     <?php if ($customer['is_active']): ?>
-                                        <a href="customers.php?action=ban&id=<?php echo $customer['id']; ?>" class="btn btn-white btn-sm border-light-subtle text-danger" title="Ban Customer" onclick="return confirm('Are you sure you want to ban this customer?');">
+                                        <a href="customers.php?action=ban&id=<?php echo $customer['id']; ?>" class="btn btn-white btn-sm border-light-subtle text-danger" title="Ban Customer" data-confirm="Are you sure you want to ban this customer?">
                                             <i class="fas fa-ban"></i>
                                         </a>
                                     <?php else: ?>
@@ -192,10 +192,7 @@ include 'header.php';
                         </div>
                     </div>
                 </div>
-                <div class="modal-footer border-0 p-4 pt-0">
-                    <button type="button" class="btn btn-light rounded-pill px-4 fw-bold text-muted border" data-bs-dismiss="modal">Cancel</button>
-                    <button type="submit" class="btn btn-danger rounded-pill px-4 fw-bold shadow-sm">Save Changes</button>
-                </div>
+                <?php admin_modal_footer('Save Changes'); ?>
             </form>
         </div>
     </div>

@@ -15,7 +15,7 @@ require_once 'includes/header.php';
 
     <div class="card border-0 shadow-sm bg-dark text-white mb-5 overflow-hidden rounded-4">
         <div class="card-body p-5 text-center">
-            <h1 class="display-4 fw-bold mb-4"><?php echo t('about_us'); ?></h1>
+            <h1 class="app-page-title fw-bold mb-4"><?php echo t('about_us'); ?></h1>
             <p class="fs-5 text-white-75 mx-auto mb-0" style="max-width: 800px;">
                 <?php echo t('about_intro'); ?>
             </p>

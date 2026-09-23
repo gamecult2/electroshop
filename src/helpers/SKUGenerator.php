@@ -6,7 +6,7 @@ require_once __DIR__ . '/../db_connect.php';
 
 class SKUGenerator {
     private $pdo;
-    const MAX_LENGTH = 64;
+    const MAX_LENGTH = 100;
     const RESERVED_PREFIXES = ['TEST', 'ADMIN', 'SYS', 'ROOT'];
     
     public function __construct($database = null) {
@@ -18,8 +18,10 @@ class SKUGenerator {
      * Format: [CATEGORY_ABBR]-[SUBCATEGORY_ABBR]-[NNNN]
      */
     public function generateSKU($categoryId, $subcategoryId = null) {
+        $ownsTransaction = !$this->pdo->inTransaction();
         try {
-            $this->pdo->beginTransaction();
+            if ($ownsTransaction) $this->pdo->beginTransaction();
+            $this->allocate('category-abbreviations');
             
             // Get abbreviations
             $categoryAbbr = $this->getCategoryAbbreviation($categoryId);
@@ -29,7 +31,9 @@ class SKUGenerator {
             }
             
             // Get next sequence number
-            $number = $this->getNextNumber($categoryId, $subcategoryId);
+            $namespace = 'product:' . $categoryId . ':' . ($subcategoryId ?? 0);
+            $skuPrefix = $categoryAbbr . ($subcategoryAbbr ? '-' . $subcategoryAbbr : '') . '-';
+            $number = $this->allocate($namespace, $this->nextImportedSequence($skuPrefix));
             
             // Format logic
             $sku = $subcategoryAbbr 
@@ -39,7 +43,7 @@ class SKUGenerator {
             // Collision prevention loop
             $attempts = 0;
             while ($this->skuExists($sku) && $attempts < 50) {
-                $number++;
+                $number = $this->allocate($namespace);
                 $sku = $subcategoryAbbr 
                     ? sprintf("%s-%s-%04d", $categoryAbbr, $subcategoryAbbr, $number)
                     : sprintf("%s-%04d", $categoryAbbr, $number);
@@ -51,13 +55,12 @@ class SKUGenerator {
             }
             
             // Update counter for next time
-            $this->updateCounter($categoryId, $subcategoryId, $number + 1);
-            
-            $this->pdo->commit();
+            if (!$this->validateSKU($sku)) throw new InvalidArgumentException('Generated SKU is invalid. Review category abbreviation.');
+            if ($ownsTransaction) $this->pdo->commit();
             return $sku;
             
         } catch (Exception $e) {
-            if ($this->pdo->inTransaction()) $this->pdo->rollback();
+            if ($ownsTransaction && $this->pdo->inTransaction()) $this->pdo->rollback();
             throw $e;
         }
     }
@@ -67,11 +70,49 @@ class SKUGenerator {
      * Format: [PARENT_SKU]-V[NN] (e.g., ELEC-0042-V01)
      */
     public function generateVariantSKU($parentSku, $sequenceOffset = 0) {
-        // Get current highest variant number for this parent
-        $currentMax = $this->getMaxVariantSequence($parentSku);
-        $nextNum = $currentMax + 1 + $sequenceOffset;
-        
-        return sprintf("%s-V%02d", $parentSku, $nextNum);
+        if (!$this->pdo->inTransaction()) throw new LogicException('Variant allocation requires a catalog transaction.');
+        // Keep enough space for the suffix, even for a maximum-length parent SKU.
+        $prefix = strlen($parentSku) > 80 ? substr($parentSku,0,65) . '-' . substr(hash('sha256',$parentSku),0,12) : $parentSku;
+        do {
+            $nextNum = $this->allocate('variant:' . $prefix, $this->nextImportedSequence($prefix . '-V'));
+            $sku = sprintf('%s-V%02d', $prefix, $nextNum);
+        } while ($this->skuExists($sku));
+        if (!$this->validateSKU($sku)) throw new InvalidArgumentException('Generated variant SKU is invalid.');
+        return $sku;
+    }
+
+    private function nextImportedSequence($prefix) {
+        $stmt = $this->pdo->prepare('SELECT sku FROM sku_registry WHERE sku LIKE ?');
+        $stmt->execute([$prefix . '%']);
+        $next = 1;
+        foreach ($stmt->fetchAll(PDO::FETCH_COLUMN) as $sku) {
+            $suffix = substr($sku, strlen($prefix));
+            if (ctype_digit($suffix) && strlen($suffix) <= 9) $next = max($next, (int)$suffix + 1);
+        }
+        return $next;
+    }
+
+    private function allocate($namespace, $floor = 1) {
+        $this->pdo->prepare('INSERT INTO sku_sequences(namespace,next_number) VALUES(?,?) ON DUPLICATE KEY UPDATE next_number=GREATEST(next_number,VALUES(next_number))')->execute([$namespace,$floor]);
+        $stmt=$this->pdo->prepare('SELECT next_number FROM sku_sequences WHERE namespace=? FOR UPDATE');
+        $stmt->execute([$namespace]);
+        $number=(int)$stmt->fetchColumn();
+        $this->pdo->prepare('UPDATE sku_sequences SET next_number=next_number+1 WHERE namespace=?')->execute([$namespace]);
+        return $number;
+    }
+
+    public function claim($sku, $type, $id) {
+        $sku=strtoupper(trim($sku));
+        if (!$this->validateSKU($sku)) throw new InvalidArgumentException('SKU must use letters, numbers and hyphens, up to 100 characters, without a reserved prefix.');
+        $stmt=$this->pdo->prepare('SELECT owner_type,owner_id FROM sku_registry WHERE sku=?');
+        $stmt->execute([$sku]); $owner=$stmt->fetch();
+        if ($owner) {
+            if ($owner['owner_type']!==$type || (int)$owner['owner_id']!==(int)$id) throw new InvalidArgumentException('SKU is already assigned or reserved: '.$sku);
+        } else {
+            // The primary key resolves concurrent cross-table allocations safely.
+            $this->pdo->prepare('INSERT INTO sku_registry(sku,owner_type,owner_id) VALUES(?,?,?)')->execute([$sku,$type,$id]);
+        }
+        return $sku;
     }
 
     /**
@@ -167,6 +208,9 @@ class SKUGenerator {
     }
     
     public function skuExists($sku) {
+        $registry = $this->pdo->prepare('SELECT COUNT(*) FROM sku_registry WHERE sku=?');
+        $registry->execute([$sku]);
+        if ($registry->fetchColumn()) return true;
         // Check Products
         $stmt = $this->pdo->prepare("SELECT COUNT(*) FROM products WHERE sku = ?");
         $stmt->execute([$sku]);

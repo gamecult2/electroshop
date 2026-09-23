@@ -62,6 +62,16 @@ function is_staff() {
     return isset($_SESSION['admin_logged_in']) && $_SESSION['admin_logged_in'] === true;
 }
 
+function require_diagnostic_access() {
+    $remoteAddress = $_SERVER['REMOTE_ADDR'] ?? '';
+    $isLocal = in_array($remoteAddress, ['127.0.0.1', '::1'], true);
+    if (!$isLocal && !is_admin()) {
+        http_response_code(404);
+        header('Content-Type: text/plain; charset=UTF-8');
+        exit('Not found');
+    }
+}
+
 function get_current_user_id() {
     return $_SESSION['user_id'] ?? $_SESSION['customer_id'] ?? null;
 }
@@ -124,6 +134,14 @@ function get_message() {
 
 function get_language() {
     return 'en';
+}
+
+function localized_field(array $record, $baseField, $lang = null, $fallback = '') {
+    $lang = $lang ?: get_language();
+    foreach ([$baseField . '_' . $lang, $baseField . '_en', $baseField] as $field) {
+        if (isset($record[$field]) && trim((string)$record[$field]) !== '') return $record[$field];
+    }
+    return $fallback;
 }
 
 function load_language_strings($lang = null) {

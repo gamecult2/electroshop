@@ -1,5 +1,7 @@
 <?php
 // src/test_api.php
+require_once 'includes/init.php';
+require_diagnostic_access();
 $_SESSION['customer_id'] = 1; // Mock user 1
 $_SESSION['initialized'] = true;
 $_SESSION['user_email'] = 'test@example.com';
@@ -7,9 +9,7 @@ $_SESSION['user_first_name'] = 'Test';
 $_SESSION['user_last_name'] = 'User';
 
 // Define constants that init.php might expect or use
-define('INIT_PHP_INCLUDED', true);
-require_once 'includes/functions.php';
-require_once 'db_connect.php';
+if (!defined('INIT_PHP_INCLUDED')) define('INIT_PHP_INCLUDED', true);
 require_once 'models/Conversation.php';
 
 try {

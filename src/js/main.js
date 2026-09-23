@@ -12,6 +12,16 @@ document.addEventListener('DOMContentLoaded', function () {
 function initApp() {
     setupResponsiveNav();
     setupLazyLoading();
+    syncHeaderHeight();
+}
+
+function syncHeaderHeight() {
+    const header = document.querySelector('header.sticky-top');
+    if (!header) return;
+    const update = () => document.documentElement.style.setProperty('--header-height', `${Math.ceil(header.getBoundingClientRect().height)}px`);
+    update();
+    if ('ResizeObserver' in window) new ResizeObserver(update).observe(header);
+    window.addEventListener('resize', update, { passive: true });
 }
 
 function initCountdownTimers() {
@@ -63,17 +73,16 @@ function initCart() {
 
         apiAddToCart(productId)
             .then(data => {
-                setTimeout(() => {
-                    button.innerHTML = originalContent;
-                    button.disabled = false;
+                button.innerHTML = originalContent;
+                button.disabled = false;
 
-                    if (data.success) {
-                        updateCartBadge();
-                        showNotification(data.message || 'Added to cart!', 'success');
-                    } else {
-                        showNotification(data.message || 'Error', 'error');
-                    }
-                }, 800);
+                if (data.success) {
+                    updateCartBadge();
+                    showNotification(data.message || 'Added to cart!', 'success');
+                } else {
+                    if (data.choose_options) { window.location.href = 'product.php?id=' + encodeURIComponent(productId); return; }
+                    showNotification(data.message || 'Error', 'error');
+                }
             })
             .catch(error => {
                 console.error('Cart Error:', error);
@@ -122,14 +131,18 @@ function initWishlist() {
                     // Update Icon based on action
                     if (data.action === 'added') {
                         icon.className = 'fas fa-heart'; // Solid heart
-                        icon.style.color = '#ef4444';    // Red
+                        icon.classList.add('text-danger');
+                        icon.classList.remove('text-muted');
+                        button.setAttribute('aria-pressed', 'true');
                         
                         // Optional: Add a small bounce animation
                         button.style.transform = 'scale(1.2)';
                         setTimeout(() => button.style.transform = '', 200);
                     } else if (data.action === 'removed') {
                         icon.className = 'far fa-heart'; // Outline heart
-                        icon.style.color = '';           // Reset color
+                        icon.classList.remove('text-danger');
+                        icon.classList.add('text-muted');
+                        button.setAttribute('aria-pressed', 'false');
                     }
 
                     // Dispatch custom event for other components to react
@@ -242,6 +255,23 @@ function initSearchAutocomplete() {
             .then(data => showAutocomplete(data, searchWrapper, input));
     });
 
+    input.addEventListener('keydown', function (event) {
+        const items = Array.from(searchWrapper.querySelectorAll('.autocomplete-item'));
+        if (!items.length) return;
+        let activeIndex = items.findIndex(item => item.getAttribute('aria-selected') === 'true');
+
+        if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
+            event.preventDefault();
+            activeIndex = event.key === 'ArrowDown'
+                ? (activeIndex + 1) % items.length
+                : (activeIndex <= 0 ? items.length - 1 : activeIndex - 1);
+            items.forEach((item, index) => item.setAttribute('aria-selected', index === activeIndex ? 'true' : 'false'));
+            items[activeIndex].focus();
+        } else if (event.key === 'Escape') {
+            hideAutocomplete();
+        }
+    });
+
     document.addEventListener('click', e => {
         if (!e.target.closest('.search-bar')) hideAutocomplete();
     });
@@ -253,14 +283,40 @@ function showAutocomplete(results, wrapper, input) {
 
     const div = document.createElement('div');
     div.className = 'autocomplete-results';
+    div.id = 'site-search-results';
+    div.setAttribute('role', 'listbox');
+    input.setAttribute('aria-expanded', 'true');
     results.forEach(r => {
-        const item = document.createElement('div');
+        const item = document.createElement('button');
+        item.type = 'button';
         item.className = 'autocomplete-item';
-        item.innerHTML = `<strong>${r.name}</strong> <span style="color:#e4393c">${r.price}</span>`;
-        item.onclick = () => {
+        item.setAttribute('role', 'option');
+        item.setAttribute('aria-selected', 'false');
+        const name = document.createElement('strong');
+        name.textContent = r.name;
+        const price = document.createElement('span');
+        price.className = 'text-danger fw-bold';
+        price.textContent = r.price;
+        item.append(name, price);
+        item.addEventListener('click', () => {
             input.value = r.name;
             wrapper.querySelector('form').submit();
-        };
+        });
+        item.addEventListener('keydown', event => {
+            const items = Array.from(div.querySelectorAll('.autocomplete-item'));
+            const index = items.indexOf(item);
+            if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
+                event.preventDefault();
+                const next = event.key === 'ArrowDown'
+                    ? (index + 1) % items.length
+                    : (index <= 0 ? items.length - 1 : index - 1);
+                items.forEach((option, optionIndex) => option.setAttribute('aria-selected', optionIndex === next ? 'true' : 'false'));
+                items[next].focus();
+            } else if (event.key === 'Escape') {
+                hideAutocomplete();
+                input.focus();
+            }
+        });
         div.appendChild(item);
     });
     wrapper.appendChild(div);
@@ -269,6 +325,7 @@ function showAutocomplete(results, wrapper, input) {
 function hideAutocomplete() {
     const el = document.querySelector('.autocomplete-results');
     if (el) el.remove();
+    document.getElementById('site-search')?.setAttribute('aria-expanded', 'false');
 }
 
 /**
@@ -310,17 +367,36 @@ function setupLazyLoading() { }
  * Notifications
  */
 function showNotification(message, type = 'info') {
+    let region = document.getElementById('notification-region');
+    if (!region) {
+        region = document.createElement('div');
+        region.id = 'notification-region';
+        region.className = 'notification-region';
+        region.setAttribute('role', 'status');
+        region.setAttribute('aria-live', type === 'error' ? 'assertive' : 'polite');
+        region.setAttribute('aria-atomic', 'true');
+        document.body.appendChild(region);
+    }
+    region.setAttribute('aria-live', type === 'error' ? 'assertive' : 'polite');
     const div = document.createElement('div');
-    div.className = `notification notification-${type}`;
-    div.textContent = message;
-    div.style.cssText = `
-        position: fixed; top: 20px; right: 20px; padding: 15px 20px;
-        background: ${type === 'success' ? '#28a745' : type === 'error' ? '#dc3545' : '#17a2b8'};
-        color: white; border-radius: 4px; z-index: 10000; box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-        transition: opacity 0.5s;
-    `;
-    document.body.appendChild(div);
-    setTimeout(() => { div.style.opacity = '0'; setTimeout(() => div.remove(), 500); }, 3000);
+    const normalizedType = type === 'success' || type === 'error' ? type : 'info';
+    div.className = `app-notification app-notification--${normalizedType}`;
+    if (normalizedType === 'error') div.setAttribute('role', 'alert');
+    const content = document.createElement('span');
+    content.textContent = message;
+    const close = document.createElement('button');
+    close.type = 'button';
+    close.className = 'app-notification__close';
+    close.setAttribute('aria-label', 'Dismiss notification');
+    close.innerHTML = '&times;';
+    close.addEventListener('click', () => div.remove());
+    div.append(content, close);
+    region.appendChild(div);
+    const dismissTimer = setTimeout(() => {
+        div.classList.add('is-leaving');
+        setTimeout(() => div.remove(), 250);
+    }, 7000);
+    div.addEventListener('mouseenter', () => clearTimeout(dismissTimer), { once: true });
 }
 
 const showToast = showNotification;
@@ -330,22 +406,40 @@ const showToast = showNotification;
  */
 function initProductComparison() {
     document.querySelectorAll('.compare-product-btn').forEach(btn => {
-        btn.onclick = () => {
-            let list = JSON.parse(localStorage.getItem('productComparison')) || [];
-            if (!list.includes(btn.dataset.productId)) {
-                list.push(btn.dataset.productId);
-                localStorage.setItem('productComparison', JSON.stringify(list));
-                updateComparisonBadge();
-                showNotification('Added to comparison', 'success');
-            } else {
-                showNotification('Already in comparison', 'info');
+        btn.onclick = async () => {
+            btn.disabled = true;
+            try {
+                const response = await fetch('api/compare.php', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ action: 'add', product_id: btn.dataset.productId })
+                });
+                const data = await response.json();
+                if (data.success) {
+                    updateComparisonBadge(data.count);
+                    showNotification(data.message || 'Added to comparison', 'success');
+                } else {
+                    showNotification(data.message || 'Unable to add this product', response.status === 400 ? 'info' : 'error');
+                }
+            } catch (error) {
+                showNotification('Connection error', 'error');
+            } finally {
+                btn.disabled = false;
             }
         };
     });
 }
 
-function updateComparisonBadge() {
-    const list = JSON.parse(localStorage.getItem('productComparison')) || [];
+function updateComparisonBadge(count) {
     const badge = document.querySelector('.action-btn[href="compare.php"] .badge');
-    if (badge) badge.textContent = list.length;
+    if (badge) {
+        badge.textContent = count;
+        badge.style.display = count > 0 ? 'flex' : 'none';
+    }
+
+    const mobileBadge = document.querySelector('#mobileMenu a[href="compare.php"] .badge');
+    if (mobileBadge) {
+        mobileBadge.textContent = count;
+        mobileBadge.style.display = count > 0 ? 'inline-flex' : 'none';
+    }
 }

@@ -3,6 +3,7 @@
 // A helper script to simulate Chargily Webhooks for specific orders.
 
 require_once 'includes/init.php';
+require_diagnostic_access();
 require_once 'includes/functions.php';
 require_once 'models/Order.php';
 
@@ -100,15 +101,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 // Set recent checkouts from database for easier testing
 $recentOrders = $pdo->query("SELECT id, order_number, total_amount, transaction_id FROM orders WHERE payment_method = 'chargily' ORDER BY created_at DESC LIMIT 10")->fetchAll();
 
+$page_title = 'Chargily webhook simulator';
 include 'includes/header.php';
 ?>
 
-<div class="container py-5">
+<div class="container-xxl pb-5">
+    <div class="alert alert-warning border-0 shadow-sm" role="note"><i class="fas fa-flask me-2" aria-hidden="true"></i>Local diagnostic utility. Payment events generated here affect development data.</div>
     <div class="row justify-content-center">
         <div class="col-lg-8">
             <div class="card shadow-lg border-0 rounded-4 overflow-hidden">
                 <div class="card-header bg-dark text-white py-3 px-4 d-flex align-items-center justify-content-between">
-                    <h4 class="mb-0 fw-bold"><i class="fas fa-microchip me-2 text-danger"></i> Chargily Webhook Simulator</h4>
+                    <h1 class="app-page-title h4 mb-0 fw-bold"><i class="fas fa-microchip me-2 text-danger" aria-hidden="true"></i> Chargily Webhook Simulator</h1>
                     <span class="badge bg-danger rounded-pill px-3">Localhost Mode</span>
                 </div>
                 <div class="card-body p-4 bg-light-subtle">

@@ -36,7 +36,7 @@ $userWishlistIds = array_column($wishlistItems, 'product_id');
     
     <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
         <div class="card-header bg-white py-3 border-bottom d-flex align-items-center justify-content-between">
-            <h2 class="h5 fw-bold mb-0 text-dark"><i class="fas fa-heart text-danger me-2"></i> <?php echo t('my_wishlist'); ?></h2>
+            <h1 class="app-page-title h5 fw-bold mb-0 text-dark"><i class="fas fa-heart text-danger me-2"></i> <?php echo t('my_wishlist'); ?></h1>
             <?php if (count($wishlistItems) > 0): ?>
                 <form method="POST" class="m-0">
                     <input type="hidden" name="move_all_to_cart" value="1">
@@ -78,14 +78,11 @@ $userWishlistIds = array_column($wishlistItems, 'product_id');
     </div>
 </div>
 
-<?php require_once 'includes/footer.php'; ?>
-
 <script>
 document.addEventListener('wishlistUpdated', function(e) {
     if (e.detail.action === 'removed') {
         const productId = e.detail.productId;
-        const card = document.querySelector(`.product-card-jd .add-to-wishlist-btn[data-product-id="${productId}"]`)?.closest('.product-card-jd') 
-                    || document.querySelector(`.product-card-compact .add-to-wishlist-btn[data-product-id="${productId}"]`)?.closest('.product-card-compact');
+        const card = document.querySelector(`.add-to-wishlist-btn[data-product-id="${productId}"]`)?.closest('.product-card');
         
         if (card) {
             card.style.opacity = '0';
@@ -101,3 +98,4 @@ document.addEventListener('wishlistUpdated', function(e) {
     }
 });
 </script>
+<?php require_once 'includes/footer.php'; ?>

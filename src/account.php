@@ -59,7 +59,7 @@ $loyaltyTier = 'Silver';
                             <?php echo strtoupper(substr($user['first_name'], 0, 1)); ?>
                         </div>
                         <div>
-                            <h1 class="h6 mb-1 fw-bold"><?php echo t('welcome'); ?>, <?php echo htmlspecialchars($user['first_name']); ?></h1>
+                            <h1 class="app-page-title h5 mb-1 fw-bold"><?php echo t('welcome'); ?>, <?php echo htmlspecialchars($user['first_name']); ?></h1>
                             <span class="badge bg-danger rounded-pill px-2 py-1 x-small"><?php echo $loyaltyTier; ?> Member</span>
                         </div>
                     </div>
@@ -176,7 +176,7 @@ $loyaltyTier = 'Silver';
                                                 <?php endforeach; ?>
                                             </div>
                                             <div class="mt-4 text-end">
-                                                <button class="btn btn-link btn-sm text-danger text-decoration-none fw-bold" onclick="bootstrap.Tab.getOrCreateInstance(document.querySelector('[data-bs-target=\'#orders\']')).show()"><?php echo t('view_all'); ?> <i class="fas fa-chevron-right ms-1"></i></button>
+                                                <button type="button" class="btn btn-link btn-sm text-danger text-decoration-none fw-bold" onclick="bootstrap.Tab.getOrCreateInstance(document.querySelector('[data-bs-target=\'#orders\']')).show()"><?php echo t('view_all'); ?> <i class="fas fa-chevron-right ms-1"></i></button>
                                             </div>
                                         <?php endif; ?>
                                     </div>
@@ -194,7 +194,7 @@ $loyaltyTier = 'Silver';
                                         </div>
                                         <p class="text-muted small mb-4">75% to next tier</p>
                                         
-                                        <button class="btn btn-dark w-100 rounded-pill fw-bold" onclick="bootstrap.Tab.getOrCreateInstance(document.querySelector('[data-bs-target=\'#loyalty\']')).show()">View Rewards History</button>
+                                        <button type="button" class="btn btn-dark w-100 rounded-pill fw-bold" onclick="bootstrap.Tab.getOrCreateInstance(document.querySelector('[data-bs-target=\'#loyalty\']')).show()">View Rewards History</button>
                                     </div>
                                 </div>
                             </div>
@@ -269,10 +269,10 @@ $loyaltyTier = 'Silver';
                                                             $btnText = ($unreviewedCount == 0) ? 'Reviewed' : 'Review';
                                                             $btnClass = ($unreviewedCount == 0) ? 'btn-outline-success' : 'btn-danger';
                                                         ?>
-                                                            <button class="btn <?php echo $btnClass; ?> btn-sm rounded-pill px-3 fw-bold shadow-xs" style="font-size: 11px;" onclick="openReviewModal('<?php echo $order['id']; ?>')"><?php echo $btnText; ?></button>
+                                                            <button type="button" class="btn <?php echo $btnClass; ?> btn-sm rounded-pill px-3 fw-bold shadow-xs" style="font-size: 11px;" onclick="openReviewModal('<?php echo $order['id']; ?>')"><?php echo $btnText; ?></button>
                                                         <?php endif; ?>
                                                         <?php if ($order['status'] === 'shipped' || $order['status'] === 'delivered'): ?>
-                                                            <button class="btn btn-outline-secondary btn-sm rounded-pill px-3 fw-bold shadow-xs" style="font-size: 11px;" onclick="trackOrder('<?php echo $order['id']; ?>')"><?php echo t('track_order'); ?></button>
+                                                            <button type="button" class="btn btn-outline-secondary btn-sm rounded-pill px-3 fw-bold shadow-xs" style="font-size: 11px;" onclick="trackOrder('<?php echo $order['id']; ?>')"><?php echo t('track_order'); ?></button>
                                                         <?php endif; ?>
                                                     </div>
                                                 </td>
@@ -341,7 +341,7 @@ $loyaltyTier = 'Silver';
                     <div class="card border-0 shadow-sm">
                         <div class="card-header bg-white border-bottom py-3 d-flex align-items-center justify-content-between">
                             <h2 class="h5 mb-0 fw-bold"><?php echo t('saved_addresses'); ?></h2>
-                            <button class="btn btn-danger btn-sm rounded-pill px-4 fw-bold" onclick="showAddAddressForm()"><i class="fas fa-plus me-2"></i> Add New</button>
+                            <button type="button" class="btn btn-danger btn-sm rounded-pill px-4 fw-bold" onclick="showAddAddressForm()"><i class="fas fa-plus me-2"></i> Add New</button>
                         </div>
                         <div class="card-body p-4">
                             <div class="row g-4 mb-4" id="address-list">
@@ -372,12 +372,12 @@ $loyaltyTier = 'Silver';
                                                         </div>
                                                         
                                                         <div class="d-flex gap-2 align-items-center">
-                                                            <button class="btn btn-link btn-sm p-0 text-muted fw-bold text-decoration-none" onclick='editAddress(<?php echo json_encode($address); ?>)' style="font-size: 0.75rem;"><?php echo t('edit'); ?></button>
+                                                            <button type="button" class="btn btn-link btn-sm p-0 text-muted fw-bold text-decoration-none" onclick='editAddress(<?php echo json_encode($address); ?>)' style="font-size: 0.75rem;"><?php echo t('edit'); ?></button>
                                                             <span class="text-light-subtle small">|</span>
-                                                            <button class="btn btn-link btn-sm p-0 text-danger fw-bold text-decoration-none" onclick="deleteAddress(<?php echo $address['id']; ?>)" style="font-size: 0.75rem;"><?php echo t('delete'); ?></button>
+                                                            <button type="button" class="btn btn-link btn-sm p-0 text-danger fw-bold text-decoration-none" onclick="deleteAddress(<?php echo $address['id']; ?>)" style="font-size: 0.75rem;"><?php echo t('delete'); ?></button>
                                                             <?php if (!$address['is_default']): ?>
                                                                 <span class="text-light-subtle small">|</span>
-                                                                <button class="btn btn-link btn-sm p-0 text-dark fw-bold text-decoration-none" onclick="setDefaultAddress(<?php echo $address['id']; ?>)" style="font-size: 0.75rem;">Default</button>
+                                                                <button type="button" class="btn btn-link btn-sm p-0 text-dark fw-bold text-decoration-none" onclick="setDefaultAddress(<?php echo $address['id']; ?>)" style="font-size: 0.75rem;">Default</button>
                                                             <?php endif; ?>
                                                         </div>
                                                     </div>
@@ -464,7 +464,7 @@ $loyaltyTier = 'Silver';
                     <div class="card border-0 shadow-sm">
                         <div class="card-header bg-white border-bottom py-3 d-flex justify-content-between align-items-center">
                             <h2 class="h5 mb-0 fw-bold">My Messages</h2>
-                            <button class="btn btn-danger btn-sm rounded-pill" onclick="toggleChatModal()">
+                            <button type="button" class="btn btn-danger btn-sm rounded-pill" onclick="toggleChatModal()">
                                 <i class="fas fa-plus me-1"></i> New Message
                             </button>
                         </div>
@@ -484,15 +484,15 @@ $loyaltyTier = 'Silver';
                                 <nav aria-label="Messages pagination" class="px-3 py-3">
                                     <ul class="pagination justify-content-center mb-0">
                                         <li class="page-item" id="prevPageAccount">
-                                            <a class="page-link" href="#" aria-label="Previous" onclick="loadAccountConversationsPage(currentPageAccount - 1)">
+                                            <button type="button" class="page-link" aria-label="Previous" onclick="loadAccountConversationsPage(currentPageAccount - 1)">
                                                 <span aria-hidden="true">&laquo;</span>
-                                            </a>
+                                            </button>
                                         </li>
                                         <!-- Page numbers will be dynamically added here -->
                                         <li class="page-item" id="nextPageAccount">
-                                            <a class="page-link" href="#" aria-label="Next" onclick="loadAccountConversationsPage(currentPageAccount + 1)">
+                                            <button type="button" class="page-link" aria-label="Next" onclick="loadAccountConversationsPage(currentPageAccount + 1)">
                                                 <span aria-hidden="true">&raquo;</span>
-                                            </a>
+                                            </button>
                                         </li>
                                     </ul>
                                 </nav>
@@ -591,7 +591,7 @@ $loyaltyTier = 'Silver';
                                                 <h5 class="h6 fw-bold mb-1">5% Discount Coupon</h5>
                                                 <span class="text-muted small">Costs 500 Points</span>
                                             </div>
-                                            <button class="btn btn-outline-secondary btn-sm rounded-pill ms-auto px-3" disabled>Locked</button>
+                                            <button type="button" class="btn btn-outline-secondary btn-sm rounded-pill ms-auto px-3" disabled>Locked</button>
                                         </div>
                                     </div>
                                 </div>
@@ -603,7 +603,7 @@ $loyaltyTier = 'Silver';
                                                 <h5 class="h6 fw-bold mb-1">Free Delivery</h5>
                                                 <span class="text-muted small">Costs 800 Points</span>
                                             </div>
-                                            <button class="btn btn-outline-secondary btn-sm rounded-pill ms-auto px-3" disabled>Locked</button>
+                                            <button type="button" class="btn btn-outline-secondary btn-sm rounded-pill ms-auto px-3" disabled>Locked</button>
                                         </div>
                                     </div>
                                 </div>
@@ -650,7 +650,7 @@ $loyaltyTier = 'Silver';
                                     <p class="mb-0 fw-bold">Delete Account</p>
                                     <small class="text-muted">Once you delete your account, there is no going back. Please be certain.</small>
                                 </div>
-                                <button class="btn btn-outline-danger rounded-pill fw-bold" onclick="confirmDeleteAccount()">Delete Account</button>
+                                <button type="button" class="btn btn-outline-danger rounded-pill fw-bold" onclick="confirmDeleteAccount()">Delete Account</button>
                             </div>
                         </div>
                     </div>
@@ -683,7 +683,21 @@ $loyaltyTier = 'Silver';
 
 <!-- Tracking Modal -->
 <div class="modal fade" id="trackingModal" tabindex="-1" aria-hidden="true">
-...
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content border-0 rounded-4 shadow-lg">
+      <div class="modal-header border-0 pb-0">
+        <h2 class="modal-title h5 fw-bold"><i class="fas fa-truck text-danger me-2" aria-hidden="true"></i>Track your order</h2>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body p-4">
+        <p class="text-muted mb-0">View the latest fulfillment updates, tracking number, and estimated delivery date.</p>
+      </div>
+      <div class="modal-footer border-0 pt-0">
+        <button type="button" class="btn btn-light rounded-pill px-4" data-bs-dismiss="modal">Close</button>
+        <a id="trackingDetailsLink" class="btn btn-danger rounded-pill px-4 fw-bold" href="order_tracking.php">View tracking details</a>
+      </div>
+    </div>
+  </div>
 </div>
 
 <!-- Product Review Modal -->
@@ -757,18 +771,19 @@ function renderReviewItems(items) {
                         </div>
                         <div class="rating-stars mb-2" id="stars-${item.product_id}" data-rating="${currentRating}">
                             ${[1,2,3,4,5].map(num => `
-                                <i class="${num <= currentRating ? 'fas' : 'far'} fa-star text-warning pointer fs-5" onclick="setRating(${item.product_id}, ${num})"></i>
+                                <button type="button" class="rating-star-button text-warning fs-5" onclick="setRating(${item.product_id}, ${num})" aria-label="Rate ${num} out of 5 stars" aria-pressed="${num <= currentRating}"><i class="${num <= currentRating ? 'fas' : 'far'} fa-star" aria-hidden="true"></i></button>
                             `).join('')}
                         </div>
                     </div>
                     <div class="col-12">
                         <textarea class="form-control form-control-sm border-light-subtle shadow-none mb-2" 
                                   placeholder="What did you like or dislike? How was the quality?" 
+                                  aria-label="Write a product review"
                                   rows="2" id="text-${item.product_id}">${item.review_text || ''}</textarea>
                         <div class="text-end">
                             ${isReviewed ? 
-                                `<button class="btn btn-outline-primary btn-sm rounded-pill px-4 fw-bold" onclick="updateExistingReview(${item.review_id}, ${item.product_id}, this)">Update Review</button>` : 
-                                `<button class="btn btn-danger btn-sm rounded-pill px-4 fw-bold" onclick="submitSingleReview(${item.product_id}, this)">Post Review</button>`
+                                `<button type="button" class="btn btn-outline-primary btn-sm rounded-pill px-4 fw-bold" onclick="updateExistingReview(${item.review_id}, ${item.product_id}, this)">Update Review</button>` :
+                                `<button type="button" class="btn btn-danger btn-sm rounded-pill px-4 fw-bold" onclick="submitSingleReview(${item.product_id}, this)">Post Review</button>`
                             }
                         </div>
                     </div>
@@ -783,11 +798,11 @@ async function updateExistingReview(reviewId, productId, btn) {
     const text = document.getElementById(`text-${productId}`).value.trim();
 
     if (!rating || rating == 0) {
-        alert('Please select a star rating.');
+        showNotification('Please select a star rating.', 'info');
         return;
     }
     if (!text) {
-        alert('Please enter your review text.');
+        showNotification('Please enter your review text.', 'info');
         return;
     }
 
@@ -816,12 +831,12 @@ async function updateExistingReview(reviewId, productId, btn) {
             const card = btn.closest('.review-item-card');
             card.innerHTML = `<div class="text-center py-3 text-success fw-bold"><i class="fas fa-check-circle me-2"></i>Updated! Your review is awaiting re-approval.</div>`;
         } else {
-            alert(data.error || 'Failed to update review');
+            showNotification(data.error || 'Failed to update review', 'error');
             btn.disabled = false;
             btn.innerHTML = originalText;
         }
     } catch (err) {
-        alert('Connection error.');
+        showNotification('Connection error.', 'error');
         btn.disabled = false;
         btn.innerHTML = originalText;
     }
@@ -830,8 +845,10 @@ async function updateExistingReview(reviewId, productId, btn) {
 function setRating(productId, rating) {
     const starsContainer = document.getElementById(`stars-${productId}`);
     starsContainer.setAttribute('data-rating', rating);
-    const stars = starsContainer.querySelectorAll('i');
-    stars.forEach((star, index) => {
+    const stars = starsContainer.querySelectorAll('.rating-star-button');
+    stars.forEach((starButton, index) => {
+        const star = starButton.querySelector('i');
+        starButton.setAttribute('aria-pressed', index < rating ? 'true' : 'false');
         if (index < rating) {
             star.classList.remove('far');
             star.classList.add('fas');
@@ -848,11 +865,11 @@ async function submitSingleReview(productId, btn) {
     const text = document.getElementById(`text-${productId}`).value.trim();
 
     if (!rating) {
-        alert('Please select a star rating.');
+        showNotification('Please select a star rating.', 'info');
         return;
     }
     if (!text) {
-        alert('Please enter your review text.');
+        showNotification('Please enter your review text.', 'info');
         return;
     }
 
@@ -880,12 +897,12 @@ async function submitSingleReview(productId, btn) {
                 }
             }, 2000);
         } else {
-            alert(data.error || 'Failed to submit review');
+            showNotification(data.error || 'Failed to submit review', 'error');
             btn.disabled = false;
             btn.innerHTML = originalText;
         }
     } catch (err) {
-        alert('Connection error.');
+        showNotification('Connection error.', 'error');
         btn.disabled = false;
         btn.innerHTML = originalText;
     }
@@ -904,11 +921,9 @@ async function submitSingleReview(productId, btn) {
         <input type="hidden" id="editReviewId">
         <div class="text-center mb-4">
             <div class="rating-stars" id="edit-stars-container">
-                <i class="far fa-star text-warning pointer fs-3 mx-1" onclick="setEditRating(1)"></i>
-                <i class="far fa-star text-warning pointer fs-3 mx-1" onclick="setEditRating(2)"></i>
-                <i class="far fa-star text-warning pointer fs-3 mx-1" onclick="setEditRating(3)"></i>
-                <i class="far fa-star text-warning pointer fs-3 mx-1" onclick="setEditRating(4)"></i>
-                <i class="far fa-star text-warning pointer fs-3 mx-1" onclick="setEditRating(5)"></i>
+                <?php for ($ratingValue = 1; $ratingValue <= 5; $ratingValue++): ?>
+                    <button type="button" class="rating-star-button text-warning fs-3 mx-1" onclick="setEditRating(<?php echo $ratingValue; ?>)" aria-label="Rate <?php echo $ratingValue; ?> out of 5 stars" aria-pressed="false"><i class="far fa-star" aria-hidden="true"></i></button>
+                <?php endfor; ?>
             </div>
             <p class="text-muted small mt-2">Update your star rating and feedback</p>
         </div>
@@ -934,14 +949,16 @@ document.addEventListener('DOMContentLoaded', function() {
     // Restore active tab
 
     // Restore active tab
-    let activeTabId = localStorage.getItem('activeAccountTab') || '#dashboard';
+    let activeTabId = window.location.hash || localStorage.getItem('activeAccountTab') || '#dashboard';
     if (!activeTabId.startsWith('#')) activeTabId = '#' + activeTabId;
     const triggerEl = document.querySelector(`button[data-bs-target="${activeTabId}"]`);
     if (triggerEl) bootstrap.Tab.getOrCreateInstance(triggerEl).show();
 
     document.querySelectorAll('button[data-bs-toggle="pill"]').forEach(el => {
         el.addEventListener('shown.bs.tab', event => {
-            localStorage.setItem('activeAccountTab', event.target.getAttribute('data-bs-target'));
+            const target = event.target.getAttribute('data-bs-target');
+            localStorage.setItem('activeAccountTab', target);
+            history.replaceState(null, '', target);
         });
     });
 
@@ -1116,7 +1133,7 @@ function setDefaultAddress(id) {
 }
 
 function trackOrder(orderId) {
-    // In a real app, fetch tracking info via AJAX
+    document.getElementById('trackingDetailsLink').href = `order_tracking.php?order_id=${encodeURIComponent(orderId)}`;
     new bootstrap.Modal(document.getElementById('trackingModal')).show();
 }
 
@@ -1127,7 +1144,7 @@ function confirmDeleteAccount() {
 function deleteAccount() {
     const password = document.getElementById('delete-confirm-password').value;
     if (!password) {
-        alert('Please enter your password to confirm.');
+        showNotification('Please enter your password to confirm.', 'info');
         return;
     }
 
@@ -1144,7 +1161,7 @@ function deleteAccount() {
         if (data.success) {
             window.location.href = 'index.php?msg=account_deleted';
         } else {
-            alert(data.error || 'Failed to delete account');
+            showNotification(data.error || 'Failed to delete account', 'error');
         }
     });
 }
@@ -1242,7 +1259,7 @@ function updateAccountPaginationControls(pagination) {
         const pageLi = document.createElement('li');
         pageLi.className = `page-item ${i === currentPageAccount ? 'active' : ''}`;
         pageLi.innerHTML = `
-            <a class="page-link" href="#" onclick="loadAccountConversationsPage(${i})">${i}</a>
+            <button type="button" class="page-link" onclick="loadAccountConversationsPage(${i})" aria-label="Page ${i}">${i}</button>
         `;
         if (nextBtn && nextBtn.parentNode) {
             nextBtn.parentNode.insertBefore(pageLi, nextBtn);
@@ -1262,7 +1279,7 @@ function displayAccountConversations(conversations) {
                     <i class="fas fa-comments text-muted fs-2"></i>
                 </div>
                 <p class="text-muted mb-4">No messages yet</p>
-                <button class="btn btn-danger rounded-pill px-5 fw-bold" onclick="toggleChatModal()">
+                <button type="button" class="btn btn-danger rounded-pill px-5 fw-bold" onclick="toggleChatModal()">
                     Start a Conversation
                 </button>
             </div>
@@ -1271,10 +1288,10 @@ function displayAccountConversations(conversations) {
     }
     
     container.innerHTML = conversations.map(conv => `
-        <div class="list-group-item list-group-item-action py-3 ${conv.customer_unread_count > 0 ? 'bg-warning-subtle' : ''}" style="cursor: pointer;" onclick="openConversationFromAccount(${conv.id})">
+        <button type="button" class="list-group-item list-group-item-action py-3 text-start ${conv.customer_unread_count > 0 ? 'bg-warning-subtle' : ''}" onclick="openConversationFromAccount(${conv.id})">
             <div class="d-flex gap-3">
                 ${conv.product_image ? 
-                    `<img src="${conv.product_image}" class="rounded" style="width: 60px; height: 60px; object-fit: cover;">` :
+                    `<img src="${conv.product_image}" class="rounded" style="width: 60px; height: 60px; object-fit: cover;" alt="">` :
                     `<div class="bg-secondary rounded d-flex align-items-center justify-content-center text-white" style="width: 60px; height: 60px;">
                         <i class="fas fa-comment"></i>
                     </div>`
@@ -1293,7 +1310,7 @@ function displayAccountConversations(conversations) {
                     </div>
                 </div>
             </div>
-        </div>
+        </button>
     `).join('');
 }
 
@@ -1337,8 +1354,10 @@ function openEditReviewModal(review) {
 function setEditRating(rating) {
     const container = document.getElementById('edit-stars-container');
     container.setAttribute('data-rating', rating);
-    const stars = container.querySelectorAll('i');
-    stars.forEach((star, index) => {
+    const stars = container.querySelectorAll('.rating-star-button');
+    stars.forEach((starButton, index) => {
+        const star = starButton.querySelector('i');
+        starButton.setAttribute('aria-pressed', index < rating ? 'true' : 'false');
         if (index < rating) {
             star.classList.remove('far');
             star.classList.add('fas');
@@ -1355,11 +1374,11 @@ async function saveReviewEdit(btn) {
     const text = document.getElementById('editReviewInput').value.trim();
 
     if (!rating) {
-        alert('Please select a star rating.');
+        showNotification('Please select a star rating.', 'info');
         return;
     }
     if (!text) {
-        alert('Please enter your review text.');
+        showNotification('Please enter your review text.', 'info');
         return;
     }
 
@@ -1384,12 +1403,12 @@ async function saveReviewEdit(btn) {
             editReviewModal.hide();
             setTimeout(() => location.reload(), 1500);
         } else {
-            alert(data.error || 'Failed to update review');
+            showNotification(data.error || 'Failed to update review', 'error');
             btn.disabled = false;
             btn.innerHTML = originalText;
         }
     } catch (err) {
-        alert('Connection error.');
+        showNotification('Connection error.', 'error');
         btn.disabled = false;
         btn.innerHTML = originalText;
     }

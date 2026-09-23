@@ -126,7 +126,7 @@ require_once 'header.php';
             </div>
 
             <div class="pt-2">
-                <button type="submit" class="btn btn-danger px-5 py-2 fw-bold rounded-pill shadow-sm">
+                <button type="submit" class="btn btn-primary px-5 py-2 fw-bold rounded-pill shadow-sm">
                     <i class="fas fa-user-plus me-2"></i> Create Staff Member
                 </button>
             </div>

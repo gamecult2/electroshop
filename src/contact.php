@@ -53,7 +53,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     
     <div class="card border-0 shadow-sm rounded-4 overflow-hidden mb-4">
         <div class="card-body text-center py-5">
-            <h1 class="fw-bold text-dark mb-3"><?php echo t('contact_us'); ?></h1>
+            <h1 class="app-page-title fw-bold text-dark mb-3"><?php echo t('contact_us'); ?></h1>
             <p class="text-muted fs-5 mx-auto mb-0" style="max-width: 700px;">
                 <?php echo t('contact_intro') ?? "Have questions? We're here to help. Send us a message or reach out through our contact methods."; ?>
             </p>
@@ -176,16 +176,23 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 </div>
             </div>
 
-            <!-- Social Links Card -->
-            <div class="card border-0 shadow-sm rounded-4 text-center p-4">
-                <h3 class="h6 fw-bold mb-3"><?php echo t('follow_us') ?? 'Follow Us'; ?></h3>
-                <div class="d-flex justify-content-center gap-3">
-                    <a href="#" class="btn btn-outline-danger btn-sm rounded-circle d-flex align-items-center justify-content-center shadow-sm" style="width: 36px; height: 36px;"><i class="fab fa-facebook-f"></i></a>
-                    <a href="#" class="btn btn-outline-danger btn-sm rounded-circle d-flex align-items-center justify-content-center shadow-sm" style="width: 36px; height: 36px;"><i class="fab fa-instagram"></i></a>
-                    <a href="#" class="btn btn-outline-danger btn-sm rounded-circle d-flex align-items-center justify-content-center shadow-sm" style="width: 36px; height: 36px;"><i class="fab fa-twitter"></i></a>
-                    <a href="#" class="btn btn-outline-danger btn-sm rounded-circle d-flex align-items-center justify-content-center shadow-sm" style="width: 36px; height: 36px;"><i class="fab fa-linkedin-in"></i></a>
+            <?php
+            $socialLinks = [
+                'Facebook' => [get_setting('facebook_url', ''), 'fab fa-facebook-f'],
+                'Instagram' => [get_setting('instagram_url', ''), 'fab fa-instagram'],
+                'Twitter' => [get_setting('twitter_url', ''), 'fab fa-twitter'],
+                'LinkedIn' => [get_setting('linkedin_url', ''), 'fab fa-linkedin-in'],
+            ];
+            if (array_filter($socialLinks, fn($social) => !empty($social[0]))): ?>
+                <div class="card border-0 shadow-sm rounded-4 text-center p-4">
+                    <h3 class="h6 fw-bold mb-3"><?php echo t('follow_us') ?? 'Follow Us'; ?></h3>
+                    <div class="d-flex justify-content-center gap-3">
+                        <?php foreach ($socialLinks as $label => [$url, $icon]): if (!$url) continue; ?>
+                            <a href="<?php echo htmlspecialchars($url); ?>" class="btn btn-outline-danger btn-sm rounded-circle d-flex align-items-center justify-content-center shadow-sm" style="width: 36px; height: 36px;" target="_blank" rel="noopener" aria-label="<?php echo $label; ?>"><i class="<?php echo $icon; ?>" aria-hidden="true"></i></a>
+                        <?php endforeach; ?>
+                    </div>
                 </div>
-            </div>
+            <?php endif; ?>
         </div>
     </div>
 </div>

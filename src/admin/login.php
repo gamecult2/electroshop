@@ -75,8 +75,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         <link href="../assets/css/themes/<?php echo htmlspecialchars($bsTheme); ?>/bootstrap.css" rel="stylesheet">
     <?php endif; ?>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+<link rel="stylesheet" href="../assets/css/app.css">
+<link rel="stylesheet" href="../assets/css/admin.css">
+<?php include __DIR__ . '/includes/theme.php'; ?>
 </head>
-<body class="bg-light">
+<body class="bg-light admin-app">
     <div class="container-xxl">
         <div class="row min-vh-100 align-items-center justify-content-center">
             <div class="col-md-5 col-lg-4">
@@ -116,13 +119,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                 </div>
                             </div>
                             
-                            <button type="submit" class="btn btn-danger btn-lg w-100 rounded-pill fw-bold shadow-sm py-2">
+                            <button type="submit" class="btn btn-primary btn-lg w-100 rounded-pill fw-bold shadow-sm py-2">
                                 <i class="fas fa-sign-in-alt me-2"></i> Sign In
                             </button>
                         </form>
                         
                         <div class="mt-4 pt-3 border-top text-center">
-                            <p class="text-muted x-small mb-0" style="font-size: 0.75rem;">
+                            <p class="text-muted x-small mb-0" >
                                 <i class="fas fa-info-circle me-1"></i> Default: <strong>admin@qwenshop.dz</strong> / <strong>admin123</strong>
                             </p>
                         </div>
@@ -141,4 +144,3 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
-

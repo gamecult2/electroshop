@@ -186,7 +186,7 @@ include 'header.php';
                     </div>
                     
                     <div class="col-auto">
-                        <button type="submit" class="btn btn-danger btn-sm px-4 rounded-pill fw-bold">Filter</button>
+                        <button type="submit" class="btn btn-primary btn-sm px-4 rounded-pill fw-bold">Filter</button>
                         <?php if ($search || $status_filter): ?>
                             <a href="orders.php?view=<?php echo $view; ?>" class="btn btn-outline-secondary btn-sm rounded-pill px-4 fw-bold">Clear</a>
                         <?php endif; ?>
@@ -201,9 +201,9 @@ include 'header.php';
                         <?php echo ($isArchived) ? 'Archived Orders' : 'Active Orders'; ?> 
                         <span class="badge bg-light text-muted border ms-2 small fw-normal"><?php echo count($orders); ?> Total</span>
                     </h2>
-                    <div class="btn-group rounded-pill overflow-hidden border shadow-xs">
-                        <a href="orders.php?view=active" class="btn btn-sm <?php echo (!$isArchived) ? 'btn-danger' : 'btn-light'; ?> px-3 fw-bold" style="font-size: 11px;">Active</a>
-                        <a href="orders.php?view=archived" class="btn btn-sm <?php echo ($isArchived) ? 'btn-danger' : 'btn-light'; ?> px-3 fw-bold" style="font-size: 11px;">Archived</a>
+                    <div class="admin-row-actions">
+                        <a href="orders.php?view=active" class="btn btn-sm <?php echo (!$isArchived) ? 'btn-primary' : 'btn-light'; ?> px-3 fw-bold" >Active</a>
+                        <a href="orders.php?view=archived" class="btn btn-sm <?php echo ($isArchived) ? 'btn-primary' : 'btn-light'; ?> px-3 fw-bold" >Archived</a>
                     </div>
                 </div>
                 
@@ -211,13 +211,16 @@ include 'header.php';
                     <form id="bulkForm" method="POST" action="orders.php?view=<?php echo $view; ?>">
                         <input type="hidden" name="action" id="bulkActionInput" value="">
                         <input type="hidden" name="bulk_status_val" id="bulkStatusInput" value="">
+                        <div class="d-sm-none p-3 border-bottom">
+                            <label class="d-flex align-items-center gap-2 mb-0" for="selectAllMobile"><input id="selectAllMobile" type="checkbox" class="form-check-input m-0" onclick="toggleAll(this)">Select all orders</label>
+                        </div>
                         
-                        <table class="table table-hover align-middle mb-0">
+                        <table class="table admin-mobile-table table-hover align-middle mb-0">
                             <thead class="table-light">
                                 <tr>
                                     <th class="px-3 border-0" style="width: 40px;">
                                         <div class="form-check">
-                                            <input class="form-check-input shadow-none cursor-pointer" type="checkbox" id="selectAll" onclick="toggleAll(this)">
+                                            <input class="form-check-input shadow-none cursor-pointer" type="checkbox" id="selectAll" aria-label="Select all orders" onclick="toggleAll(this)">
                                         </div>
                                     </th>
                                     <th class="border-0">Order ID</th>
@@ -238,7 +241,7 @@ include 'header.php';
                                     <tr>
                                         <td class="px-3">
                                             <div class="form-check">
-                                                <input class="form-check-input shadow-none cursor-pointer order-checkbox" type="checkbox" name="order_ids[]" value="<?php echo $order['id']; ?>" onclick="updateBulkToolbar()">
+                                                <input class="form-check-input shadow-none cursor-pointer order-checkbox" type="checkbox" name="order_ids[]" value="<?php echo $order['id']; ?>" aria-label="Select order <?php echo (int)$order['id']; ?>" onclick="updateBulkToolbar()">
                                             </div>
                                         </td>
                                         <td class="fw-bold text-muted x-small">#<?php echo htmlspecialchars($order['id'] ?? ''); ?></td>
@@ -269,10 +272,10 @@ include 'header.php';
                                             };
                                             ?>
                                             <div class="d-flex flex-column align-items-start">
-                                                <span class="badge <?php echo $pClass; ?> rounded-pill mb-1 fw-bold text-uppercase" style="font-size: 8px; letter-spacing: 0.5px; padding: 3px 8px;">
+                                                <span class="badge <?php echo $pClass; ?> rounded-pill mb-1 fw-bold text-uppercase" style=" letter-spacing: 0.5px; padding: 3px 8px;">
                                                     <?php echo $pStatus; ?>
                                                 </span>
-                                                <div class="x-small text-muted fw-bold" style="font-size: 10px;">
+                                                <div class="x-small text-muted fw-bold" >
                                                     <?php 
                                                     if (!empty($order['payment_gateway_response'])) {
                                                         $resp = json_decode($order['payment_gateway_response'], true);
@@ -300,7 +303,7 @@ include 'header.php';
                                                         'cancelled' => 'bg-danger-subtle text-danger-emphasis border-danger-subtle',
                                                         default => 'bg-secondary-subtle'
                                                     };
-                                                ?>" style="font-size: 10px; width: 125px;" onchange="updateSingleStatus(<?php echo $order['id']; ?>, this.value)">
+                                                ?>" style=" width: 125px;" onchange="updateSingleStatus(<?php echo $order['id']; ?>, this.value)">
                                                     <?php foreach ($order_statuses as $status): ?>
                                                         <option value="<?php echo $status; ?>" <?php echo $order['status'] === $status ? 'selected' : ''; ?>>
                                                             <?php echo ucfirst($status); ?>
@@ -324,7 +327,7 @@ include 'header.php';
 
                                                 <!-- Single Delete -->
                                                 <button type="button" class="btn btn-sm btn-white border shadow-xs rounded-circle text-danger" 
-                                                        onclick="if(confirm('Delete order?')) submitSingleAction(<?php echo $order['id']; ?>, 'delete_order')"
+                                                        data-confirm="Permanently delete this order? This cannot be undone." onclick="submitSingleAction(<?php echo $order['id']; ?>, 'delete_order')"
                                                         title="Delete Permanently">
                                                     <i class="fas fa-trash"></i>
                                                 </button>
@@ -410,6 +413,9 @@ include 'header.php';
                 selectAll.checked = false;
                 selectAll.indeterminate = true;
             }
+            const mobileSelect = document.getElementById('selectAllMobile');
+            mobileSelect.checked = selectAll.checked;
+            mobileSelect.indeterminate = selectAll.indeterminate;
         }
 
         function cancelSelection() {
@@ -417,8 +423,8 @@ include 'header.php';
             toggleAll(document.getElementById('selectAll'));
         }
 
-        function applyBulkAction(action) {
-            if (action === 'bulk_delete' && !confirm('Permanently delete all selected orders?')) return;
+        async function applyBulkAction(action) {
+            if (action === 'bulk_delete' && !await AdminUI.confirm('Permanently delete all selected orders?')) return;
             
             document.getElementById('bulkActionInput').value = action;
             document.getElementById('bulkForm').submit();
@@ -427,7 +433,7 @@ include 'header.php';
         function applyBulkStatus() {
             const status = document.getElementById('bulkStatusSelect').value;
             if (!status) {
-                alert('Please select a status');
+                showToast('Please select a status', 'error');
                 return;
             }
             document.getElementById('bulkStatusInput').value = status;
@@ -453,5 +459,3 @@ include 'header.php';
 
     <!-- Include the shared footer template -->
     <?php include 'footer.php'; ?>
-
-

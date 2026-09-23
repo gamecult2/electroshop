@@ -179,11 +179,11 @@ if (is_logged_in()) {
         </aside>
         
         <!-- Search results -->
-        <main class="col-lg-9">
+        <section class="col-lg-9" aria-labelledby="search-results-title">
             <div class="card border-0 shadow-sm mb-4 bg-light overflow-hidden">
                 <div class="card-body p-4 d-md-flex align-items-center justify-content-between">
                     <div>
-                        <h1 class="h3 mb-1 fw-bold"><?php echo t('search_results_for'); ?> "<?php echo htmlspecialchars($query); ?>"</h1>
+                        <h1 id="search-results-title" class="app-page-title h3 mb-1 fw-bold"><?php echo t('search_results_for'); ?> "<?php echo htmlspecialchars($query); ?>"</h1>
                         <p class="text-muted mb-0 small"><?php echo $searchResults['total']; ?> <?php echo t('results_found'); ?></p>
                     </div>
                     <div class="mt-3 mt-md-0 d-flex align-items-center gap-3 bg-white p-2 rounded-3 shadow-sm border">
@@ -236,13 +236,9 @@ if (is_logged_in()) {
                     <a href="products.php" class="btn btn-danger rounded-pill px-5"><?php echo t('browse_all_products'); ?></a>
                 </div>
             <?php endif; ?>
-        </main>
+        </section>
     </div>
 </div>
-
-<?php
-require_once 'includes/footer.php';
-?>
 
 <script>
 // Add search filtering functionality
@@ -256,3 +252,4 @@ function applyFilters() {
     window.location.href = 'search.php?' + searchParams.toString();
 }
 </script>
+<?php require_once 'includes/footer.php'; ?>

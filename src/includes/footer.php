@@ -1,5 +1,7 @@
 </main>
 
+<div id="notification-region" class="notification-region" role="status" aria-live="polite" aria-atomic="true"></div>
+
 <?php include __DIR__ . '/chat-widget.php'; ?>
 
 <footer class="bg-dark text-white pt-5 pb-3">
@@ -11,9 +13,9 @@
                 <ul class="nav flex-column gap-2 p-0">
                     <li class="nav-item"><a href="contact.php" class="nav-link p-0 text-white-50 text-decoration-none opacity-75"><?php echo t('contact_us'); ?></a></li>
                     <li class="nav-item"><a href="faq.php" class="nav-link p-0 text-white-50 text-decoration-none opacity-75">FAQ</a></li>
-                    <li class="nav-item"><a href="returns.php" class="nav-link p-0 text-white-50 text-decoration-none opacity-75"><?php echo t('return_policy'); ?></a></li>
-                    <li class="nav-item"><a href="shipping.php" class="nav-link p-0 text-white-50 text-decoration-none opacity-75"><?php echo t('shipping_policy'); ?></a></li>
-                    <li class="nav-item"><a href="support.php" class="nav-link p-0 text-white-50 text-decoration-none opacity-75"><?php echo t('support_center'); ?></a></li>
+                    <li class="nav-item"><a href="page.php?slug=returns" class="nav-link p-0 text-white-50 text-decoration-none opacity-75"><?php echo t('return_policy'); ?></a></li>
+                    <li class="nav-item"><a href="page.php?slug=shipping" class="nav-link p-0 text-white-50 text-decoration-none opacity-75"><?php echo t('shipping_policy'); ?></a></li>
+                    <li class="nav-item"><a href="contact.php" class="nav-link p-0 text-white-50 text-decoration-none opacity-75"><?php echo t('support_center'); ?></a></li>
                 </ul>
             </div>
 
@@ -22,10 +24,10 @@
                 <h5 class="fw-bold mb-4 text-uppercase small" style="letter-spacing: 1px;"><?php echo t('about_us'); ?></h5>
                 <ul class="nav flex-column gap-2 p-0">
                     <li class="nav-item"><a href="about.php" class="nav-link p-0 text-white-50 text-decoration-none opacity-75"><?php echo t('about_us'); ?></a></li>
-                    <li class="nav-item"><a href="careers.php" class="nav-link p-0 text-white-50 text-decoration-none opacity-75">Careers</a></li>
-                    <li class="nav-item"><a href="terms.php" class="nav-link p-0 text-white-50 text-decoration-none opacity-75"><?php echo t('terms_conditions'); ?></a></li>
-                    <li class="nav-item"><a href="privacy.php" class="nav-link p-0 text-white-50 text-decoration-none opacity-75"><?php echo t('privacy_policy'); ?></a></li>
-                    <li class="nav-item"><a href="sitemap.php" class="nav-link p-0 text-white-50 text-decoration-none opacity-75">Sitemap</a></li>
+                    <li class="nav-item"><a href="page.php?slug=careers" class="nav-link p-0 text-white-50 text-decoration-none opacity-75">Careers</a></li>
+                    <li class="nav-item"><a href="page.php?slug=terms" class="nav-link p-0 text-white-50 text-decoration-none opacity-75"><?php echo t('terms_conditions'); ?></a></li>
+                    <li class="nav-item"><a href="page.php?slug=privacy" class="nav-link p-0 text-white-50 text-decoration-none opacity-75"><?php echo t('privacy_policy'); ?></a></li>
+                    <li class="nav-item"><a href="page.php?slug=sitemap" class="nav-link p-0 text-white-50 text-decoration-none opacity-75">Sitemap</a></li>
                 </ul>
             </div>
 
@@ -34,10 +36,10 @@
                 <h5 class="fw-bold mb-4 text-uppercase small" style="letter-spacing: 1px;"><?php echo t('my_account'); ?></h5>
                 <ul class="nav flex-column gap-2 p-0">
                     <li class="nav-item"><a href="account.php" class="nav-link p-0 text-white-50 text-decoration-none opacity-75"><?php echo t('my_account'); ?></a></li>
-                    <li class="nav-item"><a href="orders.php" class="nav-link p-0 text-white-50 text-decoration-none opacity-75"><?php echo t('order_history'); ?></a></li>
+                    <li class="nav-item"><a href="order_history.php" class="nav-link p-0 text-white-50 text-decoration-none opacity-75"><?php echo t('order_history'); ?></a></li>
                     <li class="nav-item"><a href="wishlist.php" class="nav-link p-0 text-white-50 text-decoration-none opacity-75"><?php echo t('wishlist'); ?></a></li>
-                    <li class="nav-item"><a href="addresses.php" class="nav-link p-0 text-white-50 text-decoration-none opacity-75"><?php echo t('saved_addresses'); ?></a></li>
-                    <li class="nav-item"><a href="notifications.php" class="nav-link p-0 text-white-50 text-decoration-none opacity-75"><?php echo t('notifications'); ?></a></li>
+                    <li class="nav-item"><a href="account.php#addresses" class="nav-link p-0 text-white-50 text-decoration-none opacity-75"><?php echo t('saved_addresses'); ?></a></li>
+                    <li class="nav-item"><a href="account.php#messages" class="nav-link p-0 text-white-50 text-decoration-none opacity-75"><?php echo t('notifications'); ?></a></li>
                 </ul>
             </div>
 
@@ -46,14 +48,22 @@
                 <h5 class="fw-bold mb-4 text-uppercase small" style="letter-spacing: 1px;"><?php echo t('newsletter'); ?></h5>
                 <p class="text-white-50 mb-4"><?php echo t('subscribe_newsletter'); ?></p>
                 <form class="newsletter-form input-group mb-4">
-                    <input type="email" name="newsletter_email" class="form-control bg-dark border-secondary text-white py-2 px-3 shadow-none rounded-0" placeholder="<?php echo t('enter_your_email'); ?>" required>
+                    <label class="visually-hidden" for="newsletter-email"><?php echo t('enter_your_email'); ?></label>
+                    <input type="email" id="newsletter-email" name="newsletter_email" class="form-control bg-dark border-secondary text-white py-2 px-3 rounded-0" placeholder="<?php echo t('enter_your_email'); ?>" required>
                     <button class="btn btn-danger py-2 px-3 rounded-0 fw-bold" type="submit"><?php echo t('subscribe'); ?></button>
                 </form>
-                <div class="d-flex gap-3">
-                    <a href="#" class="text-white-50 fs-5 transition-all opacity-75"><i class="fab fa-facebook-f"></i></a>
-                    <a href="#" class="text-white-50 fs-5 transition-all opacity-75"><i class="fab fa-twitter"></i></a>
-                    <a href="#" class="text-white-50 fs-5 transition-all opacity-75"><i class="fab fa-instagram"></i></a>
-                    <a href="#" class="text-white-50 fs-5 transition-all opacity-75"><i class="fab fa-youtube"></i></a>
+                <?php
+                $footerSocials = [
+                    'Facebook' => [get_setting('facebook_url', ''), 'fab fa-facebook-f'],
+                    'Twitter' => [get_setting('twitter_url', ''), 'fab fa-twitter'],
+                    'Instagram' => [get_setting('instagram_url', ''), 'fab fa-instagram'],
+                    'LinkedIn' => [get_setting('linkedin_url', ''), 'fab fa-linkedin-in'],
+                ];
+                ?>
+                <div class="d-flex gap-2">
+                    <?php foreach ($footerSocials as $label => [$url, $icon]): if (!$url) continue; ?>
+                        <a href="<?php echo htmlspecialchars($url); ?>" class="footer-social-link text-white-50 fs-5 transition-all" target="_blank" rel="noopener" aria-label="<?php echo $label; ?>"><i class="<?php echo $icon; ?>" aria-hidden="true"></i></a>
+                    <?php endforeach; ?>
                 </div>
             </div>
         </div>
@@ -68,8 +78,8 @@
             <div class="col-md-6 text-center text-md-end">
                 <div class="d-flex align-items-center justify-content-center justify-content-md-end gap-3 text-white-50 small">
                     <span><?php echo t('accepted_payments'); ?>:</span>
-                    <i class="fas fa-money-bill-wave fs-4" title="Cash on Delivery"></i>
-                    <i class="fas fa-university fs-4" title="Bank Transfer"></i>
+                    <span aria-label="Cash on delivery"><i class="fas fa-money-bill-wave fs-4" aria-hidden="true"></i></span>
+                    <span aria-label="Bank transfer"><i class="fas fa-university fs-4" aria-hidden="true"></i></span>
                     <span class="fw-bold border border-secondary px-2 py-0 rounded bg-secondary text-white small">BaridiMob</span>
                     <span class="fw-bold border border-secondary px-2 py-0 rounded bg-secondary text-white small">Edahabia</span>
                     <span class="fw-bold border border-secondary px-2 py-0 rounded bg-secondary text-white small">CIB</span>
@@ -105,15 +115,15 @@ document.addEventListener('DOMContentLoaded', function() {
             .then(response => response.json())
             .then(data => {
                 if (data.success) {
-                    alert(data.message);
+                    showNotification(data.message, 'success');
                     newsletterForm.reset();
                 } else {
-                    alert(data.message);
+                    showNotification(data.message, 'error');
                 }
             })
             .catch(error => {
                 console.error('Error:', error);
-                alert('<?php echo addslashes(t('error_subscription')); ?>');
+                showNotification('<?php echo addslashes(t('error_subscription')); ?>', 'error');
             });
         });
     }
@@ -133,9 +143,9 @@ function showCookieConsent() {
         <div class="container-xxl d-flex flex-column flex-md-row align-items-center justify-content-between gap-3">
             <p class="mb-0 text-light small"><?php echo addslashes(t('cookie_consent_text')); ?></p>
             <div class="d-flex gap-2">
-                <button class="btn btn-danger btn-sm px-4 fw-bold" onclick="acceptCookies()"><?php echo addslashes(t('accept')); ?></button>
-                <button class="btn btn-outline-light btn-sm px-4" onclick="declineCookies()"><?php echo addslashes(t('decline')); ?></button>
-                <a href="privacy.php" class="btn btn-link text-white-50 btn-sm text-decoration-none"><?php echo addslashes(t('learn_more')); ?></a>
+                <button type="button" class="btn btn-danger btn-sm px-4 fw-bold" onclick="acceptCookies()"><?php echo addslashes(t('accept')); ?></button>
+                <button type="button" class="btn btn-outline-light btn-sm px-4" onclick="declineCookies()"><?php echo addslashes(t('decline')); ?></button>
+                <a href="page.php?slug=privacy" class="btn btn-link text-white-50 btn-sm text-decoration-none"><?php echo addslashes(t('learn_more')); ?></a>
             </div>
         </div>
     `;
@@ -144,34 +154,36 @@ function showCookieConsent() {
 }
 
 function acceptCookies() {
-    document.cookie = "cookie_consent=accepted; expires=Fri, 31 Dec 9999 23:59:59 GMT; path=/";
+    document.cookie = "cookie_consent=accepted; max-age=31536000; path=/; SameSite=Lax";
     document.getElementById('cookie-consent-banner').remove();
 }
 
 function declineCookies() {
-    document.cookie = "cookie_consent=declined; expires=Fri, 31 Dec 9999 23:59:59 GMT; path=/";
+    document.cookie = "cookie_consent=declined; max-age=31536000; path=/; SameSite=Lax";
     document.getElementById('cookie-consent-banner').remove();
 }
 
 // Show cookie consent if not already accepted
 document.addEventListener('DOMContentLoaded', function() {
     const cookieValue = document.cookie.split('; ').find(row => row.startsWith('cookie_consent='));
-    if (!cookieValue) {
+    if (!cookieValue && <?php echo get_setting('cookie_consent_enabled', '1') === '1' ? 'true' : 'false'; ?>) {
         setTimeout(showCookieConsent, 2000); // Show after 2 seconds
     }
 });
 
 // WhatsApp widget
 function initWhatsAppWidget() {
+    const phoneNumber = '<?php echo preg_replace('/\D+/', '', WHATSAPP_BUSINESS_NUMBER); ?>';
+    if (!phoneNumber) return;
     const widget = document.createElement('div');
     // Using Bootstrap classes for WhatsApp button
     widget.className = 'whatsapp-widget fixed-bottom p-4 d-flex justify-content-end pointer-events-none';
     widget.style.zIndex = '9000';
     widget.innerHTML = `
-        <a href="https://wa.me/<?php echo WHATSAPP_BUSINESS_NUMBER; ?>?text=Hello,%20I%20have%20a%20question%20about%20your%20products" 
+        <a href="https://wa.me/${phoneNumber}?text=Hello,%20I%20have%20a%20question%20about%20your%20products"
            class="btn btn-success rounded-circle shadow-lg d-flex align-items-center justify-content-center pointer-events-auto" 
            style="width: 60px; height: 60px; font-size: 32px;"
-           target="_blank">
+           target="_blank" rel="noopener" aria-label="Contact us on WhatsApp">
             <i class="fab fa-whatsapp"></i>
         </a>
     `;
@@ -182,26 +194,6 @@ function initWhatsAppWidget() {
 document.addEventListener('DOMContentLoaded', function() {
     initWhatsAppWidget();
 
-    // Product Card Hover Elevation Effect
-    // Using event delegation for dynamic content
-    document.addEventListener('mouseover', function(e) {
-        const card = e.target.closest('.product-card');
-        if (card) {
-            card.classList.replace('shadow-sm', 'shadow');
-            card.style.transform = 'translateY(-5px)';
-            card.style.transition = 'all 0.3s ease';
-            card.style.zIndex = '10';
-        }
-    });
-
-    document.addEventListener('mouseout', function(e) {
-        const card = e.target.closest('.product-card');
-        if (card) {
-            card.classList.replace('shadow', 'shadow-sm');
-            card.style.transform = 'translateY(0)';
-            card.style.zIndex = '';
-        }
-    });
 });
 </script>
 </body>

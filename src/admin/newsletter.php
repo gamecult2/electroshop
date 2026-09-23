@@ -123,7 +123,7 @@ include 'header.php';
                         <div class="card-body p-0">
                             <div class="table-responsive">
                                 <table class="table table-hover align-middle mb-0">
-                                    <thead class="bg-light">
+                                    <thead class="table-light">
                                         <tr>
                                             <th class="border-0 px-4 py-3 small fw-bold text-muted text-uppercase">Email Address</th>
                                             <th class="border-0 py-3 small fw-bold text-muted text-uppercase text-center">Status</th>
@@ -147,13 +147,13 @@ include 'header.php';
                                                     </td>
                                                     <td class="text-center">
                                                         <?php if ($subscriber['is_confirmed'] && !$subscriber['unsubscribed_at']): ?>
-                                                            <span class="badge bg-success-subtle text-success rounded-pill px-3 py-1 fw-bold x-small text-uppercase">Active</span>
+                                                            <span class="badge bg-success-subtle text-success-emphasis rounded-pill px-3 py-1 fw-bold x-small text-uppercase">Active</span>
                                                         <?php elseif (!$subscriber['is_confirmed']): ?>
                                                             <span class="badge bg-warning-subtle text-warning-emphasis rounded-pill px-3 py-1 fw-bold x-small text-uppercase">Pending</span>
                                                         <?php endif; ?>
                                                         
                                                         <?php if ($subscriber['unsubscribed_at']): ?>
-                                                            <span class="badge bg-danger-subtle text-danger rounded-pill px-3 py-1 fw-bold x-small text-uppercase">Unsubscribed</span>
+                                                            <span class="badge bg-danger-subtle text-danger-emphasis rounded-pill px-3 py-1 fw-bold x-small text-uppercase">Unsubscribed</span>
                                                         <?php endif; ?>
                                                     </td>
                                                     <td>
@@ -177,7 +177,7 @@ include 'header.php';
                                                                 </form>
                                                             <?php endif; ?>
                                                             
-                                                            <form method="POST" class="d-inline" onsubmit="return confirm('Remove subscriber?');">
+                                                            <form method="POST" class="d-inline" data-confirm="Remove subscriber?">
                                                                 <input type="hidden" name="remove_subscriber" value="<?php echo $subscriber['id']; ?>">
                                                                 <button type="submit" class="btn btn-light btn-xs rounded-pill px-3 border border-light-subtle shadow-xs text-danger fw-bold">
                                                                     <i class="fas fa-user-minus me-1"></i> Remove

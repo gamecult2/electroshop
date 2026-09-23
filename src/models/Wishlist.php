@@ -58,39 +58,18 @@ class Wishlist {
     }
     
     public function moveItemToCart($customerId, $productId) {
-        // Remove from wishlist and add to cart in a transaction
+        require_once __DIR__ . '/Cart.php';
+        if ((int)$customerId !== (int)get_current_user_id()) return false;
         try {
             $this->pdo->beginTransaction();
-            
-            // Remove from wishlist
-            $removeSql = "DELETE FROM wishlists WHERE customer_id = ? AND product_id = ?";
-            $removeStmt = $this->pdo->prepare($removeSql);
-            $removeResult = $removeStmt->execute([$customerId, $productId]);
-            
-            // Add to cart
-            $productSql = "SELECT price FROM products WHERE id = ?";
-            $productStmt = $this->pdo->prepare($productSql);
-            $productStmt->execute([$productId]);
-            $product = $productStmt->fetch();
-            
-            if ($product) {
-                $addToCartSql = "INSERT INTO shopping_cart (customer_id, product_id, quantity, price_at_time, created_at) VALUES (?, ?, 1, ?, NOW()) ON DUPLICATE KEY UPDATE quantity = quantity + 1";
-                $addToCartStmt = $this->pdo->prepare($addToCartSql);
-                $addResult = $addToCartStmt->execute([$customerId, $productId, $product['price']]);
-                
-                if ($removeResult && $addResult) {
-                    $this->pdo->commit();
-                    return true;
-                } else {
-                    $this->pdo->rollback();
-                    return false;
-                }
-            } else {
-                $this->pdo->rollback();
-                return false;
-            }
-        } catch (Exception $e) {
-            $this->pdo->rollback();
+            $cart=new Cart();
+            $result=$cart->add($productId,1);
+            if (!$result['success']) { $this->pdo->rollBack(); return false; }
+            $this->pdo->prepare('DELETE FROM wishlists WHERE customer_id=? AND product_id=?')->execute([$customerId,$productId]);
+            $this->pdo->commit();
+            return true;
+        } catch (Throwable $e) {
+            if ($this->pdo->inTransaction()) $this->pdo->rollBack();
             return false;
         }
     }

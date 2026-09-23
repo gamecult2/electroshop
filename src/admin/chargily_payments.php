@@ -43,7 +43,7 @@ include 'header.php';
     <div class="card-body p-0">
         <div class="table-responsive">
             <table class="table table-hover align-middle mb-0">
-                <thead class="bg-light">
+                <thead class="table-light">
                     <tr>
                         <th class="border-0 px-4 py-3 small fw-bold text-uppercase ls-1">Checkout ID</th>
                         <th class="border-0 py-3 small fw-bold text-uppercase ls-1">Order #</th>

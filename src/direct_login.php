@@ -1,6 +1,7 @@
 <?php
 // Alternative login that doesn't use redirect to test session persistence
 require_once 'includes/init.php';
+require_diagnostic_access();
 require_once 'models/User.php';
 
 // Initialize variables
@@ -57,57 +58,52 @@ if ($loginSuccess) {
     // Clear the success flag so it doesn't persist
     unset($_SESSION['login_success']);
 }
-?>
 
-<!DOCTYPE html>
-<html lang="<?php echo $lang; ?>">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Direct Login Test - QwenShop</title>
-</head>
-<body>
-<div class="auth-page">
-    <div class="container-xxl">
-        <div class="auth-container">
-            <h1>Direct Login Test (No Redirect)</h1>
+$page_title = 'Direct login diagnostic';
+require_once 'includes/header.php';
+?>
+<div class="container-xxl pb-5">
+    <div class="diagnostic-shell">
+        <div class="alert alert-warning border-0 shadow-sm" role="note"><i class="fas fa-flask me-2" aria-hidden="true"></i>Local diagnostic utility</div>
+        <section class="card app-card">
+            <div class="card-body p-4 p-md-5">
+            <h1 class="app-page-title fw-bold">Direct login test</h1>
 
             <?php if ($message): ?>
-                <div class="alert alert-<?php echo $messageType; ?>"><?php echo $message; ?></div>
+                <div class="alert alert-<?php echo $messageType === 'error' ? 'danger' : 'success'; ?>"><?php echo htmlspecialchars($message); ?></div>
             <?php endif; ?>
 
             <?php if ($loginSuccess): ?>
                 <div class="alert alert-success">
                     <p>LOGIN SUCCESSFUL!</p>
-                    <p>User ID: <?php echo $_SESSION['user_id']; ?></p>
+                    <p>User ID: <?php echo (int)($_SESSION['customer_id'] ?? 0); ?></p>
                     <p>Email: <?php echo $_SESSION['user_email']; ?></p>
                     <p>Name: <?php echo $_SESSION['user_first_name'] . ' ' . $_SESSION['user_last_name']; ?></p>
                     <p>Session ID: <?php echo session_id(); ?></p>
                     <p><a href="account.php">Go to Account Page</a> - Check if session persists</p>
                 </div>
             <?php else: ?>
-                <form method="POST" action="">
-                    <div class="form-group">
-                        <label for="email">Email</label>
-                        <input type="email" id="email" name="email" value="<?php echo htmlspecialchars($_POST['email'] ?? ''); ?>" required>
+                <form method="POST" action="" class="mt-4">
+                    <div class="mb-3">
+                        <label for="email" class="form-label fw-bold">Email</label>
+                        <input type="email" id="email" name="email" class="form-control" value="<?php echo htmlspecialchars($_POST['email'] ?? ''); ?>" required>
                     </div>
 
-                    <div class="form-group">
-                        <label for="password">Password</label>
-                        <input type="password" id="password" name="password" required>
+                    <div class="mb-4">
+                        <label for="password" class="form-label fw-bold">Password</label>
+                        <input type="password" id="password" name="password" class="form-control" required>
                     </div>
 
-                    <button type="submit" class="btn btn-primary">Sign In (No Redirect)</button>
+                    <button type="submit" class="btn btn-danger rounded-pill px-4">Sign in without redirect</button>
                 </form>
             <?php endif; ?>
 
-            <div class="auth-links">
+            <div class="mt-4 d-flex gap-3 flex-wrap">
                 <p>Don't have an account? <a href="register.php">Register</a></p>
                 <a href="login.php">Back to Normal Login</a>
             </div>
-        </div>
+            </div>
+        </section>
     </div>
 </div>
-</body>
-</html>
-</content>
+<?php require_once 'includes/footer.php'; ?>
