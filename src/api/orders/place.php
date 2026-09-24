@@ -94,6 +94,22 @@ if (!isset($input['expected_subtotal']) || (int)round((float)$input['expected_su
     echo json_encode(['success'=>false,'message'=>'Prices or cart contents changed. Refresh checkout to review your total.']);
     exit;
 }
+
+if (($input['payment_method'] ?? 'cod') === 'bank_transfer' && get_setting('bank_transfer_enabled', '1') !== '1') {
+    http_response_code(422);
+    echo json_encode(['success' => false, 'message' => 'Bank transfer is currently unavailable. Please choose another payment method.']);
+    exit;
+}
+if (($input['payment_method'] ?? 'cod') === 'baridimob' && get_setting('baridimob_enabled', '0') !== '1') {
+    http_response_code(422);
+    echo json_encode(['success' => false, 'message' => 'BaridiMob is currently unavailable. Please choose another payment method.']);
+    exit;
+}
+if (($input['payment_method'] ?? 'cod') === 'chargily' && get_setting('chargily_enabled', '0') !== '1') {
+    http_response_code(422);
+    echo json_encode(['success' => false, 'message' => 'CIB / Edahabia payment is currently unavailable. Please choose another payment method.']);
+    exit;
+}
 $deliveryOption = $input['delivery_option'] ?? 'standard';
 $shippingCost = 500;
 switch($deliveryOption) {
@@ -196,6 +212,7 @@ if ($orderId && $couponId) {
 }
 
 if ($orderId) {
+    if (!$userId) $_SESSION['recent_guest_order_ids'][(int)$orderId] = true;
     $savedNumber = $pdo->prepare('SELECT order_number FROM orders WHERE id=?');
     $savedNumber->execute([$orderId]);
     $orderNumber = $savedNumber->fetchColumn();

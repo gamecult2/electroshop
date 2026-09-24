@@ -115,6 +115,10 @@ function get_default_settings($group) {
             'baridimob_ccp' => '',
             'baridimob_rip' => '',
             'baridimob_holder' => '',
+            'bank_transfer_enabled' => '1',
+            'bank_transfer_bank_name' => '',
+            'bank_transfer_holder' => '',
+            'bank_transfer_rib' => '',
             'chargily_enabled' => '0',
             'chargily_mode' => 'test',
             'chargily_public_key' => '',
@@ -452,6 +456,7 @@ include 'header.php';
                                 'PayPal' => ['fab fa-paypal text-primary', 'paypal_enabled', ['client_id' => 'Client ID', 'secret' => 'Secret']],
                                 'Stripe' => ['fab fa-stripe text-info', 'stripe_enabled', ['publishable_key' => 'Pub Key', 'secret_key' => 'Secret']],
                                 'BaridiMob' => ['fas fa-mobile-alt text-danger', 'baridimob_enabled', ['ccp' => 'CCP', 'rip' => 'RIP', 'holder' => 'Name']],
+                                'Bank Transfer' => ['fas fa-university text-danger', 'bank_transfer_enabled', ['bank_name' => 'Bank name', 'holder' => 'Account holder', 'rib' => 'RIB / account number']],
                                 'Chargily' => ['fas fa-bolt text-warning', 'chargily_enabled', ['mode' => 'Mode (test/live)', 'public_key' => 'Public Key', 'secret_key' => 'Secret Key']]
                             ];
                             foreach ($gateways as $name => $cfg): ?>
@@ -469,7 +474,7 @@ include 'header.php';
                                         <?php foreach ($cfg[2] as $fieldKey => $label): ?>
                                             <div class="mb-2">
                                                 <label class="small fw-bold text-muted text-uppercase mb-1" ><?php echo $label; ?></label>
-                                                <?php $inputKey = strtolower($name) . '_' . $fieldKey; ?>
+                                                <?php $inputKey = strtolower(str_replace(' ', '_', $name)) . '_' . $fieldKey; ?>
                                                 <?php 
                                                     $placeholder = '';
                                                     if ($name === 'Chargily') {
@@ -491,6 +496,9 @@ include 'header.php';
                                                 <?php endif; ?>
                                             </div>
                                         <?php endforeach; ?>
+                                        <?php if ($name === 'Bank Transfer'): ?>
+                                            <p class="small text-muted mb-0">Customers see these details after placing an order. Until the account details are filled in, they are asked to contact the store. Payment stays pending until verified.</p>
+                                        <?php endif; ?>
                                     </div>
                                 </div>
                             <?php endforeach; ?>

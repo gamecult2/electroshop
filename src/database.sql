@@ -173,7 +173,7 @@ CREATE TABLE orders (
     daira VARCHAR(100),
     commune VARCHAR(100),
     delivery_notes TEXT,
-    payment_method ENUM('cod', 'bank_transfer', 'baridimob', 'edahabia', 'cib'),
+    payment_method ENUM('cod', 'bank_transfer', 'baridimob', 'edahabia', 'cib', 'chargily'),
     payment_gateway_response JSON,
     transaction_id VARCHAR(255),
     tracking_number VARCHAR(100),

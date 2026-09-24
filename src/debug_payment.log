@@ -994,3 +994,22 @@ Order ID GET: 47
 2026-09-23 10:40:48 - Creating Customer: {"name":"Abderrahim DJERRAD","email":"djerradabderrahim@gmail.com","phone":"13091435037","address":{"country":"dz","state":"Alger","address":"Yangpu District Siping Road 2065 Building 6 apartment 405"}}
 2026-09-23 10:40:53 - Customer Created: 01m36xn6ym0pvwxpz1hbspj7b8
 2026-09-23 10:40:54 - Checkout URL: http://pay.chargily.dz/test/checkouts/01m36xna87p6pjq1ztqa5cxwgc/pay
+2026-09-24 10:14:55 - Accessing checkout_chargily.php
+Session ID: b23748275f90876f853270d6a680377d
+Session Data: Array
+(
+    [initialized] => 1
+    [customer_id] => 1
+    [user_email] => djerradabderrahim@gmail.com
+    [user_first_name] => Abderrahim
+    [user_last_name] => DJERRAD
+    [csrf_token] => 232ce8c529880a51c7f55c45db6eeeb52f54e2711922f319158c7dadb227c3b6
+)
+
+Order ID GET: 49
+2026-09-24 10:14:58 - Starting Payment for Order #49
+2026-09-24 10:14:58 - Creating Customer: {"name":"Abderrahim DJERRAD","email":"djerradabderrahim@gmail.com","phone":"13091435037","address":{"country":"dz","state":"Alger","address":"Yangpu District Siping Road 2065 Building 6 apartment 405"}}
+2026-09-24 10:15:05 - Customer Created: 01m39ejmggajkmwamtmj2ysrt8
+2026-09-24 10:15:06 - Checkout URL: http://pay.chargily.dz/test/checkouts/01m39ejscd89shgym9gjd76khr/pay
+2026-09-24 10:36:51 - Starting Payment for Order #54
+2026-09-24 10:36:53 - Customer Created: 01m39ftmwhdxgxnm2c8hys94nx

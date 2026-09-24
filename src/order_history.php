@@ -402,7 +402,11 @@ require_once 'includes/header.php';
                 </div>
 
                 <div class="d-grid gap-2">
-                    <?php if ($order['payment_status'] !== 'paid' && $order['status'] !== 'cancelled'): ?>
+                    <?php if ($order['payment_status'] !== 'paid' && $order['status'] !== 'cancelled' && in_array($order['payment_method'], ['bank_transfer', 'baridimob'], true)): ?>
+                        <a href="bank_transfer.php?order_id=<?php echo (int)$order['id']; ?>" class="btn btn-success py-3 shadow-sm rounded-3 fw-bold">
+                            <i class="fas fa-university me-2"></i> View <?php echo $order['payment_method'] === 'baridimob' ? 'BaridiMob' : 'Bank Transfer'; ?> Instructions
+                        </a>
+                    <?php elseif ($order['payment_status'] !== 'paid' && $order['status'] !== 'cancelled' && $order['payment_method'] === 'chargily'): ?>
                         <a href="checkout_chargily.php?order_id=<?php echo $order['id']; ?>" class="btn btn-success py-3 shadow-sm rounded-3 fw-bold">
                             <i class="fas fa-credit-card me-2"></i> Pay Now (Edahabia/CIB)
                         </a>

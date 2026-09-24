@@ -53,6 +53,14 @@ check((int)$products->getById($id)['stock_quantity']===3,'order synchronizes par
 check((int)$orders->create($order)===(int)$orderId,'repeat checkout is idempotent');
 check($orders->cancel($orderId) && $orders->cancel($orderId),'repeat cancellation succeeds safely');
 check((int)$products->getVariantById($variants[0]['id'])['stock_quantity']===3,'cancellation restocks exactly once');
+$chargilyOrder=$order;
+$chargilyOrder['order_number']='REG-'.bin2hex(random_bytes(4));
+$chargilyOrder['payment_method']='chargily';
+$chargilyOrder['items'][0]['id']=99999; // Model a fresh cart row and therefore a distinct checkout.
+$chargilyOrderId=$orders->create($chargilyOrder);
+check((bool)$chargilyOrderId && $orders->getById($chargilyOrderId)['payment_method']==='chargily','Chargily order persists before gateway handoff');
+check($orders->updatePaymentDetails($chargilyOrderId,'pending','test-checkout-id') && $orders->getById($chargilyOrderId)['transaction_id']==='test-checkout-id','Chargily checkout ID is saved on the order');
+check($orders->cancel($chargilyOrderId),'unpaid Chargily order can be cancelled and restocked');
 $oversell=$order; $oversell['order_number']='REG-'.bin2hex(random_bytes(4)); $oversell['items'][0]['quantity']=4; $oversell['subtotal']=432;
 rejects(fn()=>$orders->create($oversell),'checkout rejects insufficient stock');
 check((int)$products->getVariantById($variants[0]['id'])['stock_quantity']===3,'failed checkout preserves stock');

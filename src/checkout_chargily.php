@@ -4,14 +4,6 @@ require_once 'includes/init.php';
 require_once 'models/Order.php';
 require_once 'services/ChargilyService.php';
 
-// DEBUG LOGGING
-$logFile = __DIR__ . '/debug_payment.log';
-$logEntry = date('Y-m-d H:i:s') . " - Accessing checkout_chargily.php\n";
-$logEntry .= "Session ID: " . session_id() . "\n";
-$logEntry .= "Session Data: " . print_r($_SESSION, true) . "\n";
-$logEntry .= "Order ID GET: " . ($_GET['order_id'] ?? 'NULL') . "\n";
-file_put_contents($logFile, $logEntry, FILE_APPEND);
-
 // 1. Validate Request First
 if (!isset($_GET['order_id'])) {
     die("Invalid request: No order ID provided.");
@@ -25,6 +17,10 @@ $order = $orderModel->getById($orderId);
 
 if (!$order) {
     die("Order not found.");
+}
+if ($order['payment_method'] !== 'chargily') {
+    http_response_code(400);
+    exit('This order does not use CIB / Edahabia payment.');
 }
 
 // 3. Authorization Check
@@ -62,7 +58,11 @@ if ($checkout) {
     // This allows us to track the payment even if the user skips the return link
     $success = $orderModel->updatePaymentDetails($orderId, 'pending', $checkout->getId(), null);
     
-    file_put_contents($logFile, date('Y-m-d H:i:s') . " - Save Checkout ID for Order #{$orderId}: " . ($success ? "SUCCESS" : "FAILED") . " (ID: " . $checkout->getId() . ")\n", FILE_APPEND);
+    if (!$success) {
+        error_log("Could not save Chargily checkout ID for order #{$orderId}");
+        http_response_code(500);
+        exit('Payment could not be started. Please try again from your order details.');
+    }
     
     // Redirect user to Chargily Payment Page
     header("Location: " . $checkout->getUrl());

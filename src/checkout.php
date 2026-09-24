@@ -275,6 +275,7 @@ if ($isLoggedIn && !empty($addresses)) {
                             </label>
                         </div>
                         
+                        <?php if (get_setting('bank_transfer_enabled', '1') === '1'): ?>
                         <div class="col-md-4">
                             <label class="d-flex align-items-center gap-3 p-3 border rounded-4 h-100 transition-all" for="bank_transfer">
                                 <div class="form-check mb-0">
@@ -286,6 +287,7 @@ if ($isLoggedIn && !empty($addresses)) {
                                 </div>
                             </label>
                         </div>
+                        <?php endif; ?>
                         
                         <?php if (get_setting('baridimob_enabled') == '1'): ?>
                         <div class="col-md-4">
@@ -295,7 +297,7 @@ if ($isLoggedIn && !empty($addresses)) {
                                 </div>
                                 <div>
                                     <i class="fas fa-mobile-alt text-danger fs-4 d-block mb-1"></i>
-                                    <span class="fw-bold text-dark small"><?php echo t('baridimob'); ?></span>
+                                    <span class="fw-bold text-dark small"><?php echo t('baridimob'); ?> <span class="text-muted fw-normal">(manual transfer)</span></span>
                                 </div>
                             </label>
                         </div>
@@ -309,7 +311,7 @@ if ($isLoggedIn && !empty($addresses)) {
                                 </div>
                                 <div>
                                     <i class="fas fa-credit-card text-danger fs-4 d-block mb-1"></i>
-                                    <span class="fw-bold text-dark small">Edahabia / CIB</span>
+                                    <span class="fw-bold text-dark small">CIB / Edahabia via Chargily<?php echo get_setting('chargily_mode', 'test') === 'test' ? ' (test mode)' : ''; ?></span>
                                 </div>
                             </label>
                         </div>
@@ -759,12 +761,14 @@ function placeOrder() {
     .then(response => response.json())
     .then(data => {
         if (data.success) {
-            showNotification('<?php echo addslashes(t('order_placed')); ?>', 'success');
+            showNotification(['bank_transfer', 'baridimob'].includes(paymentMethod) ? 'Order created. Complete the transfer to confirm payment.' : '<?php echo addslashes(t('order_placed')); ?>', 'success');
             
             // Redirect based on payment method
             setTimeout(() => { 
                 if (paymentMethod === 'chargily') {
                     window.location.href = 'checkout_chargily.php?order_id=' + data.order_id;
+                } else if (paymentMethod === 'bank_transfer' || paymentMethod === 'baridimob') {
+                    window.location.href = 'bank_transfer.php?order_id=' + encodeURIComponent(data.order_id);
                 } else {
                     window.location.href = 'order_status.php?status=success&id=' + data.order_id; 
                 }

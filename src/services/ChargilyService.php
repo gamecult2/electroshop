@@ -82,8 +82,6 @@ class ChargilyService {
                     // Filter empty values
                     if (empty($customerPayload['phone'])) unset($customerPayload['phone']);
                     
-                    file_put_contents($logFile, date('Y-m-d H:i:s') . " - Creating Customer: " . json_encode($customerPayload) . "\n", FILE_APPEND);
-
                     $customer = $this->client->customers()->create($customerPayload);
                     if ($customer) {
                         $customerId = $customer->getId();
@@ -116,10 +114,6 @@ class ChargilyService {
             if (!$customerId) unset($checkoutData['customer_id']);
 
             $checkout = $this->client->checkouts()->create($checkoutData);
-
-            // Debug: Log checkout URL
-            $checkoutUrl = $checkout->getUrl();
-            file_put_contents($logFile, date('Y-m-d H:i:s') . " - Checkout URL: {$checkoutUrl}\n", FILE_APPEND);
 
             return $checkout;
         } catch (\Exception $e) {

@@ -1,7 +1,6 @@
 <?php
 require_once 'includes/init.php';
 require_once 'models/Order.php';
-require_once 'includes/header.php';
 
 $status = $_GET['status'] ?? 'unknown';
 $orderId = $_GET['id'] ?? null;
@@ -11,6 +10,10 @@ if ($status === 'success' && $orderId) {
     $orderModel = new Order();
     $order = $orderModel->getById($orderId);
     if (!$order) redirect('index.php');
+    if (in_array($order['payment_method'], ['bank_transfer', 'baridimob'], true) && $order['payment_status'] !== 'paid') {
+        header('Location: bank_transfer.php?order_id=' . (int)$orderId);
+        exit;
+    }
     
     // Check for Chargily checkout_id to verify real-time if not already updated by webhook
     $checkoutId = $_GET['checkout_id'] ?? null;
@@ -46,6 +49,7 @@ if ($status === 'success' && $orderId) {
 $progressStep1Class = 'completed';
 $progressStep2Class = 'completed';
 $progressStep3Class = $status === 'success' ? 'active completed' : 'active error';
+require_once 'includes/header.php';
 ?>
 
 <div class="container-xxl pb-4">
